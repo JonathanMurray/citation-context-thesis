@@ -7,7 +7,7 @@
 @ATTRIBUTE HEADING {true, false}
 @ATTRIBUTE BEFORE_HEADING {true, false}
 @ATTRIBUTE CONTAINS_AUTHOR {true, false}
-@ATTRIBUTE class {EXPLICIT_REFERENCE,IMPLICIT_REFERENCE,NOT_REFERENCE
+@ATTRIBUTE class {EXPLICIT_REFERENCE,IMPLICIT_REFERENCE,NOT_REFERENCE}
 @DATA
 false,false,false,false,false,false,false,false,NOT_REFERENCE
 true,false,false,false,false,false,false,false,NOT_REFERENCE
