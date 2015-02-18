@@ -1,46 +1,26 @@
 package ml;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Sentence{
-	final SentenceType type;
-	final List<String> cited;
-	final Sentence explicitReference;
-	final String text;
-	final String AZ;
+public class Sentence {
+	String sentiment;
+	String text;
+	SentenceType type;
 	
-	Sentence(String AZ, SentenceType type, List<String> cited, Sentence explicitReference, String text){
-		this.type = type;
-		this.cited = cited;
-		this.explicitReference = explicitReference;
+	public Sentence(String sentiment, String text){
+		this.sentiment = sentiment;
 		this.text = text;
-		this.AZ = AZ;
+		this.type = typeFromSentiment(sentiment);
 	}
 	
-	public static Sentence createExplicit(String text, String AZ, List<String> cited){
-		return new Sentence(AZ, SentenceType.EXPLICIT_REFERENCE, cited, null, text);
-	}
-	
-	public static Sentence createImplicit(String text, String AZ, Sentence explicit){
-		return new Sentence(AZ, SentenceType.IMPLICIT_REFERENCE, new ArrayList<String>(), explicit, text);
-	}
-	
-	public static Sentence createNonReference(String text, String AZ){
-		return new Sentence(AZ, SentenceType.NOT_REFERENCE, new ArrayList<String>(), null, text);
-	}
-	
-	public String toString(){
-		switch(type){
-		case EXPLICIT_REFERENCE:
-			return "Explicit ref (" + AZ + ") to " + cited + ":  " + text;
-		case IMPLICIT_REFERENCE:
-			return "Implicit ref (" + AZ + ") to " + explicitReference.cited + ":  " + text;
-		case NOT_REFERENCE:
-			return "Not reference (" + AZ + "):   " + text;
-		default:
-			throw new RuntimeException();	
+	private SentenceType typeFromSentiment(String sentiment){
+		if(sentiment.equals("x") || sentiment.equals("xc")){ //there are some xc, I'm not sure why
+			return SentenceType.NOT_REFERENCE;
 		}
+		if(sentiment.equals("oc") || sentiment.equals("pc") || sentiment.equals("nc")){
+			return SentenceType.EXPLICIT_REFERENCE;
+		}
+		if(sentiment.equals("o") || sentiment.equals("p") || sentiment.equals("n")){
+			return SentenceType.IMPLICIT_REFERENCE;
+		}
+		throw new RuntimeException("unknown AZ: " + sentiment);
 	}
-	
 }
