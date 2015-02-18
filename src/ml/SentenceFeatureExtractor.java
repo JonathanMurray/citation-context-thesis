@@ -42,7 +42,7 @@ public class SentenceFeatureExtractor {
 			writer.write("@ATTRIBUTE class {" + 
 					SentenceType.EXPLICIT_REFERENCE + "," + 
 					SentenceType.IMPLICIT_REFERENCE + "," + 
-					SentenceType.NOT_REFERENCE + "\n");
+					SentenceType.NOT_REFERENCE + "}\n");
 			writer.write("@DATA\n");
 			instances.forEach(instance -> {
 				try {
