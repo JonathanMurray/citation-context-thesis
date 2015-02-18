@@ -2,3 +2,5 @@ however
 although
 moreover
 therefore
+likewise
+similarly
