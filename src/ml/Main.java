@@ -62,8 +62,8 @@ public class Main {
 //				.collect(Collectors.toCollection(ArrayList::new));
 //		System.out.println(bigrams);
 		
-		NGrams ngrams = NGrams.fromDatasets(datasets);
-		
+//		NGrams ngrams = NGrams.fromDatasets(datasets);
+		NGrams ngrams = null;
 		List<Instance> instances = datasets.stream()
 			.flatMap(dataset -> extractor.createInstances(dataset, ngrams).stream())
 			.collect(Collectors.toCollection(ArrayList::new));

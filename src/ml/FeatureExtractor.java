@@ -45,6 +45,8 @@ public class FeatureExtractor {
 			writer.write("@ATTRIBUTE " + feature + " ");
 			if(feature.contains("UNIGRAM") || feature.contains("BIGRAM") || feature.contains("TRIGRAM")){
 				writer.write("NUMERIC\n");
+			}else if(feature.equals("TEXT")){
+				writer.write("STRING\n");
 			}else{
 				writer.write("{true, false}\n");
 			}
@@ -112,23 +114,24 @@ public class FeatureExtractor {
 		features.put(SentenceFeature.CONTAINS_AUTHOR.toString(), containsMainAuthor(sentence, dataset.citedMainAuthor));
 		features.put(SentenceFeature.CONTAINS_ACRONYM.toString(), containsAcronyms(sentence, dataset.acronyms));
 		features.put(SentenceFeature.CONTAINS_LEXICAL_HOOK.toString(), containsLexicalHooks(sentence, dataset.lexicalHooks));
-		for(String unigram : ngrams.unigrams){
-			features.put("UNIGRAM_" + unigram, countNgram(sentence, unigram));
-		}
-		for(String bigram : ngrams.bigrams){
-			features.put("BIGRAM_" + bigram.replaceAll(" ", "_"), countNgram(sentence, bigram));
-		}
-		for(String trigram : ngrams.trigrams){
-			features.put("TRIGRAM_" + trigram.replaceAll(" " , "_"), countNgram(sentence, trigram));
-		}
+//		for(String unigram : ngrams.unigrams){
+//			features.put("UNIGRAM_" + unigram, countNgram(sentence, unigram));
+//		}
+//		for(String bigram : ngrams.bigrams){
+//			features.put("BIGRAM_" + bigram.replaceAll(" ", "_"), countNgram(sentence, bigram));
+//		}
+//		for(String trigram : ngrams.trigrams){
+//			features.put("TRIGRAM_" + trigram.replaceAll(" " , "_"), countNgram(sentence, trigram));
+//		}
+		features.put("TEXT", "'" + NGrams.cleanString(sentence.text) + "'");
 		
 		return features;
 	}
 	
-	private int countNgram(Sentence sentence, String ngram){
-		return StringUtils.countMatches(NGrams.cleanString(sentence.text), ngram);
-	}
-	
+//	private int countNgram(Sentence sentence, String ngram){
+//		return StringUtils.countMatches(NGrams.cleanString(sentence.text), ngram);
+//	}
+//	
 
 	private boolean containsDetWork(String[] words){
 		for(int i = 1; i < words.length; i++){

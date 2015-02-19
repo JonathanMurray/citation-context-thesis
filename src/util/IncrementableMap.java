@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class IncrementableMap<T> extends HashMap<T, Integer>{
 	private static final long serialVersionUID = 1L;
@@ -12,9 +13,9 @@ public class IncrementableMap<T> extends HashMap<T, Integer>{
 
 	public void increment(T key, Integer amount){
 		if(containsKey(key)){
-			put(key, get(key) + 1);
+			put(key, get(key) + amount);
 		}else{
-			put(key, 1);
+			put(key, amount);
 		}
 	}
 	
@@ -35,6 +36,16 @@ public class IncrementableMap<T> extends HashMap<T, Integer>{
 				it.remove();
 			}
 		}
+	}
+	
+	public static <T> IncrementableMap<T> merge(Stream<IncrementableMap<T>> maps){
+		IncrementableMap<T> newMap = new IncrementableMap<T>();
+		maps.forEach(map -> {
+			map.entrySet().stream().forEach(entry -> {
+				newMap.increment(entry.getKey(),entry.getValue());
+			});
+		});
+		return newMap;
 	}
 
 	

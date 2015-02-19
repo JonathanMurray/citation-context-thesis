@@ -40,9 +40,6 @@ public class ContextDataSet {
 		System.out.println(acronyms);
 		System.out.println(lexicalHooks);
 		lexicalHooks.remove(citedMainAuthor);
-//		unigrams = findUnigrams(10);
-//		bigrams = findBigrams(5);
-//		trigrams = findTrigrams(5);
 	}
 	
 	
@@ -111,60 +108,60 @@ public class ContextDataSet {
 				.filter(s -> s.type == SentenceType.NOT_REFERENCE);
 	}
 	
+//	
+//	
+//	IncrementableMap<String> getUnigramsInImplicitReferences(){
+//		return getUnigrams(implicitReferences());
+//	}
+//	
+//	IncrementableMap<String> getUnigramsInNonReferences(){
+//		return getUnigrams(nonReferences());
+//	}
+//	
+//	private IncrementableMap<String> getUnigrams(Stream<Sentence> sentences){
+//		final List<String> stopwords = readStopwords();
+//		IncrementableMap<String> wordCounts = new IncrementableMap<String>();
+//		words(sentences).filter(word -> !stopwords.contains(word.toLowerCase()))
+//			.forEach(word -> wordCounts.increment(word, 1));
+//		return wordCounts;
+//	}
 	
-	
-	IncrementableMap<String> getUnigramsInImplicitReferences(){
-		return getUnigrams(implicitReferences());
-	}
-	
-	IncrementableMap<String> getUnigramsInNonReferences(){
-		return getUnigrams(nonReferences());
-	}
-	
-	private IncrementableMap<String> getUnigrams(Stream<Sentence> sentences){
-		final List<String> stopwords = readStopwords();
-		IncrementableMap<String> wordCounts = new IncrementableMap<String>();
-		words(sentences).filter(word -> !stopwords.contains(word.toLowerCase()))
-			.forEach(word -> wordCounts.increment(word, 1));
-		return wordCounts;
-	}
-	
-	IncrementableMap<String> getNgrams(int n, Stream<Sentence> sentences){
-		if(n < 2){
-			throw new IllegalArgumentException("use unigrams()");
-		} 
-		List<String> words = words(sentences).collect(Collectors.toList());
-		List<String> stopwords = readStopwords();
-		stopwords.add(NGrams.NUMBER);
-		IncrementableMap<String> ngramCounts = new IncrementableMap<String>();
-		for(int i = n - 1; i < words.size(); i++){
-			List<String> ngramWords = words.subList(i - n + 1, i + 1);
-			boolean ngramContainsStopword = ngramWords.stream()
-					.anyMatch(stopwords::contains);
-			if(!ngramContainsStopword){
-				Optional<String> ngram = ngramWords.stream()
-						.reduce((s1,s2) -> s1 + " " + s2);
-				ngramCounts.increment(ngram.get(), 1);
-			}
-		}
-		return ngramCounts;
-	}
-	
-	IncrementableMap<String> getBigramsInImplicitReferences(){
-		return getNgrams(2, implicitReferences());
-	}
-	
-	IncrementableMap<String> getBigramsInNonReferences(){
-		return getNgrams(2, nonReferences());
-	}
-
-	IncrementableMap<String> getTrigramsInImplicitReferences(){
-		return getNgrams(3, implicitReferences());
-	}
-	
-	IncrementableMap<String> getTrigramsInNonReferences(){
-		return getNgrams(3, nonReferences());
-	}
+//	IncrementableMap<String> getNgrams(int n, Stream<Sentence> sentences){
+//		if(n < 2){
+//			throw new IllegalArgumentException("use unigrams()");
+//		} 
+//		List<String> words = words(sentences).collect(Collectors.toList());
+//		List<String> stopwords = readStopwords();
+//		stopwords.add(NGrams.NUMBER);
+//		IncrementableMap<String> ngramCounts = new IncrementableMap<String>();
+//		for(int i = n - 1; i < words.size(); i++){
+//			List<String> ngramWords = words.subList(i - n + 1, i + 1);
+//			boolean ngramContainsStopword = ngramWords.stream()
+//					.anyMatch(stopwords::contains);
+//			if(!ngramContainsStopword){
+//				Optional<String> ngram = ngramWords.stream()
+//						.reduce((s1,s2) -> s1 + " " + s2);
+//				ngramCounts.increment(ngram.get(), 1);
+//			}
+//		}
+//		return ngramCounts;
+//	}
+//	
+//	IncrementableMap<String> getBigramsInImplicitReferences(){
+//		return getNgrams(2, implicitReferences());
+//	}
+//	
+//	IncrementableMap<String> getBigramsInNonReferences(){
+//		return getNgrams(2, nonReferences());
+//	}
+//
+//	IncrementableMap<String> getTrigramsInImplicitReferences(){
+//		return getNgrams(3, implicitReferences());
+//	}
+//	
+//	IncrementableMap<String> getTrigramsInNonReferences(){
+//		return getNgrams(3, nonReferences());
+//	}
 	
 	List<String> readStopwords(){
 		try {
@@ -176,10 +173,10 @@ public class ContextDataSet {
 		}
 	}
 	
-	private Stream<String> words(Stream<Sentence> sentences){
-		return sentences
-			.flatMap(s -> Arrays.asList(NGrams.cleanString(s.text).split(" +")).stream());
-	}
+//	private Stream<String> words(Stream<Sentence> sentences){
+//		return sentences
+//			.flatMap(s -> Arrays.asList(NGrams.cleanString(s.text).split(" +")).stream());
+//	}
 	
 	/**
 	 * Writes a json structure of the whole data set
