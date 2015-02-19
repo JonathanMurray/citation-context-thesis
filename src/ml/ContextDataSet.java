@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 import util.IncrementableMap;
 
 
-public class CitationContextDataSet {
+public class ContextDataSet {
 	String citedMainAuthor;
 	String citedTitle;
 	List<Citer> citers;
@@ -27,7 +27,7 @@ public class CitationContextDataSet {
 	
 	
 	
-	public CitationContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
+	public ContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
 		this.citedMainAuthor = citedMainAuthor;
 		this.citedTitle = citedTitle;
 		this.citers = citers;
@@ -58,7 +58,9 @@ public class CitationContextDataSet {
 			.forEach(hook -> {
 				counts.increment(hook, 1);
 			});
-		return counts.getTopN(numLexicalHooks);
+		return counts.getTopN(numLexicalHooks).stream()
+				.map(e -> e.getKey())
+				.collect(Collectors.toSet());
 	}
 	
 	private List<String> findMatchesInExplicitReferencesAroundAuthor(Pattern regex){
@@ -103,14 +105,38 @@ public class CitationContextDataSet {
 	
 	
 	
-	Set<String> findUnigrams(int numTopUnigrams){
+	IncrementableMap<String> findUnigrams(){
 		final List<String> stopwords = readStopwords();
 		IncrementableMap<String> wordCounts = new IncrementableMap<String>();
 		words(sentences()).filter(word -> !stopwords.contains(word.toLowerCase()))
 			.forEach(word -> wordCounts.increment(word, 1));
-		Set<String> topUnigrams = wordCounts.getTopN(numTopUnigrams);
-		System.out.println(topUnigrams);
-		return topUnigrams;
+		return wordCounts;
+	}
+	
+	
+	
+	IncrementableMap<String> findBigrams(){
+		List<String> words = words(sentences()).collect(Collectors.toList());
+		List<String> stopwords = readStopwords();
+		IncrementableMap<String> bigramCounts = new IncrementableMap<String>();
+		for(int i = 2; i < words.size(); i++){
+			if(!stopwords.contains(words.get(i-1)) && !stopwords.contains(words.get(i))){
+				bigramCounts.increment(words.get(i-1) + " " + words.get(i), 1);
+			}
+		}
+		return bigramCounts;
+	}
+	
+	IncrementableMap<String> findTrigrams(){
+		List<String> words = words(sentences()).collect(Collectors.toList());
+		List<String> stopwords = readStopwords();
+		IncrementableMap<String> trigramCounts = new IncrementableMap<String>();
+		for(int i = 3; i < words.size(); i++){
+			if(!stopwords.contains(words.get(i-2)) && !stopwords.contains(words.get(i-1)) && !stopwords.contains(words.get(i))){
+				trigramCounts.increment(words.get(i-2) + " " + words.get(i-1) + " " + words.get(i), 1);
+			}
+		}
+		return trigramCounts;
 	}
 	
 	List<String> readStopwords(){
@@ -123,34 +149,10 @@ public class CitationContextDataSet {
 		}
 	}
 	
-	Set<String> findBigrams(int numTopBigrams){
-		List<String> words = words(sentences()).collect(Collectors.toList());
-		List<String> stopwords = readStopwords();
-		IncrementableMap<String> bigramCounts = new IncrementableMap<String>();
-		for(int i = 2; i < words.size(); i++){
-			if(!stopwords.contains(words.get(i-1)) && !stopwords.contains(words.get(i))){
-				bigramCounts.increment(words.get(i-1) + " " + words.get(i), 1);
-			}
-		}
-		return bigramCounts.getTopN(numTopBigrams);
-	}
-	
-	Set<String> findTrigrams(int numTopTrigrams){
-		List<String> words = words(sentences()).collect(Collectors.toList());
-		List<String> stopwords = readStopwords();
-		IncrementableMap<String> trigramCounts = new IncrementableMap<String>();
-		for(int i = 3; i < words.size(); i++){
-			if(!stopwords.contains(words.get(i-2)) && !stopwords.contains(words.get(i-1)) && !stopwords.contains(words.get(i))){
-				trigramCounts.increment(words.get(i-2) + " " + words.get(i-1) + " " + words.get(i), 1);
-			}
-		}
-		return trigramCounts.getTopN(numTopTrigrams);
-	}
-	
 	private Stream<String> words(Stream<Sentence> sentences){
 		return sentences()
 			.flatMap(s -> Arrays.asList(s.text.split(" ")).stream())
-			.map(s -> s.replaceAll("[,\\.]", ""))
+			.map(s -> s.replaceAll("[,\\.\\(\\)]", ""))
 			.filter(s -> !s.equals(""));
 	}
 	

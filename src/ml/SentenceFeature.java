@@ -1,6 +1,6 @@
 package ml;
 
-public enum Feature{
+public enum SentenceFeature{
 	//Sentence contains a determiner followed by a work noun
 	DET_WORK,
 	

@@ -15,21 +15,21 @@ import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 import org.xml.sax.SAXException;
 
-public class CitationContextHTML_Parser {
+public class ContextHTML_Parser {
 	
 	public static final String dataDir = "/home/jonathan/Documents/exjobb/data/";
 	public static final String corpusDir = dataDir + "teufel-citation-context-corpus/";
 	
 
 	public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
-		CitationContextHTML_Parser parser = new CitationContextHTML_Parser();
+		ContextHTML_Parser parser = new ContextHTML_Parser();
 		File f = Paths.get(corpusDir + "A92-1018.html").toFile();
 		parser.readJsoup(f).writeToJson(Paths.get("test.json").toFile());
 	}
 	
 	
 	
-	public CitationContextDataSet readJsoup(File file){
+	public ContextDataSet readJsoup(File file){
 		Document doc;
 		try {
 			doc = Jsoup.parse(file, null);
@@ -55,7 +55,7 @@ public class CitationContextHTML_Parser {
 				}
 				citers.add(new Citer(citerTitle, sentences));
 			}
-			return new CitationContextDataSet(mainAuthorLastName, citedTitle, citers);
+			return new ContextDataSet(mainAuthorLastName, citedTitle, citers);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);

@@ -6,13 +6,15 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
+
+import util.IncrementableMap;
 
 public class Main {
 	
@@ -26,29 +28,43 @@ public class Main {
 	}
 	
 	private static void setupForWEKA(){
-		CitationContextHTML_Parser parser = new CitationContextHTML_Parser();
+		ContextHTML_Parser parser = new ContextHTML_Parser();
 		File[] files = Paths.get(sentimentCorpusDir).toFile().listFiles();
-//		File file = Paths.get(sentimentCorpusDir + "A92-1018.html").toFile();
-		List<CitationContextDataSet> datasets = Arrays.asList(files).stream()
+		List<ContextDataSet> datasets = Arrays.asList(files).stream()
 				.map(f -> parser.readJsoup(f))
 				.collect(Collectors.toList());
+		FeatureExtractor extractor = new FeatureExtractor();
 		
-//		CitationContextDataSet dataset = parser.readJsoup(file);
-//		dataset.setup();
-		SentenceFeatureExtractor extractor = new SentenceFeatureExtractor();
+		IncrementableMap<String> unigramCounts = new IncrementableMap<String>();
+		datasets.stream().forEach(dataset -> {
+			for(Entry<String,Integer> e : dataset.findUnigrams().getTopN(10)){
+				unigramCounts.increment(e.getKey(), 1);
+			}
+		});
 		
-		List<String> unigrams = datasets.stream()
-			.flatMap(dataset -> dataset.findUnigrams(10).stream())
-			.distinct()
-			.collect(Collectors.toList());
+		ArrayList<String> unigrams = unigramCounts.getTopN(12).stream()
+				.map(e -> e.getKey())
+				.collect(Collectors.toCollection(ArrayList::new));
 		System.out.println(unigrams);
-		NGrams ngrams = new NGrams(unigrams, new ArrayList<String>(), new ArrayList<String>());
+		
+		IncrementableMap<String> bigramCounts = new IncrementableMap<String>();
+		datasets.stream().forEach(dataset -> {
+			for(Entry<String,Integer> e : dataset.findBigrams().getTopN(10)){
+				bigramCounts.increment(e.getKey(), 1);
+			}
+		});
+		ArrayList<String> bigrams = bigramCounts.getTopN(12).stream()
+				.map(e -> e.getKey())
+				.collect(Collectors.toCollection(ArrayList::new));
+		System.out.println(bigrams);
+		
+		NGrams ngrams = new NGrams(unigrams, bigrams, new ArrayList<String>());
 		
 		List<Instance> instances = datasets.stream()
-			.flatMap(dataset -> extractor.extractInstances(dataset, ngrams).stream())
+			.flatMap(dataset -> extractor.createInstances(dataset, ngrams).stream())
 			.collect(Collectors.toCollection(ArrayList::new));
 		instances = Stream.concat(
-				instances.stream().filter(i -> i.instanceClass == SentenceType.NOT_REFERENCE).limit(1000),
+				instances.stream().filter(i -> i.instanceClass == SentenceType.NOT_REFERENCE).limit(10000),
 				instances.stream().filter(i -> i.instanceClass == SentenceType.IMPLICIT_REFERENCE)
 		).collect(Collectors.toList());
 		

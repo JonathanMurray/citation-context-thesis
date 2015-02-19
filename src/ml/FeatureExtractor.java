@@ -16,7 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import util.NonThrowingFileWriter;
 
 
-public class SentenceFeatureExtractor {
+public class FeatureExtractor {
 	
 	private List<String> determiners;
 	private List<String> workNouns;
@@ -25,7 +25,7 @@ public class SentenceFeatureExtractor {
 	
 	public static final String HEADER_PATTERN = "\\d+\\.\\d+.*";
 	
-	public SentenceFeatureExtractor(){
+	public FeatureExtractor(){
 		try {
 			setup();
 		} catch (IOException e) {
@@ -77,7 +77,7 @@ public class SentenceFeatureExtractor {
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	public List<Instance> extractInstances(CitationContextDataSet dataset, NGrams ngrams){
+	public List<Instance> createInstances(ContextDataSet dataset, NGrams ngrams){
 		List<Instance> instances = new ArrayList<Instance>();
 		for(Citer citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
@@ -98,19 +98,19 @@ public class SentenceFeatureExtractor {
 	
 	
 	@SuppressWarnings("rawtypes")
-	public Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, CitationContextDataSet dataset, NGrams ngrams){
+	private Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, ContextDataSet dataset, NGrams ngrams){
 		Map<String, Comparable> features = new HashMap<String, Comparable>();
 		String[] words = sentence.text.split(" ");
-		features.put(Feature.DET_WORK.toString(), containsDetWork(words));
-		features.put(Feature.PRONOUN.toString(), startsWith3rdPersonPronoun(words));
-		features.put(Feature.CONNECTOR.toString(), startsWithConnector(words));
-		features.put(Feature.AFTER_EXPLICIT.toString(), isAfterExplicitReference(previous));
-		features.put(Feature.AFTER_HEADING.toString(), startsWithSectionHeader(previous));
-		features.put(Feature.HEADING.toString(), startsWithSectionHeader(sentence));
-		features.put(Feature.BEFORE_HEADING.toString(), startsWithSectionHeader(next));
-		features.put(Feature.CONTAINS_AUTHOR.toString(), containsMainAuthor(sentence, dataset.citedMainAuthor));
-		features.put(Feature.CONTAINS_ACRONYM.toString(), containsAcronyms(sentence, dataset.acronyms));
-		features.put(Feature.CONTAINS_LEXICAL_HOOK.toString(), containsLexicalHooks(sentence, dataset.lexicalHooks));
+		features.put(SentenceFeature.DET_WORK.toString(), containsDetWork(words));
+		features.put(SentenceFeature.PRONOUN.toString(), startsWith3rdPersonPronoun(words));
+		features.put(SentenceFeature.CONNECTOR.toString(), startsWithConnector(words));
+		features.put(SentenceFeature.AFTER_EXPLICIT.toString(), isAfterExplicitReference(previous));
+		features.put(SentenceFeature.AFTER_HEADING.toString(), startsWithSectionHeader(previous));
+		features.put(SentenceFeature.HEADING.toString(), startsWithSectionHeader(sentence));
+		features.put(SentenceFeature.BEFORE_HEADING.toString(), startsWithSectionHeader(next));
+		features.put(SentenceFeature.CONTAINS_AUTHOR.toString(), containsMainAuthor(sentence, dataset.citedMainAuthor));
+		features.put(SentenceFeature.CONTAINS_ACRONYM.toString(), containsAcronyms(sentence, dataset.acronyms));
+		features.put(SentenceFeature.CONTAINS_LEXICAL_HOOK.toString(), containsLexicalHooks(sentence, dataset.lexicalHooks));
 		for(String unigram : ngrams.unigrams){
 			features.put("UNIGRAM_" + unigram, StringUtils.countMatches(sentence.text, unigram));
 		}
