@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,18 +113,21 @@ public class FeatureExtractor {
 		features.put(SentenceFeature.CONTAINS_ACRONYM.toString(), containsAcronyms(sentence, dataset.acronyms));
 		features.put(SentenceFeature.CONTAINS_LEXICAL_HOOK.toString(), containsLexicalHooks(sentence, dataset.lexicalHooks));
 		for(String unigram : ngrams.unigrams){
-			features.put("UNIGRAM_" + unigram, StringUtils.countMatches(sentence.text, unigram));
+			features.put("UNIGRAM_" + unigram, countNgram(sentence, unigram));
 		}
 		for(String bigram : ngrams.bigrams){
-			features.put("BIGRAM_" + bigram.replaceAll(" ", "_"), StringUtils.countMatches(sentence.text, bigram));
+			features.put("BIGRAM_" + bigram.replaceAll(" ", "_"), countNgram(sentence, bigram));
 		}
 		for(String trigram : ngrams.trigrams){
-			features.put("TRIGRAM_" + trigram.replaceAll(" " , "_"), StringUtils.countMatches(sentence.text, trigram));
+			features.put("TRIGRAM_" + trigram.replaceAll(" " , "_"), countNgram(sentence, trigram));
 		}
 		
 		return features;
 	}
 	
+	private int countNgram(Sentence sentence, String ngram){
+		return StringUtils.countMatches(NGrams.cleanString(sentence.text), ngram);
+	}
 	
 
 	private boolean containsDetWork(String[] words){

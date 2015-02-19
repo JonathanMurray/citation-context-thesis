@@ -1,7 +1,9 @@
 package util;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class IncrementableMap<T> extends HashMap<T, Integer>{
@@ -24,5 +26,17 @@ public class IncrementableMap<T> extends HashMap<T, Integer>{
 //				.map(e -> e.getKey())
 				.collect(Collectors.toSet());
 	}
+	
+	public void removeIfValue(Predicate<Integer> filter){
+		Iterator<Entry<T, Integer>> it = entrySet().iterator();
+		while(it.hasNext()){
+			int val = it.next().getValue();
+			if(filter.test(val)){
+				it.remove();
+			}
+		}
+	}
 
+	
+	
 }

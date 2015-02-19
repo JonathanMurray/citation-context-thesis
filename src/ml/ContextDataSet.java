@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,9 +25,7 @@ public class ContextDataSet {
 	List<Citer> citers;
 	Set<String> acronyms;
 	Set<String> lexicalHooks;
-	
-	
-	
+
 	public ContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
 		this.citedMainAuthor = citedMainAuthor;
 		this.citedTitle = citedTitle;
@@ -36,7 +35,10 @@ public class ContextDataSet {
 	
 	private void setup(){
 		acronyms = findAcronyms();
-		lexicalHooks = findLexicalHooks(3);
+		lexicalHooks = findLexicalHooks(5);
+		System.out.println("DATASET FOR " + citedMainAuthor);
+		System.out.println(acronyms);
+		System.out.println(lexicalHooks);
 		lexicalHooks.remove(citedMainAuthor);
 //		unigrams = findUnigrams(10);
 //		bigrams = findBigrams(5);
@@ -50,7 +52,7 @@ public class ContextDataSet {
 	}
 	
 	private Set<String> findLexicalHooks(int numLexicalHooks){
-		Pattern regex = Pattern.compile("[^a-zA-Z][A-Z][a-z]+[ ,]");
+		Pattern regex = Pattern.compile("[^a-zA-Z][A-Z][a-z]+[ ,:;]");
 		List<String> nonDistinctHooks = findMatchesInExplicitReferencesAroundAuthor(regex);
 		IncrementableMap<String> counts = new IncrementableMap<String>();
 		nonDistinctHooks.stream()
@@ -70,7 +72,7 @@ public class ContextDataSet {
 		explicitReferences().forEach(sentence -> {
 				int index = sentence.text.indexOf(author);
 				if(index >= 0){
-					int boundary = 50;
+					int boundary = 20;
 					int left = Math.max(0, index-boundary);
 					int right = Math.min(sentence.text.length()- 1, index+boundary);
 					String vicinityOfAuthor = sentence.text.substring(left, right);
@@ -103,40 +105,65 @@ public class ContextDataSet {
 				.flatMap(c -> c.sentences.stream());
 	}
 	
+	private Stream<Sentence> nonReferences(){
+		return citers.stream()
+				.flatMap(c -> c.sentences.stream())
+				.filter(s -> s.type == SentenceType.NOT_REFERENCE);
+	}
 	
 	
-	IncrementableMap<String> findUnigrams(){
+	
+	IncrementableMap<String> getUnigramsInImplicitReferences(){
+		return getUnigrams(implicitReferences());
+	}
+	
+	IncrementableMap<String> getUnigramsInNonReferences(){
+		return getUnigrams(nonReferences());
+	}
+	
+	private IncrementableMap<String> getUnigrams(Stream<Sentence> sentences){
 		final List<String> stopwords = readStopwords();
 		IncrementableMap<String> wordCounts = new IncrementableMap<String>();
-		words(sentences()).filter(word -> !stopwords.contains(word.toLowerCase()))
+		words(sentences).filter(word -> !stopwords.contains(word.toLowerCase()))
 			.forEach(word -> wordCounts.increment(word, 1));
 		return wordCounts;
 	}
 	
-	
-	
-	IncrementableMap<String> findBigrams(){
-		List<String> words = words(sentences()).collect(Collectors.toList());
+	IncrementableMap<String> getNgrams(int n, Stream<Sentence> sentences){
+		if(n < 2){
+			throw new IllegalArgumentException("use unigrams()");
+		} 
+		List<String> words = words(sentences).collect(Collectors.toList());
 		List<String> stopwords = readStopwords();
-		IncrementableMap<String> bigramCounts = new IncrementableMap<String>();
-		for(int i = 2; i < words.size(); i++){
-			if(!stopwords.contains(words.get(i-1)) && !stopwords.contains(words.get(i))){
-				bigramCounts.increment(words.get(i-1) + " " + words.get(i), 1);
+		stopwords.add(NGrams.NUMBER);
+		IncrementableMap<String> ngramCounts = new IncrementableMap<String>();
+		for(int i = n - 1; i < words.size(); i++){
+			List<String> ngramWords = words.subList(i - n + 1, i + 1);
+			boolean ngramContainsStopword = ngramWords.stream()
+					.anyMatch(stopwords::contains);
+			if(!ngramContainsStopword){
+				Optional<String> ngram = ngramWords.stream()
+						.reduce((s1,s2) -> s1 + " " + s2);
+				ngramCounts.increment(ngram.get(), 1);
 			}
 		}
-		return bigramCounts;
+		return ngramCounts;
 	}
 	
-	IncrementableMap<String> findTrigrams(){
-		List<String> words = words(sentences()).collect(Collectors.toList());
-		List<String> stopwords = readStopwords();
-		IncrementableMap<String> trigramCounts = new IncrementableMap<String>();
-		for(int i = 3; i < words.size(); i++){
-			if(!stopwords.contains(words.get(i-2)) && !stopwords.contains(words.get(i-1)) && !stopwords.contains(words.get(i))){
-				trigramCounts.increment(words.get(i-2) + " " + words.get(i-1) + " " + words.get(i), 1);
-			}
-		}
-		return trigramCounts;
+	IncrementableMap<String> getBigramsInImplicitReferences(){
+		return getNgrams(2, implicitReferences());
+	}
+	
+	IncrementableMap<String> getBigramsInNonReferences(){
+		return getNgrams(2, nonReferences());
+	}
+
+	IncrementableMap<String> getTrigramsInImplicitReferences(){
+		return getNgrams(3, implicitReferences());
+	}
+	
+	IncrementableMap<String> getTrigramsInNonReferences(){
+		return getNgrams(3, nonReferences());
 	}
 	
 	List<String> readStopwords(){
@@ -150,10 +177,8 @@ public class ContextDataSet {
 	}
 	
 	private Stream<String> words(Stream<Sentence> sentences){
-		return sentences()
-			.flatMap(s -> Arrays.asList(s.text.split(" ")).stream())
-			.map(s -> s.replaceAll("[,\\.\\(\\)]", ""))
-			.filter(s -> !s.equals(""));
+		return sentences
+			.flatMap(s -> Arrays.asList(NGrams.cleanString(s.text).split(" +")).stream());
 	}
 	
 	/**

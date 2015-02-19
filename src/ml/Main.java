@@ -35,36 +35,40 @@ public class Main {
 				.collect(Collectors.toList());
 		FeatureExtractor extractor = new FeatureExtractor();
 		
-		IncrementableMap<String> unigramCounts = new IncrementableMap<String>();
-		datasets.stream().forEach(dataset -> {
-			for(Entry<String,Integer> e : dataset.findUnigrams().getTopN(10)){
-				unigramCounts.increment(e.getKey(), 1);
-			}
-		});
+//		IncrementableMap<String> implicitUnigrams = IncrementableMap.countAndMergeTopOccurences(10, datasets.stream()
+//				.map(dataset -> dataset.getUnigramsInImplicitReferences()));
+//		
+//		
+//		IncrementableMap<String> unigramCounts = new IncrementableMap<String>();
+//		datasets.stream().forEach(dataset -> {
+//			for(Entry<String,Integer> e : dataset.getUnigramsInImplicitReferences().getTopN(10)){
+//				unigramCounts.increment(e.getKey(), 1);
+//			}
+//		});
+//		
+//		ArrayList<String> unigrams = unigramCounts.getTopN(12).stream()
+//				.map(e -> e.getKey())
+//				.collect(Collectors.toCollection(ArrayList::new));
+//		System.out.println(unigrams);
+//		
+//		IncrementableMap<String> bigramCounts = new IncrementableMap<String>();
+//		datasets.stream().forEach(dataset -> {
+//			for(Entry<String,Integer> e : dataset.findBigrams().getTopN(10)){
+//				bigramCounts.increment(e.getKey(), 1);
+//			}
+//		});
+//		ArrayList<String> bigrams = bigramCounts.getTopN(12).stream()
+//				.map(e -> e.getKey())
+//				.collect(Collectors.toCollection(ArrayList::new));
+//		System.out.println(bigrams);
 		
-		ArrayList<String> unigrams = unigramCounts.getTopN(12).stream()
-				.map(e -> e.getKey())
-				.collect(Collectors.toCollection(ArrayList::new));
-		System.out.println(unigrams);
-		
-		IncrementableMap<String> bigramCounts = new IncrementableMap<String>();
-		datasets.stream().forEach(dataset -> {
-			for(Entry<String,Integer> e : dataset.findBigrams().getTopN(10)){
-				bigramCounts.increment(e.getKey(), 1);
-			}
-		});
-		ArrayList<String> bigrams = bigramCounts.getTopN(12).stream()
-				.map(e -> e.getKey())
-				.collect(Collectors.toCollection(ArrayList::new));
-		System.out.println(bigrams);
-		
-		NGrams ngrams = new NGrams(unigrams, bigrams, new ArrayList<String>());
+		NGrams ngrams = NGrams.fromDatasets(datasets);
 		
 		List<Instance> instances = datasets.stream()
 			.flatMap(dataset -> extractor.createInstances(dataset, ngrams).stream())
 			.collect(Collectors.toCollection(ArrayList::new));
 		instances = Stream.concat(
-				instances.stream().filter(i -> i.instanceClass == SentenceType.NOT_REFERENCE).limit(10000),
+				instances.stream().filter(i -> i.instanceClass == SentenceType.NOT_REFERENCE).limit(2000),
 				instances.stream().filter(i -> i.instanceClass == SentenceType.IMPLICIT_REFERENCE)
 		).collect(Collectors.toList());
 		
