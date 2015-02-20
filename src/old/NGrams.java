@@ -1,4 +1,4 @@
-package ml;
+package old;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,14 +25,14 @@ public class NGrams {
 //		this.trigrams = trigrams;
 //	}
 //	
-	public static String cleanString(String before){
-		String after = before.replaceAll("[',:;%\\.\\(\\)]", "");
-		after = after.trim();
-		after = after.toLowerCase();
-		after = after.replaceAll("\\d+", "<NUMBER>");
-//		after = stem(after);
-		return after;
-	}
+//	public static String cleanString(String before){
+//		String after = before.replaceAll("[',:;%\\.\\(\\)]", "");
+//		after = after.trim();
+//		after = after.toLowerCase();
+//		after = after.replaceAll("\\d+", "<NUMBER>");
+////		after = stem(after);
+//		return after;
+//	}
 //	
 //	public static String stem(String before){
 //		//TODO Extremely naive stemming

@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import old.NGrams;
+
 import org.xml.sax.SAXException;
 
 import util.IncrementableMap;

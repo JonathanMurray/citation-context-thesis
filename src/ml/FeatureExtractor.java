@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import old.NGrams;
+
 import org.apache.commons.lang3.StringUtils;
 
 import util.NonThrowingFileWriter;
@@ -123,7 +125,7 @@ public class FeatureExtractor {
 //		for(String trigram : ngrams.trigrams){
 //			features.put("TRIGRAM_" + trigram.replaceAll(" " , "_"), countNgram(sentence, trigram));
 //		}
-		features.put("TEXT", "'" + NGrams.cleanString(sentence.text) + "'");
+		features.put("TEXT", "'" + sentence.text + "'");
 		
 		return features;
 	}

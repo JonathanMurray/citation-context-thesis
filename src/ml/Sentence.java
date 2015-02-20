@@ -7,8 +7,16 @@ public class Sentence {
 	
 	public Sentence(String sentiment, String text){
 		this.sentiment = sentiment;
-		this.text = text;
+		this.text = clean(text);
 		this.type = typeFromSentiment(sentiment);
+	}
+	
+	private String clean(String before){
+		String after = before.replaceAll("[',:;%\\.\\(\\)]", "");
+		after = after.trim();
+		after = after.toLowerCase();
+		after = after.replaceAll("\\d+", "<NUMBER>");
+		return after;
 	}
 	
 	private SentenceType typeFromSentiment(String sentiment){
