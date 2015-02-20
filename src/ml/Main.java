@@ -68,9 +68,11 @@ public class Main {
 			.flatMap(dataset -> extractor.createInstances(dataset, ngrams).stream())
 			.collect(Collectors.toCollection(ArrayList::new));
 		instances = Stream.concat(
-				instances.stream().filter(i -> i.instanceClass == SentenceType.NOT_REFERENCE).limit(2000),
+				instances.stream().filter(i -> i.instanceClass == SentenceType.NOT_REFERENCE).limit(10000),
 				instances.stream().filter(i -> i.instanceClass == SentenceType.IMPLICIT_REFERENCE)
 		).collect(Collectors.toList());
+		
+		
 		
 		extractor.writeInstancesToFile(instances, Paths.get("src/ml/data/instances.arff"));
 	}
