@@ -1,4 +1,4 @@
-package ml;
+package sentenceFeaturesToWeka;
 
 import java.util.List;
 

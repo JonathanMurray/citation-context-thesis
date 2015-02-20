@@ -1,4 +1,4 @@
-package ml;
+package sentenceFeaturesToWeka;
 
 public enum SentenceFeature{
 	//Sentence contains a determiner followed by a work noun

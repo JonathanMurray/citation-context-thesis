@@ -1,4 +1,4 @@
-package ml;
+package sentenceFeaturesToWeka;
 
 public class Sentence {
 	String sentiment;

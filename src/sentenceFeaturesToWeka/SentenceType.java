@@ -1,4 +1,4 @@
-package ml;
+package sentenceFeaturesToWeka;
 
 public enum SentenceType {
 	EXPLICIT_REFERENCE,
