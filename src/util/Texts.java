@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import sentenceFeaturesToWeka.Sentence;
-import sentenceFeaturesToWeka.SentenceType;
-
 public class Texts {
 	
 	private List<String> determiners;
@@ -68,24 +65,21 @@ public class Texts {
 		return looseContains(connectors, words[0]);
 	}
 	
-	public boolean isAfterExplicitReference(Sentence previousSentence){
-		return previousSentence != null ? previousSentence.type == SentenceType.EXPLICIT_REFERENCE : false;
+	
+	public boolean startsWithSectionHeader(String sentence){
+		return sentence != null ? sentence.matches(HEADER_PATTERN) : false;
 	}
 	
-	public boolean startsWithSectionHeader(Sentence sentence){
-		return sentence != null ? sentence.text.matches(HEADER_PATTERN) : false;
+	public boolean containsMainAuthor(String sentence, String mainAuthor){
+		return sentence.contains(mainAuthor);
 	}
 	
-	public boolean containsMainAuthor(Sentence sentence, String mainAuthor){
-		return sentence.text.contains(mainAuthor);
+	public boolean containsAcronyms(String sentence, Set<String> acronyms){
+		return acronyms.stream().anyMatch(acronym -> sentence.contains(acronym));
 	}
 	
-	public boolean containsAcronyms(Sentence sentence, Set<String> acronyms){
-		return acronyms.stream().anyMatch(acronym -> sentence.text.contains(acronym));
-	}
-	
-	public boolean containsLexicalHooks(Sentence sentence, Set<String> lexicalHooks){
-		return lexicalHooks.stream().anyMatch(hook -> sentence.text.contains(hook));
+	public boolean containsLexicalHooks(String sentence, Set<String> lexicalHooks){
+		return lexicalHooks.stream().anyMatch(hook -> sentence.contains(hook));
 	}
 	
 	private boolean looseContains(List<String> list, String str){
@@ -94,5 +88,15 @@ public class Texts {
 			str = str.substring(0, str.length() - 1);
 		}
 		return list.contains(str);
+	}
+	
+	public boolean containsExplicitReference(List<String> words, String mainAuthor){
+		int authorIndex = words.indexOf(mainAuthor);
+		if(authorIndex > -1){
+			List<String> vicinity = words.subList(authorIndex + 1, authorIndex + 5);
+			String year = "\\d\\d\\d\\d";
+			return vicinity.stream().anyMatch(word -> word.matches(year));
+		}
+		return false;
 	}
 }

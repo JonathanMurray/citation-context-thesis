@@ -2,6 +2,7 @@ package sentenceFeaturesToWeka;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,16 +78,17 @@ public class FeatureExtractor {
 		Texts texts = Texts.instance();
 		Map<String, Comparable> features = new HashMap<String, Comparable>();
 		String[] words = sentence.text.split(" ");
+		String[] prevWords = previous.text.split(" ");
 		features.put(SentenceFeature.DET_WORK.toString(), texts.containsDetWork(words));
 		features.put(SentenceFeature.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(words));
 		features.put(SentenceFeature.CONNECTOR.toString(), texts.startsWithConnector(words));
-		features.put(SentenceFeature.AFTER_EXPLICIT.toString(), texts.isAfterExplicitReference(previous));
-		features.put(SentenceFeature.AFTER_HEADING.toString(), texts.startsWithSectionHeader(previous));
-		features.put(SentenceFeature.HEADING.toString(), texts.startsWithSectionHeader(sentence));
-		features.put(SentenceFeature.BEFORE_HEADING.toString(), texts.startsWithSectionHeader(next));
-		features.put(SentenceFeature.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(sentence, dataset.citedMainAuthor));
-		features.put(SentenceFeature.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(sentence, dataset.acronyms));
-		features.put(SentenceFeature.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(sentence, dataset.lexicalHooks));
+		features.put(SentenceFeature.AFTER_EXPLICIT.toString(), texts.containsExplicitReference(Arrays.asList(prevWords), dataset.citedMainAuthor));
+		features.put(SentenceFeature.AFTER_HEADING.toString(), texts.startsWithSectionHeader(previous.text));
+		features.put(SentenceFeature.HEADING.toString(), texts.startsWithSectionHeader(sentence.text));
+		features.put(SentenceFeature.BEFORE_HEADING.toString(), texts.startsWithSectionHeader(next.text));
+		features.put(SentenceFeature.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(sentence.text, dataset.citedMainAuthor));
+		features.put(SentenceFeature.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(sentence.text, dataset.acronyms));
+		features.put(SentenceFeature.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(sentence.text, dataset.lexicalHooks));
 		features.put("TEXT", "'" + sentence.text + "'");
 		
 		return features;
