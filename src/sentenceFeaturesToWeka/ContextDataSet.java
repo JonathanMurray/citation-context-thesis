@@ -20,11 +20,11 @@ import util.IncrementableMap;
 
 
 public class ContextDataSet {
-	String citedMainAuthor;
-	String citedTitle;
-	List<Citer> citers;
-	Set<String> acronyms;
-	Set<String> lexicalHooks;
+	public String citedMainAuthor;
+	public String citedTitle;
+	public List<Citer> citers;
+	public Set<String> acronyms;
+	public Set<String> lexicalHooks;
 
 	public ContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
 		this.citedMainAuthor = citedMainAuthor;

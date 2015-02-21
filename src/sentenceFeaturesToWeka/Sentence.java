@@ -1,14 +1,19 @@
 package sentenceFeaturesToWeka;
 
 public class Sentence {
-	String sentiment;
-	String text;
-	SentenceType type;
+	public String sentiment;
+	public String text;
+	public SentenceType type;
 	
 	public Sentence(String sentiment, String text){
 		this.sentiment = sentiment;
 		this.text = clean(text);
 		this.type = typeFromSentiment(sentiment);
+	}
+	
+	public Sentence(SentenceType type, String text){
+		this.type = type;
+		this.text = clean(text);
 	}
 	
 	private String clean(String before){
