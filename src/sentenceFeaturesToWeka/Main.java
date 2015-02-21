@@ -16,7 +16,7 @@ import old.NGrams;
 
 import org.xml.sax.SAXException;
 
-import util.IncrementableMap;
+import util.IntegerMap;
 
 public class Main {
 	

@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import util.IncrementableMap;
+import util.IntegerMap;
 
 public class NGrams {
 //	Collection<String> unigrams;

@@ -7,11 +7,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class IncrementableMap<T> extends HashMap<T, Integer>{
+public class IntegerMap<K> extends HashMap<K, Integer>{
 	private static final long serialVersionUID = 1L;
 
 
-	public void increment(T key, Integer amount){
+	public void increment(K key, Integer amount){
 		if(containsKey(key)){
 			put(key, get(key) + amount);
 		}else{
@@ -20,7 +20,7 @@ public class IncrementableMap<T> extends HashMap<T, Integer>{
 	}
 	
 	
-	public Set<Entry<T,Integer>> getTopN(int n){
+	public Set<Entry<K,Integer>> getTopN(int n){
 		return entrySet().stream()
 				.sorted((e1,e2)-> e2.getValue() - e1.getValue())
 				.limit(n)
@@ -29,7 +29,7 @@ public class IncrementableMap<T> extends HashMap<T, Integer>{
 	}
 	
 	public void removeIfValue(Predicate<Integer> filter){
-		Iterator<Entry<T, Integer>> it = entrySet().iterator();
+		Iterator<Entry<K, Integer>> it = entrySet().iterator();
 		while(it.hasNext()){
 			int val = it.next().getValue();
 			if(filter.test(val)){
@@ -38,8 +38,8 @@ public class IncrementableMap<T> extends HashMap<T, Integer>{
 		}
 	}
 	
-	public static <T> IncrementableMap<T> merge(Stream<IncrementableMap<T>> maps){
-		IncrementableMap<T> newMap = new IncrementableMap<T>();
+	public static <T> IntegerMap<T> merge(Stream<IntegerMap<T>> maps){
+		IntegerMap<T> newMap = new IntegerMap<T>();
 		maps.forEach(map -> {
 			map.entrySet().stream().forEach(entry -> {
 				newMap.increment(entry.getKey(),entry.getValue());

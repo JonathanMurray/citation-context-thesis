@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import sentenceFeaturesToWeka.Sentence;
-import sentenceFeaturesToWeka.SentenceType;
+import util.CosineSimilarity;
+import util.DoubleMap;
 
 public class Main {
 	
@@ -19,18 +20,18 @@ public class Main {
 	static final int YES = 1;
 	
 	int numSentences;
-	List<Sentence> sentences;
+	List<HashMap<String,Double>> sentences;
 	List<double[]> beliefs;
 	List<Map<Integer,double[]>> allReceivedMessages;
 	int neighbourhood = 1;
 	
 	Main(){
 		
-		sentences = new ArrayList<Sentence>();
-		sentences.add(new Sentence(SentenceType.NOT_REFERENCE, "Ax"));
-		sentences.add(new Sentence(SentenceType.NOT_REFERENCE, "Bx"));
-		sentences.add(new Sentence(SentenceType.NOT_REFERENCE, "Cx"));
-		sentences.add(new Sentence(SentenceType.NOT_REFERENCE, "D"));
+		sentences = new ArrayList<HashMap<String,Double>>();
+		sentences.add(sentenceToWordVec("a b c"));
+		sentences.add(sentenceToWordVec("a b d e"));
+		sentences.add(sentenceToWordVec("c x x"));
+		sentences.add(sentenceToWordVec("y y c"));
 		
 		numSentences = sentences.size();
 		beliefs = new ArrayList<double[]>();
@@ -43,7 +44,19 @@ public class Main {
 		for(int i = 0; i < 3; i++){
 			oneLoop();	
 		}
-		
+	}
+	
+	private static HashMap<String, Double> sentenceToWordVec(Sentence sentence){
+		return sentenceToWordVec(sentence.text);
+	}
+	
+	private static HashMap<String, Double> sentenceToWordVec(String sentence){
+		String[] words = sentence.split(" ");
+		DoubleMap<String> wordVector = new DoubleMap<String>();
+		Arrays.asList(words).stream().forEach(word -> {
+			wordVector.increment(word, 1.0);
+		});
+		return wordVector;
 	}
 	
 	
@@ -73,8 +86,8 @@ public class Main {
 					double[] totalBeliefAboutSelf = new double[]{
 							belief[NO] * productReceived[NO], 
 							belief[YES] * productReceived[YES]};
-					Sentence sender = sentences.get(from);
-					Sentence receiver = sentences.get(to);
+					HashMap<String, Double> sender = sentences.get(from);
+					HashMap<String, Double> receiver = sentences.get(to);
 					
 					double[] message = new double[2];
 					
@@ -92,8 +105,8 @@ public class Main {
 					double normalization = 1/(message[NO] + message[YES]);
 					message[NO]*=normalization;
 					message[YES]*=normalization;
-					System.out.println("from: " + sender.text);
-					System.out.println("to: " + receiver.text);
+					System.out.println("from: " + sender);
+					System.out.println("to: " + receiver);
 					System.out.println("msg: " + Arrays.toString(message));
 					System.out.println();
 					allReceivedMessages.get(to).put(from, message);
@@ -115,22 +128,17 @@ public class Main {
 		return prod;
 	}
 	
-	double compatibility(int context1, int context2, Sentence s1, Sentence s2){
+	double compatibility(int context1, int context2, HashMap<String, Double> s1, HashMap<String, Double> s2){
 		if(context1 == NO){
 			return 0.5;
 		}
-		double cosSimilarity = cosSimilarity(s1, s2);
+		double cosSimilarity = CosineSimilarity.calculateCosineSimilarity(s1, s2);
+		System.out.println("sim(   " + s1 + "   ,   " + s2 + "   ==   " + cosSimilarity);
 		double probContext = 1 / (1 + Math.exp(-cosSimilarity));
 		return context2 == YES? probContext : 1 - probContext;
 	}
 	
-	double cosSimilarity(Sentence s1, Sentence s2){
-		
-		if(s1.text.contains("x") && s2.text.contains("x")){
-			return 10;
-		}
-		return 0;
-	}
+	
 	
 	
 	

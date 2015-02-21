@@ -6,17 +6,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import util.IncrementableMap;
+import util.IntegerMap;
 
 
 public class ContextDataSet {
@@ -51,7 +49,7 @@ public class ContextDataSet {
 	private Set<String> findLexicalHooks(int numLexicalHooks){
 		Pattern regex = Pattern.compile("[^a-zA-Z][A-Z][a-z]+[ ,:;]");
 		List<String> nonDistinctHooks = findMatchesInExplicitReferencesAroundAuthor(regex);
-		IncrementableMap<String> counts = new IncrementableMap<String>();
+		IntegerMap<String> counts = new IntegerMap<String>();
 		nonDistinctHooks.stream()
 			.filter(hook -> !hook.equals(citedMainAuthor))
 			.forEach(hook -> {
