@@ -25,8 +25,8 @@ public class ContextDataSet {
 	public Set<String> lexicalHooks;
 
 	public ContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
-		this.citedMainAuthor = citedMainAuthor;
-		this.citedTitle = citedTitle;
+		this.citedMainAuthor = citedMainAuthor.toLowerCase();
+		this.citedTitle = citedTitle.toLowerCase();
 		this.citers = citers;
 		setup();
 	}
@@ -74,7 +74,7 @@ public class ContextDataSet {
 					Matcher m = regex.matcher(vicinityOfAuthor);
 					while(m.find()){
 						String match = m.group();
-						match = match.replaceAll("[,\\[\\]\\(\\)]", "").trim();
+						match = match.replaceAll("[,\\[\\]\\(\\)]", "").trim().toLowerCase();
 						matches.add(match);
 					}
 				}

@@ -11,3 +11,6 @@ design
 practice
 process
 scheme
+work
+result
+example

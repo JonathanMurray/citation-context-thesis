@@ -3,6 +3,7 @@ package util;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ public class Texts {
 	private List<String> workNouns;
 	private List<String> thirdPersonPronouns;
 	private List<String> connectors;
+	private List<String> stopwords;
 	
 	public static final String HEADER_PATTERN = "\\d+\\.\\d+.*";
 	
@@ -40,6 +42,17 @@ public class Texts {
 		workNouns = readLines("src/" + packageName + "/data/workNouns.txt");
 		thirdPersonPronouns = readLines("src/" + packageName + "/data/thirdPersonPronouns.txt");
 		connectors = readLines("src/" + packageName + "/data/connectors.txt");
+		stopwords = readLines("src/" + packageName + "/data/stopwords.txt");
+	}
+	
+	public List<String> removeStopwords(String[] words){
+		List<String> filtered = new ArrayList<String>();
+		for(String w : words){
+			if(!stopwords.contains(w)){
+				filtered.add(w);
+			}
+		}
+		return filtered;
 	}
 	
 	private List<String> readLines(String filePath) throws IOException{
@@ -57,6 +70,14 @@ public class Texts {
 		return false;
 	}
 	
+	public boolean startsWithDetWork(String[] words){
+		return looseContains(determiners, words[0]) && looseContains(workNouns, words[1]);
+	}
+	
+	public boolean startsWithLimitedDet(String[] words){
+		return words[0].equals("this") || words[0].equals("such");
+	}
+	
 	public boolean startsWith3rdPersonPronoun(String[] words){
 		return looseContains(thirdPersonPronouns, words[0]);
 	}
@@ -71,7 +92,7 @@ public class Texts {
 	}
 	
 	public boolean containsMainAuthor(String sentence, String mainAuthor){
-		return sentence.contains(mainAuthor);
+		return sentence.contains(mainAuthor.toLowerCase());
 	}
 	
 	public boolean containsAcronyms(String sentence, Set<String> acronyms){
