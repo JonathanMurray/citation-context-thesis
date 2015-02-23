@@ -1,6 +1,8 @@
 package markovRandomField;
 
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,18 +32,13 @@ public class Main {
 		ContextDataSet dataset = new ContextHTML_Parser().readJsoup(Paths.get(sentimentCorpusDir + "A92-1018.html").toFile());
 		
 		System.out.println(dataset.citedTitle);
+		System.out.println("main author: " + dataset.citedMainAuthor);
 		
 		String citedAbstract = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements. Only a lexicon and some unlabeled training text are required. Accuracy exceeds 96%. We describe implementation strategies and optimizations which result in high-speed operation. Three applications for tagging are described: phrase recognition; word sense disambiguation; and grammatical function assignment.";
 		
-//		dataset.citers.get(0).sentences.forEach( s -> {
-//			System.out.println(sentenceToWordVec(s));
-//			System.out.println(CosineSimilarity.calculateCosineSimilarity(sentenceToWordVec(s), textToWordVec(firstPaperAbstract)));
-//			System.out.println();
-//		});
-		
 		System.out.println("\n");
 		
-		Citer citer = dataset.citers.get(2);
+		Citer citer = dataset.citers.get(26);
 		
 		List<String> sentences = citer.sentences.stream().sequential()
 				.map(s -> s.text)
@@ -51,27 +48,7 @@ public class Main {
 				.map(s -> s.type)
 				.collect(Collectors.toCollection(ArrayList::new));
 		
-		new Main().go(sentences, sentenceTypes, dataset.citedMainAuthor, citedAbstract);
-	}
-	
-	private static void testWithSmallData(){
-		String[] texts = new String[6];
-		texts[0] = "We describe the design, prototyping and evaluation of ARC, a system for automatically compiling a list of authoritative web resources on any (sufficiently broad) topic.";
-		texts[1] = "The goal of ARC is to compile resource lists similar to those provided by Yahoo! or Infoseek.";
-		texts[2] = "The fundamental difference is that these services construct lists either manually or through a	combination of human and automated effort, while ARC operates fully automatically.";
-		texts[3] = "We describe the evaluation of ARC, Yahoo!, and Infoseek resource lists by a panel of human users.";
-		texts[4] = "This evaluation suggests that the resources found by ARC frequently fare almost as well as, and sometimes better than, lists of resources that are manually compiled or classified into a topic.";
-		texts[5] = "We also provide examples of ARC resource lists for the reader to examine."; 
-		
-		String referencedAbstract = "In this paper we report on our experience using WebSQL, a high level declarative query"
-						+ "language for extracting information from the Web. WebSQL takes advantage of multiple"
-						+ "index servers without requiring users to know about them, and integrates full-text with"
-						+ "topology-based queries. The WebSQL query engine is a library of Java classes, and"
-						+ "WebSQL queries can be embedded into Java programs much in the same way as SQL"
-						+ "queries are embedded in C programs. This allows us to access the Web from Java at a";
-		
-		
-		new Main().go(Arrays.asList(texts), null, "Arocena", referencedAbstract);
+		new Main().go(sentences, sentenceTypes, dataset.citedMainAuthor, citedAbstract, dataset);
 	}
 	
 	static final int NO = 0;
@@ -79,9 +56,45 @@ public class Main {
 	
 	int numSentences;
 	List<HashMap<String,Double>> sentenceVectors;
+	List<HashMap<String,Double>> bigramVectors;
+	List<String> sentenceTexts;
+	List<SentenceType> sentenceTypes;
 	List<double[]> beliefs;
 	List<Map<Integer,double[]>> allReceivedMessages;
 	int neighbourhood = 4;
+	
+	private void setup(String mainAuthor, String referencedText, ContextDataSet dataset){
+		List<Double> unnormalizedBeliefs = new ArrayList<Double>();
+		
+		for(String text : sentenceTexts){
+			HashMap<String, Double> vector = textToWordVec(text); 
+			sentenceVectors.add(vector);
+			bigramVectors.add(Texts.instance().getNGrams(2, text));
+			unnormalizedBeliefs.add(selfBelief(text, vector, mainAuthor, textToWordVec(referencedText), dataset));
+		}
+		
+		double maxBelief = unnormalizedBeliefs.stream().max(Double::compareTo).get();
+		double minBelief = unnormalizedBeliefs.stream().min(Double::compareTo).get();
+		
+		System.out.println("max " + maxBelief);
+		System.out.println("min " + minBelief);
+		
+		for(double unnormalizedBelief : unnormalizedBeliefs){
+			double normalized;
+			if(maxBelief > minBelief){
+				normalized = (unnormalizedBelief - minBelief) / (maxBelief - minBelief);
+			}else{
+				System.out.println(maxBelief + " !> " + minBelief);
+				normalized = 0.5;
+			}
+			if(normalized == 0){
+				normalized = 0.1; //TODO don't want any 0-probabilities
+			}
+//			System.out.println("sentence: " + sentenceTexts.get(j));
+//			System.out.println("belief: " + normalized);
+			beliefs.add(new double[]{1 - normalized, normalized});
+		}
+	}
 	
 	
 	/**
@@ -89,44 +102,37 @@ public class Main {
 	 * @param sentenceTexts
 	 * @param mainAuthor
 	 */
-	public void go(List<String> sentenceTexts, List<SentenceType> sentenceTypes, String mainAuthor, String referencedText){
+	public void go(List<String> sentenceTexts, List<SentenceType> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
+		this.sentenceTexts = sentenceTexts;
+		this.sentenceTypes = sentenceTypes;
 		sentenceVectors = new ArrayList<HashMap<String,Double>>();
+		bigramVectors = new ArrayList<HashMap<String,Double>>();
 		beliefs = new ArrayList<double[]>();
-		
-		List<Double> unnormalizedBeliefs = new ArrayList<Double>();
-		
-		for(String text : sentenceTexts){
-			HashMap<String, Double> vector = textToWordVec(text); 
-			sentenceVectors.add(vector);
-			unnormalizedBeliefs.add(selfBelief(text, vector, mainAuthor, textToWordVec(referencedText)));
-		}
-		
-		double maxBelief = unnormalizedBeliefs.stream().max(Double::compareTo).get();
-		double minBelief = unnormalizedBeliefs.stream().min(Double::compareTo).get();
-		
-		int j = 0; 
-		for(double unnormalizedBelief : unnormalizedBeliefs){
-			double normalized = (unnormalizedBelief - minBelief) / (maxBelief - minBelief);
-//			System.out.println("sentence: " + sentenceTexts.get(j));
-//			System.out.println("belief: " + normalized);
-			beliefs.add(new double[]{1 - normalized, normalized});
-			j ++;
-		}
-		
 		numSentences = sentenceVectors.size();
+		
+		setup(mainAuthor, referencedText, dataset);
 		initMessages();
 		
-		for(int i = 0; i < 10; i++){
+		for(int i = 0; i < 5; i++){
 			oneLoop();	
 		}
 		
+		printResults();
+	}
+	
+	private void printResults(){
 		int truePos = 0;
 		int falsePos = 0;
+		int pos = 0;
 		
 		for(int i = 0; i < numSentences; i++){
 			double[] belief = finalBelief(i);
-			System.out.println(sentenceTypes.get(i) + " - " + Arrays.toString(belief) + ":  " + sentenceTexts.get(i));
-			if(belief[1] > 0.5){
+			double[] selfBelief = beliefs.get(i);
+			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(selfBelief) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
+			if(sentenceTypes.get(i) != SentenceType.NOT_REFERENCE){
+				pos ++;
+			}
+			if(belief[1] > 0.65){
 				if(sentenceTypes.get(i) == SentenceType.NOT_REFERENCE){
 					falsePos ++;
 				}else{
@@ -135,18 +141,28 @@ public class Main {
 			}
 		}
 		
-		System.out.println("false: " + falsePos);
-		System.out.println("true: " + truePos);
+		System.out.println("precision: " + truePos + "/" + (truePos+falsePos));
+		System.out.println("recall: " + truePos + "/" + pos);
 	}
 	
-	private static double selfBelief(String sentence, HashMap<String,Double> sentenceVector, String mainAuthor, HashMap<String,Double> referencedText){
-		String[] words = sentence.split(" ");
-		double explicit = Texts.instance().containsMainAuthor(sentence, mainAuthor) ? 1:0;
-		double detWork = Texts.instance().startsWithDetWork(words) ? 1:0;
-		double det = Texts.instance().startsWithLimitedDet(words) ? 1:0;
-		double cosSim = CosineSimilarity.calculateCosineSimilarity(sentenceVector, referencedText);
-		double unnormalizedBelief = explicit + detWork + det + (cosSim); //TODO mult. cossim
-		return unnormalizedBelief;
+	String beliefToString(double[] belief){
+		NumberFormat formatter = new DecimalFormat("#0.00");     
+		return formatter.format(belief[1]);
+	}
+	
+	private static double selfBelief(String sentence, HashMap<String,Double> sentenceVector, String mainAuthor, HashMap<String,Double> referencedText, ContextDataSet dataset){
+		String[] words = sentence.split(" +");
+		double explicit = Texts.instance().containsExplicitReference(Arrays.asList(words), mainAuthor) ? 2:0;
+		double detWork = Texts.instance().startsWithDetWork(words) ? 0:0;
+		double det = Texts.instance().startsWithLimitedDet(words) ? 0:0;
+		double cosSim = 0;
+		if(sentenceVector.size() > 0){
+			cosSim = CosineSimilarity.calculateCosineSimilarity(sentenceVector, referencedText);
+		}
+		double acronyms = Texts.instance().containsAcronyms(sentence, dataset.acronyms) ? 1:0;
+		double hooks = Texts.instance().containsLexicalHooks(sentence, dataset.lexicalHooks)? 1:0;
+		
+		return 0.01 + explicit + detWork + det + cosSim + acronyms + hooks; //TODO mult. cossim
 	}
 	
 	private static HashMap<String, Double> sentenceToWordVec(Sentence sentence){
@@ -154,7 +170,7 @@ public class Main {
 	}
 	
 	private static HashMap<String, Double> textToWordVec(String sentence){
-		List<String> words = Texts.instance().removeStopwords(sentence.split(" "));
+		List<String> words = Texts.instance().removeStopwords(sentence.split(" +"));
 		DoubleMap<String> wordVector = new DoubleMap<String>();
 		words.stream().forEach(word -> {
 			wordVector.increment(stem(word.toLowerCase()), 1.0);
@@ -177,7 +193,7 @@ public class Main {
 			Map<Integer, double[]> receivedMessages = new HashMap<Integer, double[]>();
 			for(int m = Math.max(0, s-neighbourhood); m <= Math.min(s+neighbourhood, numSentences-1); m++){
 				if(m != s){
-					receivedMessages.put(m, new double[]{1,1}); //start value for msg
+					receivedMessages.put(m, new double[]{0.5,0.5}); //start value for msg
 				}
 			}
 			allReceivedMessages.add(receivedMessages);
@@ -190,61 +206,63 @@ public class Main {
 		double[] totalBeliefAboutSelf = new double[]{
 				belief[NO] * productReceived[NO], 
 				belief[YES] * productReceived[YES]};
-		fixProbabilityVector(totalBeliefAboutSelf);
+		normalizeProbabilityVector(totalBeliefAboutSelf);
 		return totalBeliefAboutSelf;
 	}
 	
 	private void oneLoop(){
-		System.out.println();
+		System.out.println("loop.");
 		for(int from = 0; from < numSentences; from++){
 			double[] belief = beliefs.get(from);
-			Map<Integer, double[]> received = allReceivedMessages.get(from);
+			Map<Integer, double[]> receivedMessages = allReceivedMessages.get(from);
 			int leftmostNeighbour = Math.max(0, from - neighbourhood);
 			int rightmostNeighbour = Math.min(numSentences - 1, from + neighbourhood);
 			for(int to = leftmostNeighbour; to <= rightmostNeighbour; to++){
 				if(to != from){
-					double[] productReceived = productOfValuesExcept(received, to);
-					double[] totalBeliefAboutSelf = new double[]{
-							belief[NO] * productReceived[NO], 
-							belief[YES] * productReceived[YES]};
-					fixProbabilityVector(totalBeliefAboutSelf);
-					HashMap<String, Double> sender = sentenceVectors.get(from);
-					HashMap<String, Double> receiver = sentenceVectors.get(to);
-					
-					double[] message = new double[2];
-					
-					double[][] compatibility = new double[][]{
-							compatibility(NO, sender, receiver),
-							compatibility(YES, sender, receiver)
-					};
-					
-//					System.out.println(compatibility[YES][YES]);
-					
-					message[NO] =
-							(totalBeliefAboutSelf[NO] * compatibility[NO][NO]) + 
-							(totalBeliefAboutSelf[YES] * compatibility[YES][NO]);
-					message[YES] =
-							(totalBeliefAboutSelf[NO] * compatibility[NO][YES]) + 
-							(totalBeliefAboutSelf[YES] * compatibility[YES][YES]);
-					double normalization = 1/(message[NO] + message[YES]);
-					message[NO]*=normalization;
-					message[YES]*=normalization;
-					
-					
-					allReceivedMessages.get(to).put(from, message);
+					sendMessage(from, to, receivedMessages, belief);
 				}
 			}
-			received.clear(); //Clear all messages. They will fill up before next time
+//			received.clear(); //Clear all messages. They will fill up before next time
 		}
 	}
 	
-	private void fixProbabilityVector(double[] probabilities){
+	private void sendMessage(int from, int to, Map<Integer, double[]> receivedMessages, double[] belief){
+		double[] productReceived = productOfValuesExcept(receivedMessages, to);
+		double[] totalBeliefAboutSelf = new double[]{
+				belief[NO] * productReceived[NO], 
+				belief[YES] * productReceived[YES]};
+		normalizeProbabilityVector(totalBeliefAboutSelf);
+		
+		double[] message = new double[2];
+		
+		double[][] compatibility = new double[][]{
+				compatibility(NO, from, to),
+				compatibility(YES, from, to)
+		};
+		
+		message[NO] =
+				(totalBeliefAboutSelf[NO] * compatibility[NO][NO]) + 
+				(totalBeliefAboutSelf[YES] * compatibility[YES][NO]);
+		message[YES] =
+				(totalBeliefAboutSelf[NO] * compatibility[NO][YES]) + 
+				(totalBeliefAboutSelf[YES] * compatibility[YES][YES]);
+		
+		normalizeProbabilityVector(message);
+		
+		allReceivedMessages.get(to).put(from, message);
+	}
+	
+	private void normalizeProbabilityVector(double[] probabilities){
 		if(probabilities.length != 2){
 			throw new IllegalArgumentException();
 		}
 		double sum = probabilities[0] + probabilities[1];
-		probabilities[0] /= sum;
-		probabilities[1] /= sum;
+		if(sum == 0){
+			probabilities = new double[]{0.5,0.5};
+		}else{
+			probabilities[0] /= sum;
+			probabilities[1] /= sum;
+		}
 	}
 	
 	private double[] productOfValues(Map<Integer,double[]> map){
@@ -271,71 +289,52 @@ public class Main {
 	//TODO Change the way sentences are compared,
 	//Maybe look for det+work in the later sentence?
 	//Problem: We don't know how far away they are from eachother
-	private double[] compatibility(int context1, HashMap<String, Double> s1, HashMap<String, Double> s2){
+	private double[] compatibility(int context1, int s1, int s2){
+
 		if(context1 == NO){
 			return new double[]{0.5, 0.5};
 		}
-		double cosSimilarity = CosineSimilarity.calculateCosineSimilarity(s1, s2);
+		double relatedness = relatedness(s1, s2);
 //		System.out.println("sim(   " + s1 + "   ,   " + s2 + "   ==   " + cosSimilarity);
-		double probContext = 1 / (1 + Math.exp( - 2 * cosSimilarity)); //TODO multiplying cossim
+		double probContext = 1 / (1 + Math.exp( - relatedness)); 
 		return new double[]{1 - probContext, probContext};
 //		return context2 == YES? probContext : 1 - probContext;
 	}
 	
+	private double relatedness(int s1, int s2){
+		double sim = similarity(s1, s2);
+		if(s2 == s1 + 1){
+			return sim + relatedToPrevious(s2);
+		}
+		if(s1 == s2 + 1){
+			return sim + relatedToPrevious(s1);
+		}
+		return sim;
+	}
 	
-	
-	
-	
-	
-//	public void go(ContextDataSet dataset){
-//		Citer citer = dataset.citers.get(0);
-//		List<Sentence> sentences = citer.sentences;
-//		go(sentences);
-//	}
-//	
-//	private void go(List<Sentence> sentences){
-//		List<Node> nodes = new ArrayList<Node>();
-//		for(int i = 0; i < sentences.size(); i++){
-//			double[] selfBelief = new double[]{0.3,0.7};
-//			nodes.add(new Node(selfBelief));
-//		}
-//		
-//		
-//	}
-//	
-//	
-//	
-//	
-//	
-//	private static class Node{
-//		double[] selfBelief;
-//		double[][] receivedMessages;
-//		int numNeighbours;
-//		
-//		Node(double[] selfBelief, int numNeighbours){
-//			this.selfBelief = selfBelief;
-//			this.numNeighbours = numNeighbours;
-//			receivedMessages = new double[numNeighbours][];
-//			for(int i = 0; i < numNeighbours; i++){
-//				receivedMessages[i] = new double[]{1,1}; //just a start message, actually not a valid msg 
-//			}
-//		}
-//		
-//		
-//		
-//		double[] createMessageTo(Node receiver){
-//			double notContext = 
-//					selfBelief[0] * compatibility(false, receiver)[0] * productOthersBelief[0]
-//				+ selfBelief[1] * compatibility(true, receiver)[0] * productOthersBelief[1];
-//			
-//			double context = 
-//					selfBelief[0] * compatibility(false, receiver)[1] * productOthersBelief[0]
-//				+ selfBelief[1] * compatibility(true, receiver)[1] * productOthersBelief[1];
-//			
-//			
-//			
-//			return new double[]{notContext, context};
-//		}
-//	}
+	private double similarity(int s1, int s2){
+		HashMap<String,Double> s1Vec = sentenceVectors.get(s1);
+		HashMap<String,Double> s2Vec = sentenceVectors.get(s2);
+		double cosSim = 0;
+		if(s1Vec.size() > 0 && s2Vec.size() > 0){
+			cosSim = CosineSimilarity.calculateCosineSimilarity(s1Vec, s2Vec);
+		}
+		
+		HashMap<String,Double> bigramVec1 = bigramVectors.get(s1);
+		HashMap<String,Double> bigramVec2 = bigramVectors.get(s2);
 
+		double bigramSim = 0;
+		if(bigramVec1.size() > 0 && bigramVec2.size() > 0){
+			bigramSim = CosineSimilarity.calculateCosineSimilarity(bigramVec1, bigramVec2);
+		}
+		return cosSim + bigramSim; //Originally only cosSim
+	}
+	
+	private double relatedToPrevious(int sentence){
+		String[] words = sentenceTexts.get(sentence).split(" +");
+		return 4 * ((Texts.instance().containsDetWork(words)? 1:0)
+			+ (Texts.instance().startsWith3rdPersonPronoun(words)? 1:0)
+			+ (Texts.instance().startsWithConnector(words)? 1:0));
+	}
+	
 }

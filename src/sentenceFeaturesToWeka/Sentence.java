@@ -1,5 +1,7 @@
 package sentenceFeaturesToWeka;
 
+import util.Texts;
+
 public class Sentence {
 	public String sentiment;
 	public String text;
@@ -17,10 +19,11 @@ public class Sentence {
 	}
 	
 	private String clean(String before){
-		String after = before.replaceAll("[',:;%\\.\\(\\)]", "");
-		after = after.trim();
-		after = after.toLowerCase();
-		after = after.replaceAll("\\d+", "<NUMBER>");
+		String after = before.replaceAll("[',:;%\\.\\(\\)\\~\\\\\\[\\]\\{\\}\\/]", " ")
+			.replaceAll("\n", " ")
+			.replaceAll(" +", " ")
+			.trim()
+			.replaceAll("\\d+", Texts.NUMBER_TAG);
 		return after;
 	}
 	

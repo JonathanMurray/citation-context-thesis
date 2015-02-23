@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import util.IntegerMap;
+import util.Texts;
 
 
 public class ContextDataSet {
@@ -25,8 +28,8 @@ public class ContextDataSet {
 	public Set<String> lexicalHooks;
 
 	public ContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
-		this.citedMainAuthor = citedMainAuthor.toLowerCase();
-		this.citedTitle = citedTitle.toLowerCase();
+		this.citedMainAuthor = citedMainAuthor;
+		this.citedTitle = citedTitle;
 		this.citers = citers;
 		setup();
 	}
@@ -74,7 +77,7 @@ public class ContextDataSet {
 					Matcher m = regex.matcher(vicinityOfAuthor);
 					while(m.find()){
 						String match = m.group();
-						match = match.replaceAll("[,\\[\\]\\(\\)]", "").trim().toLowerCase();
+						match = match.replaceAll("[,\\[\\]\\(\\)]", "").trim();
 						matches.add(match);
 					}
 				}
@@ -124,14 +127,13 @@ public class ContextDataSet {
 //		return wordCounts;
 //	}
 	
-//	IncrementableMap<String> getNgrams(int n, Stream<Sentence> sentences){
-//		if(n < 2){
-//			throw new IllegalArgumentException("use unigrams()");
-//		} 
-//		List<String> words = words(sentences).collect(Collectors.toList());
+//	IntegerMap<String> getNGrams(int n, Sentence sentence){
+//		List<String> words = Arrays.asList(sentence.text.split(" +")).stream()
+//				.map(s -> s.toLowerCase())
+//				.collect(Collectors.toCollection(ArrayList::new));
 //		List<String> stopwords = readStopwords();
-//		stopwords.add(NGrams.NUMBER);
-//		IncrementableMap<String> ngramCounts = new IncrementableMap<String>();
+//		stopwords.add(Texts.NUMBER_TAG);
+//		IntegerMap<String> ngramCounts = new IntegerMap<String>();
 //		for(int i = n - 1; i < words.size(); i++){
 //			List<String> ngramWords = words.subList(i - n + 1, i + 1);
 //			boolean ngramContainsStopword = ngramWords.stream()
@@ -144,6 +146,29 @@ public class ContextDataSet {
 //		}
 //		return ngramCounts;
 //	}
+	
+	IntegerMap<String> getNgrams(int n, Stream<Sentence> sentences){
+		if(n < 2){
+			throw new IllegalArgumentException("use unigrams()");
+		} 
+		List<String> words = sentences.flatMap(s -> Arrays.asList(s.text.split(" +")).stream())
+				.map(s -> s.toLowerCase())
+				.collect(Collectors.toCollection(ArrayList::new));
+		List<String> stopwords = readStopwords();
+		stopwords.add(Texts.NUMBER_TAG);
+		IntegerMap<String> ngramCounts = new IntegerMap<String>();
+		for(int i = n - 1; i < words.size(); i++){
+			List<String> ngramWords = words.subList(i - n + 1, i + 1);
+			boolean ngramContainsStopword = ngramWords.stream()
+					.anyMatch(stopwords::contains);
+			if(!ngramContainsStopword){
+				Optional<String> ngram = ngramWords.stream()
+						.reduce((s1,s2) -> s1 + " " + s2);
+				ngramCounts.increment(ngram.get(), 1);
+			}
+		}
+		return ngramCounts;
+	}
 //	
 //	IncrementableMap<String> getBigramsInImplicitReferences(){
 //		return getNgrams(2, implicitReferences());
@@ -195,7 +220,7 @@ public class ContextDataSet {
 				for(Sentence sentence : citer.sentences.subList(0, 2)){
 					sentencesStr.append("{\n");
 					sentencesStr.append("\"type\": \"" + sentence.sentiment + "\",\n");
-					sentencesStr.append("\"text\": \"" + sentence.text.replace('\n', ' ') + "\"},\n");
+					sentencesStr.append("\"text\": \"" + sentence.text + "\"},\n");
 				}
 				citersStr.append(sentencesStr.substring(0, sentencesStr.length() - 2)); //get rid of last comma
 				citersStr.append("\n");

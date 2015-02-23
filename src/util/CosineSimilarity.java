@@ -33,6 +33,9 @@ public class CosineSimilarity {
 	 * @return the similarity measure
 	 */
 	public static Double calculateCosineSimilarity(HashMap<String, Double> firstFeatures, HashMap<String, Double> secondFeatures) {
+		if(firstFeatures.size() < 1 || secondFeatures.size() < 1){
+			throw new IllegalArgumentException("Empty feature vector"); //Added by Jonathan 23/2-2015
+		}
 		Double similarity = 0.0;
 		Double sum = 0.0;	// the numerator of the cosine similarity
 		Double fnorm = 0.0;	// the first part of the denominator of the cosine similarity

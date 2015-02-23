@@ -4,9 +4,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import sentenceFeaturesToWeka.Sentence;
 
 public class Texts {
 	
@@ -16,6 +20,7 @@ public class Texts {
 	private List<String> connectors;
 	private List<String> stopwords;
 	
+	public static final String NUMBER_TAG = "<NUMBER>";
 	public static final String HEADER_PATTERN = "\\d+\\.\\d+.*";
 	
 	private static Texts instance;
@@ -75,7 +80,7 @@ public class Texts {
 	}
 	
 	public boolean startsWithLimitedDet(String[] words){
-		return words[0].equals("this") || words[0].equals("such");
+		return words[0].equalsIgnoreCase("this") || words[0].toLowerCase().equalsIgnoreCase("such");
 	}
 	
 	public boolean startsWith3rdPersonPronoun(String[] words){
@@ -92,7 +97,7 @@ public class Texts {
 	}
 	
 	public boolean containsMainAuthor(String sentence, String mainAuthor){
-		return sentence.contains(mainAuthor.toLowerCase());
+		return sentence.contains(mainAuthor);
 	}
 	
 	public boolean containsAcronyms(String sentence, Set<String> acronyms){
@@ -100,25 +105,47 @@ public class Texts {
 	}
 	
 	public boolean containsLexicalHooks(String sentence, Set<String> lexicalHooks){
-		return lexicalHooks.stream().anyMatch(hook -> sentence.contains(hook));
+		return lexicalHooks.stream().anyMatch(hook -> sentence.contains(hook) || sentence.contains(hook.toLowerCase()));
 	}
 	
 	private boolean looseContains(List<String> list, String str){
-		str = str.toLowerCase();
+		
 		if(str.endsWith("s")){
 			str = str.substring(0, str.length() - 1);
 		}
-		return list.contains(str);
+		return list.contains(str) || list.contains(str.toLowerCase());
 	}
 	
 	public boolean containsExplicitReference(List<String> words, String mainAuthor){
 		int authorIndex = words.indexOf(mainAuthor);
 		if(authorIndex > -1){
-			List<String> vicinity = words.subList(authorIndex + 1, authorIndex + 5);
-			String year = "\\d\\d\\d\\d";
+			int start = Math.min(authorIndex+1, words.size()-1);
+			int end = Math.min(authorIndex+5, words.size());
+			List<String> vicinity = words.subList(start, end);
+//			String year = "\\d\\d\\d\\d";
+			String year = NUMBER_TAG;
 			return vicinity.stream().anyMatch(word -> word.matches(year));
 		}
 		return false;
 	}
 
+	public DoubleMap<String> getNGrams(int n, String sentence){
+		List<String> words = Arrays.asList(sentence.split(" +")).stream()
+				.map(s -> s.toLowerCase())
+				.collect(Collectors.toCollection(ArrayList::new));
+		List<String> stopwords = this.stopwords;
+		stopwords.add(Texts.NUMBER_TAG);
+		DoubleMap<String> ngramCounts = new DoubleMap<String>();
+		for(int i = n - 1; i < words.size(); i++){
+			List<String> ngramWords = words.subList(i - n + 1, i + 1);
+			boolean ngramContainsStopword = ngramWords.stream()
+					.anyMatch(stopwords::contains);
+			if(!ngramContainsStopword){
+				Optional<String> ngram = ngramWords.stream()
+						.reduce((s1,s2) -> s1 + " " + s2);
+				ngramCounts.increment(ngram.get(), 1.0);
+			}
+		}
+		return ngramCounts;
+	}
 }
