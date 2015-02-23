@@ -36,19 +36,7 @@ public class Main {
 		
 		String citedAbstract = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements. Only a lexicon and some unlabeled training text are required. Accuracy exceeds 96%. We describe implementation strategies and optimizations which result in high-speed operation. Three applications for tagging are described: phrase recognition; word sense disambiguation; and grammatical function assignment.";
 		
-		System.out.println("\n");
-		
-		Citer citer = dataset.citers.get(26);
-		
-		List<String> sentences = citer.sentences.stream().sequential()
-				.map(s -> s.text)
-				.collect(Collectors.toCollection(ArrayList::new));
-		
-		List<SentenceType> sentenceTypes = citer.sentences.stream().sequential()
-				.map(s -> s.type)
-				.collect(Collectors.toCollection(ArrayList::new));
-		
-		new Main().go(sentences, sentenceTypes, dataset.citedMainAuthor, citedAbstract, dataset);
+		new Main().goMany(dataset.citers, dataset.citedMainAuthor, citedAbstract, dataset);
 	}
 	
 	static final int NO = 0;
@@ -62,6 +50,78 @@ public class Main {
 	List<double[]> beliefs;
 	List<Map<Integer,double[]>> allReceivedMessages;
 	int neighbourhood = 4;
+	
+	public void goMany(List<Citer> citers, String mainAuthor, String referencedText, ContextDataSet dataset){
+		Result result = new Result(0,0,0);
+		for(Citer citer : citers){
+			result.add(go(citer, mainAuthor, referencedText, dataset));
+		}
+		printResults(result);
+	}
+	
+	private void printResults(Result result){
+		System.out.println("precision: " + result.truePositives + "/" + (result.truePositives+result.falsePositives));
+		System.out.println("recall: " + result.truePositives + "/" + result.total);
+	}
+	
+	public Result go(Citer citer, String mainAuthor, String referencedText, ContextDataSet dataset){
+		List<String> sentences = citer.sentences.stream().sequential()
+				.map(s -> s.text)
+				.collect(Collectors.toCollection(ArrayList::new));
+		
+		List<SentenceType> sentenceTypes = citer.sentences.stream().sequential()
+				.map(s -> s.type)
+				.collect(Collectors.toCollection(ArrayList::new));
+		
+		return go(sentences, sentenceTypes, dataset.citedMainAuthor, referencedText, dataset);
+	}
+	
+	/**
+	 * This must be sentences from one single paper, and the ordering is critical.
+	 * @param sentenceTexts
+	 * @param mainAuthor
+	 */
+	public Result go(List<String> sentenceTexts, List<SentenceType> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
+		this.sentenceTexts = sentenceTexts;
+		this.sentenceTypes = sentenceTypes;
+		sentenceVectors = new ArrayList<HashMap<String,Double>>();
+		bigramVectors = new ArrayList<HashMap<String,Double>>();
+		beliefs = new ArrayList<double[]>();
+		numSentences = sentenceTexts.size();
+		
+		setup(mainAuthor, referencedText, dataset);
+		initMessages();
+		
+		for(int i = 0; i < 5; i++){
+			oneLoop();	
+		}
+		
+		return getResults();
+	}
+	
+	private Result getResults(){
+		int truePos = 0;
+		int falsePos = 0;
+		int pos = 0;
+		
+		for(int i = 0; i < numSentences; i++){
+			double[] belief = finalBelief(i);
+			double[] selfBelief = beliefs.get(i);
+//			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(selfBelief) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
+			if(sentenceTypes.get(i) != SentenceType.NOT_REFERENCE){
+				pos ++;
+			}
+			if(belief[1] > 0.65){
+				if(sentenceTypes.get(i) == SentenceType.NOT_REFERENCE){
+					falsePos ++;
+				}else{
+					truePos ++;
+				}
+			}
+		}
+		
+		return new Result(truePos, falsePos, pos);
+	}
 	
 	private void setup(String mainAuthor, String referencedText, ContextDataSet dataset){
 		List<Double> unnormalizedBeliefs = new ArrayList<Double>();
@@ -94,55 +154,6 @@ public class Main {
 //			System.out.println("belief: " + normalized);
 			beliefs.add(new double[]{1 - normalized, normalized});
 		}
-	}
-	
-	
-	/**
-	 * This must be sentences from one single paper, and the ordering is critical.
-	 * @param sentenceTexts
-	 * @param mainAuthor
-	 */
-	public void go(List<String> sentenceTexts, List<SentenceType> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
-		this.sentenceTexts = sentenceTexts;
-		this.sentenceTypes = sentenceTypes;
-		sentenceVectors = new ArrayList<HashMap<String,Double>>();
-		bigramVectors = new ArrayList<HashMap<String,Double>>();
-		beliefs = new ArrayList<double[]>();
-		numSentences = sentenceVectors.size();
-		
-		setup(mainAuthor, referencedText, dataset);
-		initMessages();
-		
-		for(int i = 0; i < 5; i++){
-			oneLoop();	
-		}
-		
-		printResults();
-	}
-	
-	private void printResults(){
-		int truePos = 0;
-		int falsePos = 0;
-		int pos = 0;
-		
-		for(int i = 0; i < numSentences; i++){
-			double[] belief = finalBelief(i);
-			double[] selfBelief = beliefs.get(i);
-			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(selfBelief) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
-			if(sentenceTypes.get(i) != SentenceType.NOT_REFERENCE){
-				pos ++;
-			}
-			if(belief[1] > 0.65){
-				if(sentenceTypes.get(i) == SentenceType.NOT_REFERENCE){
-					falsePos ++;
-				}else{
-					truePos ++;
-				}
-			}
-		}
-		
-		System.out.println("precision: " + truePos + "/" + (truePos+falsePos));
-		System.out.println("recall: " + truePos + "/" + pos);
 	}
 	
 	String beliefToString(double[] belief){
@@ -211,7 +222,6 @@ public class Main {
 	}
 	
 	private void oneLoop(){
-		System.out.println("loop.");
 		for(int from = 0; from < numSentences; from++){
 			double[] belief = beliefs.get(from);
 			Map<Integer, double[]> receivedMessages = allReceivedMessages.get(from);
@@ -335,6 +345,24 @@ public class Main {
 		return 4 * ((Texts.instance().containsDetWork(words)? 1:0)
 			+ (Texts.instance().startsWith3rdPersonPronoun(words)? 1:0)
 			+ (Texts.instance().startsWithConnector(words)? 1:0));
+	}
+	
+	private static class Result{
+		private int truePositives;
+		private int falsePositives;
+		private int total;
+		
+		public Result(int truePositives, int falsePositives, int total){
+			this.truePositives = truePositives;
+			this.falsePositives = falsePositives;
+			this.total = total;
+		}
+		
+		public void add(Result other){
+			truePositives += other.truePositives;
+			falsePositives += other.falsePositives;
+			total += other.total;
+		}
 	}
 	
 }
