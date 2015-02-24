@@ -36,7 +36,7 @@ public class Main {
 		
 		String citedAbstract = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements. Only a lexicon and some unlabeled training text are required. Accuracy exceeds 96%. We describe implementation strategies and optimizations which result in high-speed operation. Three applications for tagging are described: phrase recognition; word sense disambiguation; and grammatical function assignment.";
 		
-		new Main().goMany(dataset.citers, dataset.citedMainAuthor, citedAbstract, dataset);
+		new Main().runManyAndPrintResults(dataset.citers, dataset.citedMainAuthor, citedAbstract, dataset);
 	}
 	
 	static final int NO = 0;
@@ -51,10 +51,10 @@ public class Main {
 	List<Map<Integer,double[]>> allReceivedMessages;
 	int neighbourhood = 4;
 	
-	public void goMany(List<Citer> citers, String mainAuthor, String referencedText, ContextDataSet dataset){
+	public void runManyAndPrintResults(List<Citer> citers, String mainAuthor, String referencedText, ContextDataSet dataset){
 		Result result = new Result(0,0,0);
 		for(Citer citer : citers){
-			result.add(go(citer, mainAuthor, referencedText, dataset));
+			result.add(run(citer, mainAuthor, referencedText, dataset));
 		}
 		printResults(result);
 	}
@@ -72,7 +72,10 @@ public class Main {
 		return (1+Math.pow(beta, 2)) * (precision*recall)/(Math.pow(beta, 2)*precision + recall);
 	}
 	
-	public Result go(Citer citer, String mainAuthor, String referencedText, ContextDataSet dataset){
+	public Result run(Citer citer, String mainAuthor, String referencedText, ContextDataSet dataset){
+		
+		System.out.println("run - citer: " + citer.title + "...");
+		
 		List<String> sentences = citer.sentences.stream().sequential()
 				.map(s -> s.text)
 				.collect(Collectors.toCollection(ArrayList::new));
@@ -81,7 +84,7 @@ public class Main {
 				.map(s -> s.type)
 				.collect(Collectors.toCollection(ArrayList::new));
 		
-		return go(sentences, sentenceTypes, dataset.citedMainAuthor, referencedText, dataset);
+		return run(sentences, sentenceTypes, dataset.citedMainAuthor, referencedText, dataset);
 	}
 	
 	/**
@@ -89,7 +92,7 @@ public class Main {
 	 * @param sentenceTexts
 	 * @param mainAuthor
 	 */
-	public Result go(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
+	public Result run(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
 		this.sentenceTexts = sentenceTexts;
 		this.sentenceTypes = sentenceTypes;
 		sentenceVectors = new ArrayList<HashMap<String,Double>>();
@@ -107,30 +110,6 @@ public class Main {
 		return getResults();
 	}
 	
-	private Result getResults(){
-		int truePos = 0;
-		int falsePos = 0;
-		int pos = 0;
-		
-		for(int i = 0; i < numSentences; i++){
-			double[] belief = finalBelief(i);
-			double[] selfBelief = beliefs.get(i);
-//			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(selfBelief) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
-			if(sentenceTypes.get(i) != SentenceClass.NOT_REFERENCE){
-				pos ++;
-			}
-			if(belief[1] > 0.65){
-				if(sentenceTypes.get(i) == SentenceClass.NOT_REFERENCE){
-					falsePos ++;
-				}else{
-					truePos ++;
-				}
-			}
-		}
-		
-		return new Result(truePos, falsePos, pos);
-	}
-	
 	private void setup(String mainAuthor, String referencedText, ContextDataSet dataset){
 		List<Double> unnormalizedBeliefs = new ArrayList<Double>();
 		
@@ -143,9 +122,6 @@ public class Main {
 		
 		double maxBelief = unnormalizedBeliefs.stream().max(Double::compareTo).get();
 		double minBelief = unnormalizedBeliefs.stream().min(Double::compareTo).get();
-		
-		System.out.println("max " + maxBelief);
-		System.out.println("min " + minBelief);
 		
 		for(double unnormalizedBelief : unnormalizedBeliefs){
 			double normalized;
@@ -164,9 +140,17 @@ public class Main {
 		}
 	}
 	
-	String beliefToString(double[] belief){
-		NumberFormat formatter = new DecimalFormat("#0.00");     
-		return formatter.format(belief[1]);
+	private static HashMap<String, Double> sentenceToWordVec(Sentence sentence){
+		return textToWordVec(sentence.text);
+	}
+	
+	private static HashMap<String, Double> textToWordVec(String sentence){
+		List<String> words = Texts.instance().removeStopwords(sentence.split(" +"));
+		DoubleMap<String> wordVector = new DoubleMap<String>();
+		words.stream().forEach(word -> {
+			wordVector.increment(stem(word.toLowerCase()), 1.0);
+		});
+		return wordVector;
 	}
 	
 	private static double selfBelief(String sentence, HashMap<String,Double> sentenceVector, String mainAuthor, HashMap<String,Double> referencedText, ContextDataSet dataset){
@@ -184,17 +168,42 @@ public class Main {
 		return 0.01 + explicit + detWork + det + cosSim + acronyms + hooks; //TODO mult. cossim
 	}
 	
-	private static HashMap<String, Double> sentenceToWordVec(Sentence sentence){
-		return textToWordVec(sentence.text);
+	private Result getResults(){
+		int truePos = 0;
+		int falsePos = 0;
+		int pos = 0;
+		
+		for(int i = 0; i < numSentences; i++){
+			double[] belief = finalBelief(i);
+//			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(selfBelief) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
+			if(sentenceTypes.get(i) != SentenceClass.NOT_REFERENCE){
+				pos ++;
+			}
+			if(belief[1] > 0.65){
+				if(sentenceTypes.get(i) == SentenceClass.NOT_REFERENCE){
+					falsePos ++;
+				}else{
+					truePos ++;
+				}
+			}
+		}
+		
+		return new Result(truePos, falsePos, pos);
 	}
 	
-	private static HashMap<String, Double> textToWordVec(String sentence){
-		List<String> words = Texts.instance().removeStopwords(sentence.split(" +"));
-		DoubleMap<String> wordVector = new DoubleMap<String>();
-		words.stream().forEach(word -> {
-			wordVector.increment(stem(word.toLowerCase()), 1.0);
-		});
-		return wordVector;
+	private double[] finalBelief(int sentence){
+		double[] productReceived = productOfValues(allReceivedMessages.get(sentence));
+		double[] belief = beliefs.get(sentence);
+		double[] totalBeliefAboutSelf = new double[]{
+				belief[NO] * productReceived[NO], 
+				belief[YES] * productReceived[YES]};
+		normalizeProbabilityVector(totalBeliefAboutSelf);
+		return totalBeliefAboutSelf;
+	}
+	
+	String beliefToString(double[] belief){
+		NumberFormat formatter = new DecimalFormat("#0.00");     
+		return formatter.format(belief[1]);
 	}
 	
 	private static String stem(String word){
@@ -203,8 +212,6 @@ public class Main {
 		s.stem();
 		return s.toString();
 	}
-	
-	
 	
 	private void initMessages(){
 		allReceivedMessages = new ArrayList<Map<Integer,double[]>>();
@@ -219,16 +226,6 @@ public class Main {
 		}
 	}
 	
-	private double[] finalBelief(int sentence){
-		double[] productReceived = productOfValues(allReceivedMessages.get(sentence));
-		double[] belief = beliefs.get(sentence);
-		double[] totalBeliefAboutSelf = new double[]{
-				belief[NO] * productReceived[NO], 
-				belief[YES] * productReceived[YES]};
-		normalizeProbabilityVector(totalBeliefAboutSelf);
-		return totalBeliefAboutSelf;
-	}
-	
 	private void oneLoop(){
 		for(int from = 0; from < numSentences; from++){
 			double[] belief = beliefs.get(from);
@@ -240,7 +237,6 @@ public class Main {
 					sendMessage(from, to, receivedMessages, belief);
 				}
 			}
-//			received.clear(); //Clear all messages. They will fill up before next time
 		}
 	}
 	
@@ -303,20 +299,14 @@ public class Main {
 		return prod;
 	}
 	
-	
-	//TODO Change the way sentences are compared,
-	//Maybe look for det+work in the later sentence?
-	//Problem: We don't know how far away they are from eachother
 	private double[] compatibility(int context1, int s1, int s2){
 
 		if(context1 == NO){
 			return new double[]{0.5, 0.5};
 		}
 		double relatedness = relatedness(s1, s2);
-//		System.out.println("sim(   " + s1 + "   ,   " + s2 + "   ==   " + cosSimilarity);
 		double probContext = 1 / (1 + Math.exp( - relatedness)); 
 		return new double[]{1 - probContext, probContext};
-//		return context2 == YES? probContext : 1 - probContext;
 	}
 	
 	private double relatedness(int s1, int s2){
