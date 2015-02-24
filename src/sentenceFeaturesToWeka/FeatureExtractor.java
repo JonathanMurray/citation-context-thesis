@@ -35,8 +35,8 @@ public class FeatureExtractor {
 			}
 		});
 		writer.write("@ATTRIBUTE class {" + 
-				SentenceType.IMPLICIT_REFERENCE + "," + 
-				SentenceType.NOT_REFERENCE + "}\n");
+				SentenceClass.IMPLICIT_REFERENCE + "," + 
+				SentenceClass.NOT_REFERENCE + "}\n");
 		writer.write("@DATA\n");
 		instances.forEach(instance -> {
 			instance.features.entrySet().stream()
@@ -63,7 +63,7 @@ public class FeatureExtractor {
 				Sentence sentence = citer.sentences.get(i);
 				Sentence next = i < citer.sentences.size() - 1? citer.sentences.get(i+1) : null;
 				Map<String, Comparable> features = extractFeatures(previous, sentence, next, dataset, ngrams);
-				if(sentence.type == SentenceType.EXPLICIT_REFERENCE){
+				if(sentence.type == SentenceClass.EXPLICIT_REFERENCE){
 					continue; //Excluded
 				}
 				instances.add(new Instance(features, sentence.type));

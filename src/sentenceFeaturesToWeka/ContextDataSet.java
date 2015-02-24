@@ -89,13 +89,13 @@ public class ContextDataSet {
 	private Stream<Sentence> explicitReferences(){
 		return citers.stream()
 				.flatMap(c -> c.sentences.stream())
-				.filter(s -> s.type == SentenceType.EXPLICIT_REFERENCE);
+				.filter(s -> s.type == SentenceClass.EXPLICIT_REFERENCE);
 	}
 	
 	private Stream<Sentence> implicitReferences(){
 		return citers.stream()
 				.flatMap(c -> c.sentences.stream())
-				.filter(s -> s.type == SentenceType.IMPLICIT_REFERENCE);
+				.filter(s -> s.type == SentenceClass.IMPLICIT_REFERENCE);
 	}
 	
 	private Stream<Sentence> sentences(){
@@ -106,7 +106,7 @@ public class ContextDataSet {
 	private Stream<Sentence> nonReferences(){
 		return citers.stream()
 				.flatMap(c -> c.sentences.stream())
-				.filter(s -> s.type == SentenceType.NOT_REFERENCE);
+				.filter(s -> s.type == SentenceClass.NOT_REFERENCE);
 	}
 	
 //	

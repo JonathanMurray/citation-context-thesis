@@ -70,8 +70,8 @@ public class Main {
 			.flatMap(dataset -> extractor.createInstances(dataset, ngrams).stream())
 			.collect(Collectors.toCollection(ArrayList::new));
 		instances = Stream.concat(
-				instances.stream().filter(i -> i.instanceClass == SentenceType.NOT_REFERENCE).limit(10000),
-				instances.stream().filter(i -> i.instanceClass == SentenceType.IMPLICIT_REFERENCE)
+				instances.stream().filter(i -> i.instanceClass == SentenceClass.NOT_REFERENCE).limit(10000),
+				instances.stream().filter(i -> i.instanceClass == SentenceClass.IMPLICIT_REFERENCE)
 		).collect(Collectors.toList());
 		
 		

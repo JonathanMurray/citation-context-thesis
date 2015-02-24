@@ -14,7 +14,7 @@ import sentenceFeaturesToWeka.Citer;
 import sentenceFeaturesToWeka.ContextDataSet;
 import sentenceFeaturesToWeka.ContextHTML_Parser;
 import sentenceFeaturesToWeka.Sentence;
-import sentenceFeaturesToWeka.SentenceType;
+import sentenceFeaturesToWeka.SentenceClass;
 import util.CosineSimilarity;
 import util.DoubleMap;
 import util.Stemmer;
@@ -46,7 +46,7 @@ public class Main {
 	List<HashMap<String,Double>> sentenceVectors;
 	List<HashMap<String,Double>> bigramVectors;
 	List<String> sentenceTexts;
-	List<SentenceType> sentenceTypes;
+	List<SentenceClass> sentenceTypes;
 	List<double[]> beliefs;
 	List<Map<Integer,double[]>> allReceivedMessages;
 	int neighbourhood = 4;
@@ -62,6 +62,14 @@ public class Main {
 	private void printResults(Result result){
 		System.out.println("precision: " + result.truePositives + "/" + (result.truePositives+result.falsePositives));
 		System.out.println("recall: " + result.truePositives + "/" + result.total);
+		double precision = result.truePositives / (double)(result.truePositives + result.falsePositives);
+		double recall = result.truePositives / (double)result.total;
+		System.out.println("F-score: " + fMeasure(precision, recall, 1));
+		System.out.println("F3: " + fMeasure(precision, recall, 3));
+	}
+	
+	private double fMeasure(double precision, double recall, double beta){
+		return (1+Math.pow(beta, 2)) * (precision*recall)/(Math.pow(beta, 2)*precision + recall);
 	}
 	
 	public Result go(Citer citer, String mainAuthor, String referencedText, ContextDataSet dataset){
@@ -69,7 +77,7 @@ public class Main {
 				.map(s -> s.text)
 				.collect(Collectors.toCollection(ArrayList::new));
 		
-		List<SentenceType> sentenceTypes = citer.sentences.stream().sequential()
+		List<SentenceClass> sentenceTypes = citer.sentences.stream().sequential()
 				.map(s -> s.type)
 				.collect(Collectors.toCollection(ArrayList::new));
 		
@@ -81,7 +89,7 @@ public class Main {
 	 * @param sentenceTexts
 	 * @param mainAuthor
 	 */
-	public Result go(List<String> sentenceTexts, List<SentenceType> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
+	public Result go(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
 		this.sentenceTexts = sentenceTexts;
 		this.sentenceTypes = sentenceTypes;
 		sentenceVectors = new ArrayList<HashMap<String,Double>>();
@@ -108,11 +116,11 @@ public class Main {
 			double[] belief = finalBelief(i);
 			double[] selfBelief = beliefs.get(i);
 //			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(selfBelief) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
-			if(sentenceTypes.get(i) != SentenceType.NOT_REFERENCE){
+			if(sentenceTypes.get(i) != SentenceClass.NOT_REFERENCE){
 				pos ++;
 			}
 			if(belief[1] > 0.65){
-				if(sentenceTypes.get(i) == SentenceType.NOT_REFERENCE){
+				if(sentenceTypes.get(i) == SentenceClass.NOT_REFERENCE){
 					falsePos ++;
 				}else{
 					truePos ++;

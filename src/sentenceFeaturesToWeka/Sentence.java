@@ -5,7 +5,7 @@ import util.Texts;
 public class Sentence {
 	public String sentiment;
 	public String text;
-	public SentenceType type;
+	public SentenceClass type;
 	
 	public Sentence(String sentiment, String text){
 		this.sentiment = sentiment;
@@ -13,7 +13,7 @@ public class Sentence {
 		this.type = typeFromSentiment(sentiment);
 	}
 	
-	public Sentence(SentenceType type, String text){
+	public Sentence(SentenceClass type, String text){
 		this.type = type;
 		this.text = clean(text);
 	}
@@ -27,15 +27,15 @@ public class Sentence {
 		return after;
 	}
 	
-	private SentenceType typeFromSentiment(String sentiment){
+	private SentenceClass typeFromSentiment(String sentiment){
 		if(sentiment.equals("x") || sentiment.equals("xc")){ //there are some xc, I'm not sure why
-			return SentenceType.NOT_REFERENCE;
+			return SentenceClass.NOT_REFERENCE;
 		}
 		if(sentiment.equals("oc") || sentiment.equals("pc") || sentiment.equals("nc")){
-			return SentenceType.EXPLICIT_REFERENCE;
+			return SentenceClass.EXPLICIT_REFERENCE;
 		}
 		if(sentiment.equals("o") || sentiment.equals("p") || sentiment.equals("n")){
-			return SentenceType.IMPLICIT_REFERENCE;
+			return SentenceClass.IMPLICIT_REFERENCE;
 		}
 		throw new RuntimeException("unknown AZ: " + sentiment);
 	}
