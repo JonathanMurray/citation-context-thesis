@@ -1,4 +1,4 @@
-package sentenceFeaturesToWeka;
+package citationContextData;
 
 import java.util.List;
 

@@ -2,7 +2,9 @@ package sentenceFeaturesToWeka;
 
 import java.util.Map;
 
-public class Instance{
+import citationContextData.SentenceClass;
+
+class Instance{
 	Map<String, Comparable> features;
 	SentenceClass instanceClass;
 	

@@ -7,12 +7,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import old.NGrams;
 import util.NonThrowingFileWriter;
 import util.Texts;
+import citationContextData.Citer;
+import citationContextData.ContextDataSet;
+import citationContextData.Sentence;
+import citationContextData.SentenceClass;
 
 
-public class FeatureExtractor {
+class FeatureExtractor {
 	
 	public FeatureExtractor(){
 
@@ -55,14 +58,14 @@ public class FeatureExtractor {
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	public List<Instance> createInstances(ContextDataSet dataset, NGrams ngrams){
+	public List<Instance> createInstances(ContextDataSet dataset){
 		List<Instance> instances = new ArrayList<Instance>();
 		for(Citer citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
 				Sentence previous = i > 0 ? citer.sentences.get(i-1) : null;
 				Sentence sentence = citer.sentences.get(i);
 				Sentence next = i < citer.sentences.size() - 1? citer.sentences.get(i+1) : null;
-				Map<String, Comparable> features = extractFeatures(previous, sentence, next, dataset, ngrams);
+				Map<String, Comparable> features = extractFeatures(previous, sentence, next, dataset);
 				if(sentence.type == SentenceClass.EXPLICIT_REFERENCE){
 					continue; //Excluded
 				}
@@ -74,7 +77,7 @@ public class FeatureExtractor {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, ContextDataSet dataset, NGrams ngrams){
+	private Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, ContextDataSet dataset){
 		Texts texts = Texts.instance();
 		Map<String, Comparable> features = new HashMap<String, Comparable>();
 		String[] words = sentence.text.split(" ");

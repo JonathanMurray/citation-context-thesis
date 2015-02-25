@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import sentenceFeaturesToWeka.Citer;
-import sentenceFeaturesToWeka.ContextDataSet;
-import sentenceFeaturesToWeka.ContextHTML_Parser;
-import sentenceFeaturesToWeka.Sentence;
-import sentenceFeaturesToWeka.SentenceClass;
+import citationContextData.Citer;
+import citationContextData.ContextDataSet;
+import citationContextData.ContextHTML_Parser;
+import citationContextData.Sentence;
+import citationContextData.SentenceClass;
 import util.CosineSimilarity;
 import util.DoubleMap;
 import util.Stemmer;
 import util.Texts;
 
 
-public class Main {
+class Main {
 	
 	public static final String dataDir = "/home/jonathan/Documents/exjobb/data/";
 	public static final String CFC_Dir = dataDir + "CFC_distribution/2006_paper_training/";
@@ -29,7 +29,7 @@ public class Main {
 	
 	
 	public static void main(String[] args) {
-		ContextDataSet dataset = new ContextHTML_Parser().readJsoup(Paths.get(sentimentCorpusDir + "A92-1018.html").toFile());
+		ContextDataSet dataset = new ContextHTML_Parser().parseHTML(Paths.get(sentimentCorpusDir + "A92-1018.html").toFile());
 		
 		System.out.println(dataset.citedTitle);
 		System.out.println("main author: " + dataset.citedMainAuthor);

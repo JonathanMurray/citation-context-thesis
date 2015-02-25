@@ -1,4 +1,4 @@
-package sentenceFeaturesToWeka;
+package citationContextData;
 
 public enum SentenceClass {
 	EXPLICIT_REFERENCE,

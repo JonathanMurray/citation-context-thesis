@@ -1,15 +1,17 @@
-package sentenceFeaturesToWeka;
+package citationContextData;
 
 import util.Texts;
 
 public class Sentence {
 	public String sentiment;
 	public String text;
+	public String unprocessedText;
 	public SentenceClass type;
 	
 	public Sentence(String sentiment, String text){
 		this.sentiment = sentiment;
 		this.text = clean(text);
+		this.unprocessedText = text;
 		this.type = typeFromSentiment(sentiment);
 	}
 	

@@ -1,4 +1,4 @@
-package sentenceFeaturesToWeka;
+package citationContextData;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,12 +24,12 @@ public class ContextHTML_Parser {
 	public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
 		ContextHTML_Parser parser = new ContextHTML_Parser();
 		File f = Paths.get(corpusDir + "A92-1018.html").toFile();
-		parser.readJsoup(f).writeToJson(Paths.get("test.json").toFile());
+		parser.parseHTML(f).writeToJson(Paths.get("test.json").toFile());
 	}
 	
 	
 	
-	public ContextDataSet readJsoup(File file){
+	public ContextDataSet parseHTML(File file){
 		Document doc;
 		try {
 			doc = Jsoup.parse(file, null);
