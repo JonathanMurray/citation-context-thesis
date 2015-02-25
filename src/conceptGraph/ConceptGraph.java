@@ -1,5 +1,7 @@
 package conceptGraph;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,19 +12,16 @@ public class ConceptGraph {
 		ConcurrentHashMap<String, List<String>> links = GraphCreator.loadLinksFromFile("conceptGraphLower.ser");
 		ConceptGraph graph = new ConceptGraph(links);
 		Scanner sc = new Scanner(System.in);
-		System.out.println("Enter 2 phrases to compare: ");
+		System.out.println("Enter 2 sentences to compare: ");
 		while(true){
 			System.out.println("Enter first: ");
-			String w1 = sc.nextLine();
-			if(w1.equals("bye")){
+			String[] s1 = sc.nextLine().split("\\s+");
+			if(s1.length > 0 && s1[0].equals("bye")){
 				break;
 			}
 			System.out.println("Enter second: ");
-			String w2 = sc.nextLine();
-			System.out.println(w1 + ": " + links.get(w1));
-			System.out.println(w2 + ": " + links.get(w2));
-			System.out.println(graph.similarity(w1, w2));
-			
+			String[] s2 = sc.nextLine().split("\\s+");
+			System.out.println(graph.similarity(s1, s2));
 		}
 		sc.close();
 	}
@@ -33,6 +32,61 @@ public class ConceptGraph {
 	public ConceptGraph(ConcurrentHashMap<String, List<String>> links){
 		this.links = links;
 	}
+	
+	public double similarity(String[] sentence1, String[] sentence2){
+		HashMap<Concept, Double> vec1 = sentenceToVec(sentence1);
+		HashMap<Concept, Double> vec2 = sentenceToVec(sentence2);
+		System.out.println(vec1);
+		System.out.println(vec2);
+		
+		if(vec1.size() > 0 && vec2.size() > 0){
+			return similarity(vec1, vec2);
+		}
+		return 0;
+	}
+	
+	private double similarity(HashMap<Concept, Double> vector1, HashMap<Concept, Double> vector2){
+		double sum = 0;
+		for(Concept c1 : vector1.keySet()){
+			for(Concept c2 : vector2.keySet()){
+				if(c1.related(c2)){
+					sum += 1.0;
+				}
+			}
+		}
+		return sum / (double)vector1.size() / (double)vector2.size();
+	}
+	
+	private boolean containsRelatedKey(HashMap<Concept, Double> map, Concept concept){
+		for(Concept other : map.keySet()){
+			if(concept.related(other)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private HashMap<Concept, Double> sentenceToVec(String[] sentence){
+		HashMap<Concept, Double> vec = new HashMap<Concept, Double>();
+		for(int i = 0; i < sentence.length; i++){
+			vec.put(phraseToConcept(sentence[i]), 1.0);
+			if(i < sentence.length - 1){
+				String bigram = sentence[i] + " " + sentence[i+1];
+				vec.put(phraseToConcept(bigram), 1.0);
+			}
+		}
+		return vec;
+	}
+	
+	private Concept phraseToConcept(String phrase){
+		HashSet<String> related = new HashSet<String>();
+		related.add(phrase);
+		if(links.containsKey(phrase)){
+			related.addAll(links.get(phrase));
+		}
+		return new Concept(related); 
+	}
+	
 	
 	private double similarity(String phrase1, String phrase2){
 		
@@ -101,21 +155,26 @@ public class ConceptGraph {
 		return Math.sqrt(sim) / Math.sqrt(otherPhrases.size());
 	}
 	
-//	private static class Concept{
-//		HashSet<String> words;
-//		Concept(HashSet<String> words){
-//			this.words = words;
-//		}
-//		@Override
-//		public boolean equals(Object other){
-//			if(other instanceof Concept){
-//				for(String word : words){
-//					if(((Concept)other).words.contains(word)){
-//						return true;
-//					}
-//				}
-//			}
-//			return false;
-//		}
-//	}
+	private static class Concept{
+		
+		HashSet<String> words;
+		
+		Concept(HashSet<String> words){
+			this.words = words;
+		}
+		
+		public boolean related(Concept other){
+			for(String word : words){
+				if(((Concept)other).words.contains(word)){
+					return true;
+				}
+			}
+			return false;
+		}
+		
+	
+		public String toString(){
+			return words.toString();
+		}
+	}
 }
