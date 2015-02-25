@@ -33,7 +33,7 @@ public class CosineSimilarity {
 	 * @param secondFeatures The feature vector of the second cluster 
 	 * @return the similarity measure
 	 */
-	public static <Key> Double calculateCosineSimilarity(HashMap<Key, Double> firstFeatures, HashMap<String, Double> secondFeatures) {
+	public static <K> Double calculateCosineSimilarity(HashMap<K, Double> firstFeatures, HashMap<K, Double> secondFeatures) {
 		if(firstFeatures.size() < 1 || secondFeatures.size() < 1){
 			throw new IllegalArgumentException("Empty feature vector"); //Added by Jonathan 23/2-2015
 		}
@@ -41,10 +41,10 @@ public class CosineSimilarity {
 		Double sum = 0.0;	// the numerator of the cosine similarity
 		Double fnorm = 0.0;	// the first part of the denominator of the cosine similarity
 		Double snorm = 0.0;	// the second part of the denominator of the cosine similarity
-		Set<Key> fkeys = firstFeatures.keySet();
-		Iterator<Key> fit = fkeys.iterator();
+		Set<K> fkeys = firstFeatures.keySet();
+		Iterator<K> fit = fkeys.iterator();
 		while (fit.hasNext()) {
-			Key featurename = fit.next();
+			K featurename = fit.next();
 			boolean containKey = secondFeatures.containsKey(featurename);
 			if (containKey) {
 				sum = sum + firstFeatures.get(featurename) * secondFeatures.get(featurename);
@@ -52,6 +52,9 @@ public class CosineSimilarity {
 		}
 		fnorm = calculateNorm(firstFeatures);
 		snorm = calculateNorm(secondFeatures);
+		System.out.println("sum: " + sum);
+		System.out.println("fnorm: " + fnorm);
+		System.out.println("snorm: " + snorm);
 		similarity = sum / (fnorm * snorm);
 		return similarity;
 	}
