@@ -17,11 +17,7 @@ import citationContextData.SentenceClass;
 
 class FeatureExtractor {
 	
-	public FeatureExtractor(){
-
-	}
-	
-	public void writeInstancesToFile(List<Instance> instances, Path path){
+	public static void writeInstancesToFile(List<Instance> instances, Path path){
 		
 		System.out.println("writeInstanceToFile - " + path + " ...");
 		
@@ -58,7 +54,7 @@ class FeatureExtractor {
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	public List<Instance> createInstances(ContextDataSet dataset){
+	public static List<Instance> createInstances(ContextDataSet dataset){
 		List<Instance> instances = new ArrayList<Instance>();
 		for(Citer citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
@@ -77,7 +73,7 @@ class FeatureExtractor {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, ContextDataSet dataset){
+	private static Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, ContextDataSet dataset){
 		Texts texts = Texts.instance();
 		Map<String, Comparable> features = new HashMap<String, Comparable>();
 		String[] words = sentence.text.split(" ");
