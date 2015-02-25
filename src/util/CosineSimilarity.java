@@ -20,6 +20,7 @@ import java.lang.Math;
  * 
  * (https://github.com/xiejuncs/)
  *
+ * Jonathan made string keys generic 25/2 - 2015
  */
 public class CosineSimilarity {
 
@@ -32,7 +33,7 @@ public class CosineSimilarity {
 	 * @param secondFeatures The feature vector of the second cluster 
 	 * @return the similarity measure
 	 */
-	public static Double calculateCosineSimilarity(HashMap<String, Double> firstFeatures, HashMap<String, Double> secondFeatures) {
+	public static <Key> Double calculateCosineSimilarity(HashMap<Key, Double> firstFeatures, HashMap<String, Double> secondFeatures) {
 		if(firstFeatures.size() < 1 || secondFeatures.size() < 1){
 			throw new IllegalArgumentException("Empty feature vector"); //Added by Jonathan 23/2-2015
 		}
@@ -40,10 +41,10 @@ public class CosineSimilarity {
 		Double sum = 0.0;	// the numerator of the cosine similarity
 		Double fnorm = 0.0;	// the first part of the denominator of the cosine similarity
 		Double snorm = 0.0;	// the second part of the denominator of the cosine similarity
-		Set<String> fkeys = firstFeatures.keySet();
-		Iterator<String> fit = fkeys.iterator();
+		Set<Key> fkeys = firstFeatures.keySet();
+		Iterator<Key> fit = fkeys.iterator();
 		while (fit.hasNext()) {
-			String featurename = fit.next();
+			Key featurename = fit.next();
 			boolean containKey = secondFeatures.containsKey(featurename);
 			if (containKey) {
 				sum = sum + firstFeatures.get(featurename) * secondFeatures.get(featurename);
@@ -61,12 +62,12 @@ public class CosineSimilarity {
 	 * @param feature of one cluster
 	 * @return
 	 */
-	public static Double calculateNorm(HashMap<String, Double> feature) {
+	public static <Key> Double calculateNorm(HashMap<Key, Double> feature) {
 		Double norm = 0.0;
-		Set<String> keys = feature.keySet();
-		Iterator<String> it = keys.iterator();
+		Set<Key> keys = feature.keySet();
+		Iterator<Key> it = keys.iterator();
 		while (it.hasNext()) {
-			String featurename = it.next();
+			Key featurename = it.next();
 			norm = norm + Math.pow(feature.get(featurename), 2);
 		}
 		return Math.sqrt(norm);

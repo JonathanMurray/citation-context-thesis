@@ -96,10 +96,9 @@ class Main {
 	}
 	
 	private static List<Instance> createInstances(){
-		ContextHTML_Parser parser = new ContextHTML_Parser();
 		File[] files = Paths.get(sentimentCorpusDir).toFile().listFiles();
 		List<ContextDataSet> datasets = Arrays.asList(files).stream()
-				.map(f -> parser.parseHTML(f))
+				.map(f -> ContextHTML_Parser.parseHTML(f))
 				.collect(Collectors.toList());
 		List<Instance> instances = datasets.stream()
 			.flatMap(dataset -> FeatureExtractor.createInstances(dataset).stream())

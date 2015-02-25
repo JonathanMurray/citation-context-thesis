@@ -22,14 +22,18 @@ public class ContextHTML_Parser {
 	
 
 	public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
-		ContextHTML_Parser parser = new ContextHTML_Parser();
 		File f = Paths.get(corpusDir + "A92-1018.html").toFile();
-		parser.parseHTML(f).writeToJson(Paths.get("test.json").toFile());
+		ContextHTML_Parser.parseHTML(f).writeToJson(Paths.get("test.json").toFile());
 	}
 	
+	public static ContextDataSet parseHTML_Default(){
+		final String dataDir = "/home/jonathan/Documents/exjobb/data/";
+		String corpusDir = dataDir + "teufel-citation-context-corpus/";
+		String filepath = corpusDir + "A92-1018.html";
+		return parseHTML(Paths.get(filepath).toFile());
+	}
 	
-	
-	public ContextDataSet parseHTML(File file){
+	public static ContextDataSet parseHTML(File file){
 		Document doc;
 		try {
 			doc = Jsoup.parse(file, null);
@@ -63,7 +67,7 @@ public class ContextHTML_Parser {
 		}
 	}
 	
-	private String getTypeFromClassAttr(String classes){
+	private static String getTypeFromClassAttr(String classes){
 		return classes.split(" ")[1];
 	}
 
