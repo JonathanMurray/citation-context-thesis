@@ -52,9 +52,6 @@ public class CosineSimilarity {
 		}
 		fnorm = calculateNorm(firstFeatures);
 		snorm = calculateNorm(secondFeatures);
-		System.out.println("sum: " + sum);
-		System.out.println("fnorm: " + fnorm);
-		System.out.println("snorm: " + snorm);
 		similarity = sum / (fnorm * snorm);
 		return similarity;
 	}

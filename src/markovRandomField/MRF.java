@@ -10,18 +10,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import util.CosineSimilarity;
+import util.DoubleMap;
+import util.Stemmer;
+import util.Texts;
 import citationContextData.Citer;
 import citationContextData.ContextDataSet;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
-import util.CosineSimilarity;
-import util.DoubleMap;
-import util.Stemmer;
-import util.Texts;
+import conceptGraph.ConceptGraph;
 
 
-class Main {
+class MRF {
 	
 	public static final String dataDir = "/home/jonathan/Documents/exjobb/data/";
 	public static final String CFC_Dir = dataDir + "CFC_distribution/2006_paper_training/";
@@ -29,6 +30,7 @@ class Main {
 	
 	
 	public static void main(String[] args) {
+		
 		ContextDataSet dataset = new ContextHTML_Parser().parseHTML(Paths.get(sentimentCorpusDir + "A92-1018.html").toFile());
 		
 		System.out.println(dataset.citedTitle);
@@ -36,26 +38,42 @@ class Main {
 		
 		String citedAbstract = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements. Only a lexicon and some unlabeled training text are required. Accuracy exceeds 96%. We describe implementation strategies and optimizations which result in high-speed operation. Three applications for tagging are described: phrase recognition; word sense disambiguation; and grammatical function assignment.";
 		
-		new Main().runManyAndPrintResults(dataset.citers, dataset.citedMainAuthor, citedAbstract, dataset);
+		List<Citer> citers = dataset.citers;
+		
+		new MRF().runManyAndPrintResults(citers, dataset.citedMainAuthor, citedAbstract, dataset);
+		ConceptGraph conceptGraph = ConceptGraph.fromFiles("links.ser", "phraseToIndex.ser");
+		double[] constants = new double[]{0.001, 0.005, 0.01, 0.05, 0.1};
+		for(double simConstant : constants){
+			ConceptGraph.SIMILARITY_CONSTANT = simConstant;
+			System.out.println("\nSimilarity constant: " + simConstant);
+			new MRF_WithConcepts(conceptGraph).runManyAndPrintResults(citers, dataset.citedMainAuthor, citedAbstract, dataset);
+		}
+		
+		
 	}
 	
 	static final int NO = 0;
 	static final int YES = 1;
 	
 	int numSentences;
-	List<HashMap<String,Double>> sentenceVectors;
-	List<HashMap<String,Double>> bigramVectors;
-	List<String> sentenceTexts;
-	List<SentenceClass> sentenceTypes;
+	protected List<HashMap<String,Double>> sentenceVectors;
+	protected List<HashMap<String,Double>> bigramVectors;
+	protected List<String> sentenceTexts;
+	protected List<SentenceClass> sentenceTypes;
 	List<double[]> beliefs;
 	List<Map<Integer,double[]>> allReceivedMessages;
 	int neighbourhood = 4;
 	
 	public void runManyAndPrintResults(List<Citer> citers, String mainAuthor, String referencedText, ContextDataSet dataset){
 		Result result = new Result(0,0,0);
+		int total = citers.size();
+		int i = 0;
 		for(Citer citer : citers){
 			result.add(run(citer, mainAuthor, referencedText, dataset));
+			i++;
+			System.out.print(i + " ");
 		}
+		System.out.println();
 		printResults(result);
 	}
 	
@@ -74,7 +92,7 @@ class Main {
 	
 	public Result run(Citer citer, String mainAuthor, String referencedText, ContextDataSet dataset){
 		
-		System.out.println("run - citer: " + citer.title + "...");
+//		System.out.println("run - citer: " + citer.title + "...");
 		
 		List<String> sentences = citer.sentences.stream().sequential()
 				.map(s -> s.text)
@@ -107,7 +125,7 @@ class Main {
 			oneLoop();	
 		}
 		
-		return getResults();
+		return getResults(0.7);
 	}
 	
 	private void setup(String mainAuthor, String referencedText, ContextDataSet dataset){
@@ -168,18 +186,18 @@ class Main {
 		return 0.01 + explicit + detWork + det + cosSim + acronyms + hooks; //TODO mult. cossim
 	}
 	
-	private Result getResults(){
+	private Result getResults(double beliefThreshold){
 		int truePos = 0;
 		int falsePos = 0;
 		int pos = 0;
 		
 		for(int i = 0; i < numSentences; i++){
 			double[] belief = finalBelief(i);
-//			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(selfBelief) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
+//			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(beliefs.get(i)) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
 			if(sentenceTypes.get(i) != SentenceClass.NOT_REFERENCE){
 				pos ++;
 			}
-			if(belief[1] > 0.65){
+			if(belief[1] > beliefThreshold){
 				if(sentenceTypes.get(i) == SentenceClass.NOT_REFERENCE){
 					falsePos ++;
 				}else{
@@ -320,7 +338,7 @@ class Main {
 		return sim;
 	}
 	
-	private double similarity(int s1, int s2){
+	protected double similarity(int s1, int s2){
 		HashMap<String,Double> s1Vec = sentenceVectors.get(s1);
 		HashMap<String,Double> s2Vec = sentenceVectors.get(s2);
 		double cosSim = 0;
@@ -337,6 +355,8 @@ class Main {
 		}
 		return cosSim + bigramSim; //Originally only cosSim
 	}
+	
+	
 	
 	private double relatedToPrevious(int sentence){
 		String[] words = sentenceTexts.get(sentence).split(" +");
@@ -362,5 +382,6 @@ class Main {
 			total += other.total;
 		}
 	}
+
 	
 }

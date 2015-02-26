@@ -1,5 +1,7 @@
 package conceptGraph;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -11,18 +13,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.function.BiConsumer;
 
-import citationContextData.Citer;
-import citationContextData.ContextDataSet;
-import citationContextData.ContextHTML_Parser;
+import util.Printer;
+
 
 /**
  * Builds up a title-graph from the wiki-dumps at http://haselgrove.id.au/wikipedia.htm
@@ -31,54 +29,101 @@ import citationContextData.ContextHTML_Parser;
  */
 public class GraphCreator {
 	
-	public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
-		
-//		buildLinksAndSaveToFile("conceptGraphLower.ser");
-		
-		
-
+//	public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
+//		buildLinksAndSaveToFile("indexToPhrase.ser", "phraseToIndex.ser", "links.ser");
+////		testPerformance();
+//	}
+	
+	
+	
+	public static ConceptGraph loadConceptGraph(String linksPath, String indicesPath){
+		try{
+			HashMap<Integer, TIntArrayList> links = GraphCreator.deserializeLinks(linksPath);
+			HashMap<String, Integer> indices = GraphCreator.deserializeIndices(indicesPath);
+			return new ConceptGraph(links, indices);
+		}catch(IOException | ClassNotFoundException e){
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
 	}
 	
+	public static  HashMap<Integer, TIntArrayList> deserializeLinks(String filepath) throws FileNotFoundException, IOException, ClassNotFoundException{
+		System.out.println("Loading map from file ...");
+		try(ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(filepath)))){
+			int size = ois.readInt();
+			HashMap<Integer, TIntArrayList> map = new HashMap<Integer, TIntArrayList>();
+			for(int i = 0; i < size; i++){
+				Integer key = ois.readInt();
+				TIntArrayList value = (TIntArrayList) ois.readObject();
+				map.put(key, value);
+				Printer.printProgress(i, 500000, 20);
+			}
+			System.out.println("Load successful. Read " + map.size() + " entries.");
+			return map;
+		}
+	}
 	
+	public static HashMap<String, Integer> deserializeIndices(String filepath){
+		System.out.println("Loading map<string,int> from file ...");
+		try(ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(filepath)))){
+			int size = ois.readInt();
+			HashMap<String, Integer> map = new HashMap<String, Integer>();
+			for(int i = 0; i < size; i++){
+				String key = (String)ois.readObject();
+				int value = ois.readInt();
+				map.put(key, value);
+				Printer.printProgress(i, 500000, 20);
+			}
+			System.out.println("Load successful. Read " + map.size() + " entries.");
+			return map;
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
 
-	public static void buildLinksAndSaveToFile(String fileName){
+	public static void buildLinksAndSaveToFile(String toPhrasePath, String toIndexPath, String linksPath){
 		String dir = "/home/jonathan/Documents/exjobb/data/wikipedia/";
 		try {
-			ConcurrentHashMap<String, List<String>> links = createDataFromFiles(dir + "links-simple-sorted.txt", dir + "titles-sorted.txt");
-			saveLinksToFile(links, fileName);
+			Structures structures = createDataFromFiles(dir + "links-simple-sorted.txt", dir + "titles-sorted.txt");
+			serialize(structures.phraseToIndex, toIndexPath, GraphCreator::writeString, GraphCreator::writeInt);
+			serialize(structures.links, linksPath, GraphCreator::writeInt, GraphCreator::writeObject);
 		} catch (IOException | InterruptedException e) {
+			
 			e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	
-	private static void testSerialization(){
-		try{
-			GraphCreator gc = new GraphCreator();
-			ConcurrentHashMap<String, List<String>> links = new ConcurrentHashMap<String, List<String>>();
-			links.put("hej", Arrays.asList(new String[]{"hopp", "san", "sa"}));
-			links.put("va", Arrays.asList(new String[]{"sa", "du"}));
-			links.put("tom", Arrays.asList(new String[0]));
-			links.put("a", Arrays.asList(new String[]{"b"}));
-			
-			saveLinksToFile(links, "test.ser");
-			links = null;
-			links = loadLinksFromFile("test.ser");
-			
-			links.entrySet().forEach(
-				System.out::println
-			);
-		}catch(Exception e){
+	private static void writeInt(int i, ObjectOutputStream oos){
+		try {
+			oos.writeInt(i);
+		} catch (IOException e) {
 			e.printStackTrace();
-			System.exit(0);
 		}
 	}
 	
-	public static ConcurrentHashMap<String, List<String>> createDataFromFiles(String linksFilePath, String titlesFilePath) throws IOException, InterruptedException{
+	private static void writeString(String s, ObjectOutputStream oos){
+		try {
+			oos.writeObject(s);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void writeObject(Object o, ObjectOutputStream oos){
+		try {
+			oos.writeObject(o);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static Structures createDataFromFiles(String linksFilePath, String titlesFilePath) throws IOException, InterruptedException{
 		return createDataFromFiles(new File(linksFilePath), new File(titlesFilePath));
 	}
 	
-	public static ConcurrentHashMap<String, List<String>> createDataFromFiles(File linksFile, File titlesFile) throws IOException, InterruptedException{
+	public static Structures createDataFromFiles(File linksFile, File titlesFile) throws IOException, InterruptedException{
 		System.out.println("Creating data from files: " + linksFile.getPath() + ",  " + titlesFile.getPath());
 		try(BufferedReader linksReader = new BufferedReader(new FileReader(linksFile))){
 			try (BufferedReader titlesReader = new BufferedReader(new FileReader(titlesFile))) {
@@ -87,85 +132,66 @@ public class GraphCreator {
 		}
 	}
 	
-	public static ConcurrentHashMap<String, List<String>> createDataFromReaders(BufferedReader linksReader, BufferedReader titlesReader) throws IOException{
+	public static Structures createDataFromReaders(BufferedReader linksReader, BufferedReader titlesReader) throws IOException{
+		ConcurrentHashMap<String,Integer> phraseToIndex = new ConcurrentHashMap<String,Integer>();
+		ConcurrentHashMap<Integer, TIntArrayList> links = new ConcurrentHashMap<Integer, TIntArrayList>(); 
 		
-		List<String> titles = new ArrayList<String>();
-		ConcurrentHashMap<String, List<String>> links = new ConcurrentHashMap<String, List<String>>();
-		
-		titlesReader.lines().forEach(titlesLine -> {
-			titles.add(titlesLine.replace('_', ' ').toLowerCase());
-		});
-		
-		
-		System.out.println("Adding links");
-		linksReader.lines().parallel().forEach(linksLine -> {
-			String[] ids = linksLine.split("[ :]");
-			String citer = titles.get(Integer.parseInt(ids[0])-1);
-			List<String> cited = Arrays.stream(ids)
-					.skip(1)
-					.filter(s -> s.length() > 0)
-					.map(s -> titles.get(Integer.parseInt(s)-1))
-					.collect(Collectors.toCollection(ArrayList::new));
-			if(links.size() % 100000 < 4){
-				System.out.println(links.size());
+		System.out.println("Adding titles...");
+		{
+			Iterator<String> titleLines = titlesReader.lines().iterator();
+			int i = 1;
+			while(titleLines.hasNext()){
+				String phrase = titleLines.next().replace('_', ' ').toLowerCase();
+				phraseToIndex.put(phrase, i);
 			}
-//			if(cited == null){
-//				System.out.println(links.size() + ": NULL instead of empty list!");
-//				cited = new ArrayList<String>();
-//			}
-			links.put(citer, cited);
-			
+		}
+		
+		System.out.println("Adding links...");
+		
+		//NOTE!
+		//lines().parallel is extremely slow when running for a long time, due to garbage collection.
+		//Crashes with "gc limit exceeded" after being almost stuck for several minutes at around 4'800'000
+		linksReader.lines().forEach(linksLine -> {
+			Printer.printProgress(links.size(), 100000, 10);
+			int pos = linksLine.indexOf(' ') + 1;
+			int citer = Integer.parseInt(linksLine.substring(0, pos-2));
+			TIntArrayList cited = new TIntArrayList();
+	        int end;
+	        while ((end = linksLine.indexOf(' ', pos)) >= 0) {
+	            cited.add(Integer.parseInt(linksLine.substring(pos, end)));
+	            pos = end + 1;
+	        }
+	        links.put(citer, cited);
 		});
-		return links;
+		return new Structures(phraseToIndex, links);
 	}
 	
-	public static void saveLinksToFile(ConcurrentHashMap<String, List<String>> links, String filepath) throws IOException{
-		System.out.println("Saving links to file ...");
-		System.out.println("keys: " + links.keySet().size());
-		System.out.println("values: " + links.values().size());
-		System.out.println("size: " + links.size());
-		System.out.println("(There are " + links.entrySet().size() + " entries.)");
+	
+
+	public static <K,V> void serialize(ConcurrentHashMap<K, V> map, String filepath, BiConsumer<K, ObjectOutputStream> serializeKey, BiConsumer<V, ObjectOutputStream> serializeValue) throws FileNotFoundException, IOException{
+		System.out.println("Saving map to file ...");
 		
 		try(ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filepath)))){
-			oos.writeInt(links.size());
+			oos.writeInt(map.size());
 			int i = 0; 
-			for(Entry<String, List<String>> e : links.entrySet()){
-				if(e.getValue() == null){
-					throw new IllegalArgumentException();
-				}
-				oos.writeObject(e.getKey());
-				oos.writeObject(e.getValue());
+			for(Entry<K, V> e : map.entrySet()){
+				serializeKey.accept(e.getKey(), oos);
+				serializeValue.accept(e.getValue(), oos);
 				i++;
-				if(i % 100000 == 0){
-					System.out.println(i);
-				}
+				Printer.printProgress(i, 100000, 10);
 			}
-			
-			System.out.println("Wrote " + i + " entries.");
-			System.out.println("now size: " + links.entrySet().size() + ", " + links.size());
+			System.out.println("Save successful. Wrote " + i + " entries.");
 		}
 	}
 	
-	public static ConcurrentHashMap<String,List<String>> loadLinksFromFile(String filepath){
-		System.out.println("Loading links from file ...");
-		try(ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(filepath)))){
-			int size = ois.readInt();
-			System.out.println(size + " entries");
-			ConcurrentHashMap<String,List<String>> links = new ConcurrentHashMap<String, List<String>>();
-			for(int i = 0; i < size; i++){
-				if(i % 100000 == 0){
-					System.out.println(i);
-				}
-				String key = (String) ois.readObject();
-				@SuppressWarnings("unchecked")
-				List<String> val = (List<String>) ois.readObject();
-				links.put(key, val);
-			}
-			System.out.println("Finished reading. links.size() == " + links.size());
-			return links;
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException();
+	private static class Structures{
+		public Structures(ConcurrentHashMap<String, Integer> phraseToIndex,
+				ConcurrentHashMap<Integer, TIntArrayList> links) {
+			super();
+			this.phraseToIndex = phraseToIndex;
+			this.links = links;
 		}
+		ConcurrentHashMap<String, Integer> phraseToIndex;
+		ConcurrentHashMap<Integer, TIntArrayList> links;
 	}
 }

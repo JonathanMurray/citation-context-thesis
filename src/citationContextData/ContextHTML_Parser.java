@@ -6,25 +6,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
-import org.xml.sax.SAXException;
 
 public class ContextHTML_Parser {
 	
 	public static final String dataDir = "/home/jonathan/Documents/exjobb/data/";
 	public static final String corpusDir = dataDir + "teufel-citation-context-corpus/";
-	
-
-	public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
-		File f = Paths.get(corpusDir + "A92-1018.html").toFile();
-		ContextHTML_Parser.parseHTML(f).writeToJson(Paths.get("test.json").toFile());
-	}
 	
 	public static ContextDataSet parseHTML_Default(){
 		final String dataDir = "/home/jonathan/Documents/exjobb/data/";
