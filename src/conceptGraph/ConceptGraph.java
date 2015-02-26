@@ -9,7 +9,8 @@ import java.util.List;
 
 public class ConceptGraph {
 	
-	public static double SIMILARITY_CONSTANT = 0.01;
+	public static final double DEFAULT_SIMILARITY_MULTIPLIER = 0.01;
+	private double similarityMultiplier;
 	
 	private HashMap<Integer, TIntArrayList> links;
 	private HashMap<String, Integer> indices;
@@ -21,8 +22,17 @@ public class ConceptGraph {
 	}
 	
 	public ConceptGraph(HashMap<Integer, TIntArrayList> links, HashMap<String, Integer> indices){
+		this(links, indices, DEFAULT_SIMILARITY_MULTIPLIER);
+	}
+	
+	public ConceptGraph(HashMap<Integer, TIntArrayList> links, HashMap<String, Integer> indices, double similarityMultiplier){
 		this.links = links;
 		this.indices = indices;
+		this.similarityMultiplier = similarityMultiplier;
+	}
+	
+	public void setSimilarityMultiplier(double mult){
+		similarityMultiplier = mult;
 	}
 	
 	public double similarity(String[] sentence1, String[] sentence2){
@@ -44,7 +54,7 @@ public class ConceptGraph {
 				}
 			}
 		}
-		return SIMILARITY_CONSTANT * sum / (double)concepts1.size() / (double)concepts2.size();
+		return similarityMultiplier * sum / (double)concepts1.size() / (double)concepts2.size();
 	}
 
 	private List<Concept> sentenceToConcepts(String[] sentence){

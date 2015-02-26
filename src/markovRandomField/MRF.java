@@ -1,6 +1,5 @@
 package markovRandomField;
 
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -16,41 +15,11 @@ import util.Stemmer;
 import util.Texts;
 import citationContextData.Citer;
 import citationContextData.ContextDataSet;
-import citationContextData.ContextHTML_Parser;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
-import conceptGraph.ConceptGraph;
 
 
-class MRF {
-	
-	public static final String dataDir = "/home/jonathan/Documents/exjobb/data/";
-	public static final String CFC_Dir = dataDir + "CFC_distribution/2006_paper_training/";
-	public static final String sentimentCorpusDir = dataDir + "teufel-citation-context-corpus/";
-	
-	
-	public static void main(String[] args) {
-		
-		ContextDataSet dataset = new ContextHTML_Parser().parseHTML(Paths.get(sentimentCorpusDir + "A92-1018.html").toFile());
-		
-		System.out.println(dataset.citedTitle);
-		System.out.println("main author: " + dataset.citedMainAuthor);
-		
-		String citedAbstract = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements. Only a lexicon and some unlabeled training text are required. Accuracy exceeds 96%. We describe implementation strategies and optimizations which result in high-speed operation. Three applications for tagging are described: phrase recognition; word sense disambiguation; and grammatical function assignment.";
-		
-		List<Citer> citers = dataset.citers;
-		
-		new MRF().runManyAndPrintResults(citers, dataset.citedMainAuthor, citedAbstract, dataset);
-		ConceptGraph conceptGraph = ConceptGraph.fromFiles("links.ser", "phraseToIndex.ser");
-		double[] constants = new double[]{0.001, 0.005, 0.01, 0.05, 0.1};
-		for(double simConstant : constants){
-			ConceptGraph.SIMILARITY_CONSTANT = simConstant;
-			System.out.println("\nSimilarity constant: " + simConstant);
-			new MRF_WithConcepts(conceptGraph).runManyAndPrintResults(citers, dataset.citedMainAuthor, citedAbstract, dataset);
-		}
-		
-		
-	}
+public class MRF {
 	
 	static final int NO = 0;
 	static final int YES = 1;
