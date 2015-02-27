@@ -1,0 +1,30 @@
+Comparing classifiers on [A92-1018]
+--------------------------------------------------
+
+Classifier-options: [-C, 1.0, -L, 0.001, -P, 1.0E-12, -N, 0, -V, -1, -W, 1, -K, weka.classifiers.functions.supportVector.PolyKernel -E 1.0 -C 250007]
+Training on 208960 instances
+class counts: [1784, 207176]
+Balancing changed data size from 208960 to 3554
+Filter-options: [-R, 11, -P, NGRAMS_, -W, 1000, -prune-rate, -1.0, -N, 0, -L, -stemmer, weka.core.stemmers.LovinsStemmer, -stopwords-handler, weka.core.stopwords.Null, -M, 1, -tokenizer, weka.core.tokenizers.NGramTokenizer -max 3 -min 1 -delimiters " \r\n\t.,;:\'\"()?!"]
+Filtering changed # attributes from 12 to 1502
+Training done.
+Filtering changed # attributes from 12 to 1502
+testing on 12896 instances
+73.0  3.0
+1694.0  11126.0
+
+WEKA
+-------------------------
+precision: .041
+recall: .961
+F: .924
+
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 
+
+MRF - Normal
+-------------------------
+precision: .256
+recall: .563
+F: .352
+
+
