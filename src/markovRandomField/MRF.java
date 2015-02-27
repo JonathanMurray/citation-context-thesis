@@ -44,11 +44,11 @@ public class MRF {
 		this.neighbourhood = neighbourhood;
 	}
 	
-	public ClassificationResultImpl runMany(List<Citer> citers, String mainAuthor, String referencedText, ContextDataSet dataset){
+	public ClassificationResultImpl runMany(List<Citer> citers, String referencedText, ContextDataSet dataset){
 		ClassificationResultImpl result = new ClassificationResultImpl(0,0,0);
 		int i = 0;
 		for(Citer citer : citers){
-			result.add(run(citer, mainAuthor, referencedText, dataset));
+			result.add(run(citer, referencedText, dataset));
 			i++;
 			System.out.print(i + " ");
 		}
@@ -56,7 +56,7 @@ public class MRF {
 		return result;
 	}
 	
-	public ClassificationResultImpl run(Citer citer, String mainAuthor, String referencedText, ContextDataSet dataset){
+	public ClassificationResultImpl run(Citer citer, String referencedText, ContextDataSet dataset){
 //		System.out.println("run - citer: " + citer.title + "...");
 		List<String> sentences = citer.sentences.stream().sequential()
 				.map(s -> s.text)

@@ -1,7 +1,6 @@
 package main;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -14,11 +13,12 @@ import java.util.stream.Stream;
 
 import markovRandomField.MRF;
 import markovRandomField.MRF_WithConcepts;
-import sentenceFeaturesToWeka.InstanceHandler;
-import sentenceFeaturesToWeka.SimpleInstance;
-import sentenceFeaturesToWeka.WekaClassifier;
 import util.ClassificationResult;
 import util.NonThrowingFileWriter;
+import weka.core.Instances;
+import wekaWrapper.InstanceHandler;
+import wekaWrapper.SimpleInstance;
+import wekaWrapper.WekaClassifier;
 import citationContextData.Citer;
 import citationContextData.ContextDataSet;
 import citationContextData.ContextHTML_Parser;
@@ -58,31 +58,52 @@ public class Main {
 		System.out.println("--------------------------------------------------");
 		System.out.println();
 		
-		ContextDataSet dataset = ContextHTML_Parser.parseHTML(new File(SENTIMENT_CORPUS_DIR, filename + ".html"));
-		
-//		System.out.println(dataset.citedTitle);
-//		System.out.println("main author: " + dataset.citedMainAuthor);
+		ContextDataSet contextDataset = ContextHTML_Parser.parseHTML(new File(SENTIMENT_CORPUS_DIR, filename + ".html"));
 		
 		String citedAbstract = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements. Only a lexicon and some unlabeled training text are required. Accuracy exceeds 96%. We describe implementation strategies and optimizations which result in high-speed operation. Three applications for tagging are described: phrase recognition; word sense disambiguation; and grammatical function assignment.";
 		//TODO Hardcoded to one test file
 		
-		
-		List<Citer> citers = dataset.citers;
-		
-		ClassificationResult res;
-		
 		WekaClassifier classifier = new WekaClassifier();
-
-		classifier.trainOnData(WekaClassifier.fromDirExcept(new File("arff/"), new File("arff/" + filename + ".html.arff")));
-		res = classifier.testOnData(WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff")));
-		printResult("WEKA", res);
+		classifier.trainOnData(WekaClassifier.fromDirExcept(
+				new File("arff/"), new File("arff/" + filename + ".html.arff")));
 		
-		res = new MRF(4).runMany(citers, dataset.citedMainAuthor, citedAbstract, dataset);
-		printResult("MRF - Normal", res);
+		MRF mrf = new MRF(4);
 		ConceptGraph conceptGraph = ConceptGraph.fromFiles("links.ser", "phraseToIndex.ser");
 		conceptGraph.setSimilarityMultiplier(0.01);
-		res = new MRF_WithConcepts(4, conceptGraph).runMany(citers, dataset.citedMainAuthor, citedAbstract, dataset);
-		printResult("MRF - Concepts", res);
+		MRF_WithConcepts mrfWithConcepts = new MRF_WithConcepts(4, conceptGraph);
+		Instances wekaInstances = WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff"));
+		DataSet dataset = new DataSet(contextDataset, citedAbstract, wekaInstances);
+		
+		
+		compareClassifiers(dataset, 
+				new Classifier("Weka", classifier), 
+				new Classifier("MRF", mrf), 
+				new Classifier("MRF - Concepts", mrfWithConcepts));
+		
+		
+//		List<Citer> citers = contextDataset.citers;
+//		
+//		ClassificationResult res;
+//		
+//		WekaClassifier classifier = new WekaClassifier();
+//		classifier.trainOnData(WekaClassifier.fromDirExcept(new File("arff/"), new File("arff/" + filename + ".html.arff")));
+//		res = classifier.testOnData(WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff")));
+//		printResult("WEKA", res);
+//		
+//		res = new MRF(4).runMany(citers, citedAbstract, contextDataset);
+//		printResult("MRF - Normal", res);
+//		ConceptGraph conceptGraph = ConceptGraph.fromFiles("links.ser", "phraseToIndex.ser");
+//		conceptGraph.setSimilarityMultiplier(0.01);
+//		res = new MRF_WithConcepts(4, conceptGraph).runMany(citers, citedAbstract, contextDataset);
+//		printResult("MRF - Concepts", res);
+	}
+	
+	public static void compareClassifiers(DataSet dataset, Classifier... classifiers){
+		for(Classifier classifier : classifiers){
+			System.out.println("Testing " + classifier + "...");
+			ClassificationResult res = classifier.testOn(dataset);
+			printResult(classifier.toString(), res);
+		}
 	}
 	
 	public static void printResult(String title, ClassificationResult result){

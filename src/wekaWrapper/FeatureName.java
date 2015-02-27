@@ -1,4 +1,4 @@
-package sentenceFeaturesToWeka;
+package wekaWrapper;
 
 public enum FeatureName{
 	//Sentence contains a determiner followed by a work noun

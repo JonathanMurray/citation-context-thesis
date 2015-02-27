@@ -1,4 +1,4 @@
-package sentenceFeaturesToWeka;
+package wekaWrapper;
 
 import java.util.Map;
 
