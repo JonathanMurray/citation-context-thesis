@@ -35,7 +35,8 @@ public class Main {
 	
 	public static void main(String[] args) {
 //		convertDataToArff("C98-2122");
-		compareClassifiers("A92-1018");
+//		compareClassifiers("A92-1018");
+		WekaClassifier.NaiveBayes().ROC(WekaClassifier.fromFiles(new File("arff/C98-2122.html.arff")));
 	}
 	
 	public static void convertAllDataToArff(File dir){
@@ -63,7 +64,12 @@ public class Main {
 		String citedAbstract = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements. Only a lexicon and some unlabeled training text are required. Accuracy exceeds 96%. We describe implementation strategies and optimizations which result in high-speed operation. Three applications for tagging are described: phrase recognition; word sense disambiguation; and grammatical function assignment.";
 		//TODO Hardcoded to one test file
 		
-		WekaClassifier classifier = new WekaClassifier();
+		
+		Instances wekaInstances = WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff"));
+		DataSet dataset = new DataSet(contextDataset, citedAbstract, wekaInstances);
+		
+		
+		WekaClassifier classifier = WekaClassifier.SMO();
 		classifier.trainOnData(WekaClassifier.fromDirExcept(
 				new File("arff/"), new File("arff/" + filename + ".html.arff")));
 		
@@ -71,31 +77,12 @@ public class Main {
 		ConceptGraph conceptGraph = ConceptGraph.fromFiles("links.ser", "phraseToIndex.ser");
 		conceptGraph.setSimilarityMultiplier(0.01);
 		MRF_WithConcepts mrfWithConcepts = new MRF_WithConcepts(4, conceptGraph);
-		Instances wekaInstances = WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff"));
-		DataSet dataset = new DataSet(contextDataset, citedAbstract, wekaInstances);
-		
 		
 		compareClassifiers(dataset, 
 				new Classifier("Weka", classifier), 
 				new Classifier("MRF", mrf), 
-				new Classifier("MRF - Concepts", mrfWithConcepts));
-		
-		
-//		List<Citer> citers = contextDataset.citers;
-//		
-//		ClassificationResult res;
-//		
-//		WekaClassifier classifier = new WekaClassifier();
-//		classifier.trainOnData(WekaClassifier.fromDirExcept(new File("arff/"), new File("arff/" + filename + ".html.arff")));
-//		res = classifier.testOnData(WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff")));
-//		printResult("WEKA", res);
-//		
-//		res = new MRF(4).runMany(citers, citedAbstract, contextDataset);
-//		printResult("MRF - Normal", res);
-//		ConceptGraph conceptGraph = ConceptGraph.fromFiles("links.ser", "phraseToIndex.ser");
-//		conceptGraph.setSimilarityMultiplier(0.01);
-//		res = new MRF_WithConcepts(4, conceptGraph).runMany(citers, citedAbstract, contextDataset);
-//		printResult("MRF - Concepts", res);
+				new Classifier("MRF - Concepts", mrfWithConcepts)
+		);
 	}
 	
 	public static void compareClassifiers(DataSet dataset, Classifier... classifiers){

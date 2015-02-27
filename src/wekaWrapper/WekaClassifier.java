@@ -1,5 +1,6 @@
 package wekaWrapper;
 
+import java.awt.BorderLayout;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -13,8 +14,9 @@ import util.ClassificationResult;
 import util.ClassificationResultWrapper;
 import util.Printer;
 import weka.classifiers.Classifier;
-import weka.classifiers.CostMatrix;
 import weka.classifiers.Evaluation;
+import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
@@ -25,23 +27,39 @@ import weka.core.converters.ConverterUtils.DataSource;
 import weka.core.tokenizers.NGramTokenizer;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.StringToWordVector;
+import weka.gui.visualize.PlotData2D;
+import weka.gui.visualize.ThresholdVisualizePanel;
 
 public class WekaClassifier {
 	
-	private  Printer printer = new Printer(true);
+	private static Printer printer = new Printer(true);
 	
 	private Classifier classifier;
 	private StringToWordVector filter;
 	
-	public WekaClassifier(){
+	public WekaClassifier(Classifier classifier){
+		this.classifier = classifier;
+	}
+	
+	public static WekaClassifier SMO(){
 		try {
-			classifier = setupSMO();
+			return new WekaClassifier(setupSMO());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	private SMO setupSMO() throws Exception{
+	public static WekaClassifier NaiveBayes(){
+		try {
+			return new WekaClassifier(new NaiveBayes());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	
+	
+	private static SMO setupSMO() throws Exception{
 		SMO classifier = new SMO();
 		String classifierOptions = "-C 1.0 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1";
 		String kernelOptions = "-E 1.0 -C 250007";
@@ -60,7 +78,7 @@ public class WekaClassifier {
 			printer.println("Training on " + data.size() + " instances");
 			data = balanceData(data, countClasses(data));
 			
-			filter = createFilter(data);
+			filter = createNGramFilter(data,1,3);
 			data = filterData(data, filter);
 			
 			classifier.buildClassifier(data);
@@ -139,9 +157,9 @@ public class WekaClassifier {
 		return filteredData;
 	}
 	
-	private StringToWordVector createFilter(Instances data) throws Exception{
+	private StringToWordVector createNGramFilter(Instances data, int minNgram, int maxNgram) throws Exception{
 		data.setClassIndex(data.numAttributes() - 1);
-		String ngramOptions = "-max 3 -min 1 -delimiters \" \\r\\n\\t.,;:\\\'\\\"()?!\"";
+		String ngramOptions = "-max " + maxNgram + " -min " + minNgram + " -delimiters \" \\r\\n\\t.,;:\\\'\\\"()?!\"";
 		String[] ngramOptionsVec = weka.core.Utils.splitOptions(ngramOptions);
 		String str2WordOptions = "-R 11 -P NGRAMS_ -W 1000 -prune-rate -1.0 -N 0 -L -stemmer weka.core.stemmers.LovinsStemmer -stopwords-handler weka.core.stopwords.Null -M 1";
 		String[] string2WordOptions = weka.core.Utils.splitOptions(str2WordOptions);
@@ -178,17 +196,76 @@ public class WekaClassifier {
 		return balanced;
 	}
 	
+	public void ROC(Instances data){
+		try{
+			data.setClassIndex(data.numAttributes()-1);
+			System.out.println(Arrays.toString(countClasses(data)));
+			data = filterData(data, createNGramFilter(data,2,3));
+			
+			Evaluation eval = new Evaluation(data);
+			
+//			eval.evaluateModel(classifier, data);
+			eval.crossValidateModel(classifier, data, 10, new Random());
+		
+			// generate curve
+			ThresholdCurve tc = new ThresholdCurve();
+			int classIndex = 0;
+			Instances result = tc.getCurve(eval.predictions(), classIndex);
+			
+			System.out.println("area: " + ThresholdCurve.getROCArea(result));
+		 
+		     // plot curve
+		    ThresholdVisualizePanel vmc = new ThresholdVisualizePanel();
+		    vmc.setROCString("(Area under ROC = " + ThresholdCurve.getROCArea(result) + ")");
+		    vmc.setName(result.relationName());
+		    
+		    System.out.println(result.attribute("Recall").index());
+		    System.out.println(result.attribute("Precision").index());
+		    
+//		    vmc.setXIndex(result.attribute("Recall").index());
+//		    vmc.setYIndex(result.attribute("Precision").index());
+		    
+		    PlotData2D tempd = new PlotData2D(result);
+		    tempd.setPlotName(result.relationName());
+		    tempd.addInstanceNumberAttribute();
+		    
+		    // specify which points are connected
+		    boolean[] cp = new boolean[result.numInstances()];
+	     	for (int n = 1; n < cp.length; n++)
+		       cp[n] = true;
+		    tempd.setConnectPoints(cp);
+		     
+		    // add plot
+		    vmc.addPlot(tempd);
+		 
+		    // display curve
+		    String plotName = vmc.getName();
+		    final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Visualize: "+plotName);
+		    jf.setSize(500,400);
+		    jf.getContentPane().setLayout(new BorderLayout());
+		    jf.getContentPane().add(vmc, BorderLayout.CENTER);
+		    jf.addWindowListener(new java.awt.event.WindowAdapter() {
+		    	public void windowClosing(java.awt.event.WindowEvent e) {
+		    		jf.dispose();
+			    }
+			});
+		    jf.setVisible(true);
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public ClassificationResult crossValidate(Instances data, int numFolds){
 		try{
 			
 			data = balanceData(data, countClasses(data));
 			
-			data = filterData(data, createFilter(data));
+			data = filterData(data, createNGramFilter(data,1,3));
 //			data = resample(data, 10000);
 			
 			Evaluation eval = new Evaluation(data);
 			printer.println("Validating ...");
-			eval.crossValidateModel(classifier, data, numFolds, new Random(1));
+			eval.crossValidateModel(classifier, data, numFolds, new Random());
 			
 			printer.println(eval.toSummaryString());
 			printer.println("confusion matrix:");
