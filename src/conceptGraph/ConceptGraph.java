@@ -16,8 +16,6 @@ public class ConceptGraph {
 	private HashMap<String, Integer> indices;
 	
 	public static ConceptGraph fromFiles(String linksPath, String indicesPath){
-		System.out.println("links: " + linksPath);
-		System.out.println("indices: " + indicesPath);
 		return GraphCreator.loadConceptGraph(linksPath, indicesPath);
 	}
 	

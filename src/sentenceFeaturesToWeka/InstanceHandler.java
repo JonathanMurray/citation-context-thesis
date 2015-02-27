@@ -15,9 +15,9 @@ import citationContextData.Sentence;
 import citationContextData.SentenceClass;
 
 
-class FeatureExtractor {
+public class InstanceHandler {
 	
-	public static void writeInstancesToFile(List<Instance> instances, Path path){
+	public static void writeToArffFile(List<Instance> instances, Path path){
 		
 		System.out.println("writeInstanceToFile - " + path + " ...");
 		
@@ -77,19 +77,20 @@ class FeatureExtractor {
 		Texts texts = Texts.instance();
 		Map<String, Comparable> features = new HashMap<String, Comparable>();
 		String[] words = sentence.text.split(" ");
-		String[] prevWords = previous.text.split(" ");
-		features.put(SentenceFeature.DET_WORK.toString(), texts.containsDetWork(words));
-		features.put(SentenceFeature.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(words));
-		features.put(SentenceFeature.CONNECTOR.toString(), texts.startsWithConnector(words));
-		features.put(SentenceFeature.AFTER_EXPLICIT.toString(), texts.containsExplicitReference(Arrays.asList(prevWords), dataset.citedMainAuthor));
-		features.put(SentenceFeature.AFTER_HEADING.toString(), texts.startsWithSectionHeader(previous.text));
-		features.put(SentenceFeature.HEADING.toString(), texts.startsWithSectionHeader(sentence.text));
-		features.put(SentenceFeature.BEFORE_HEADING.toString(), texts.startsWithSectionHeader(next.text));
-		features.put(SentenceFeature.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(sentence.text, dataset.citedMainAuthor));
-		features.put(SentenceFeature.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(sentence.text, dataset.acronyms));
-		features.put(SentenceFeature.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(sentence.text, dataset.lexicalHooks));
+		String[] prevWords = previous != null? previous.text.split(" ") : new String[0];
+		features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(words));
+		features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(words));
+		features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(words));
+		features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitReference(Arrays.asList(prevWords), dataset.citedMainAuthor));
+		features.put(FeatureName.AFTER_HEADING.toString(), texts.startsWithSectionHeader(previous != null ? previous.text : ""));
+		features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(sentence.text));
+		features.put(FeatureName.BEFORE_HEADING.toString(), texts.startsWithSectionHeader(next != null? next.text : ""));
+		features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(sentence.text, dataset.citedMainAuthor));
+		features.put(FeatureName.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(sentence.text, dataset.acronyms));
+		features.put(FeatureName.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(sentence.text, dataset.lexicalHooks));
 		features.put("TEXT", "'" + sentence.text + "'");
 		
 		return features;
 	}
+
 }

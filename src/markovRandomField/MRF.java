@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import util.ClassificationResultImpl;
 import util.CosineSimilarity;
 import util.DoubleMap;
 import util.Stemmer;
@@ -31,11 +32,20 @@ public class MRF {
 	protected List<SentenceClass> sentenceTypes;
 	List<double[]> beliefs;
 	List<Map<Integer,double[]>> allReceivedMessages;
-	int neighbourhood = 4;
 	
-	public void runManyAndPrintResults(List<Citer> citers, String mainAuthor, String referencedText, ContextDataSet dataset){
-		Result result = new Result(0,0,0);
-		int total = citers.size();
+	public final static int DEFAULT_NEIGHBOURHOOD = 4;
+	int neighbourhood;
+	
+	public MRF(){
+		this(DEFAULT_NEIGHBOURHOOD);
+	}
+	
+	public MRF(int neighbourhood){
+		this.neighbourhood = neighbourhood;
+	}
+	
+	public ClassificationResultImpl runMany(List<Citer> citers, String mainAuthor, String referencedText, ContextDataSet dataset){
+		ClassificationResultImpl result = new ClassificationResultImpl(0,0,0);
 		int i = 0;
 		for(Citer citer : citers){
 			result.add(run(citer, mainAuthor, referencedText, dataset));
@@ -43,26 +53,11 @@ public class MRF {
 			System.out.print(i + " ");
 		}
 		System.out.println();
-		printResults(result);
+		return result;
 	}
 	
-	private void printResults(Result result){
-		System.out.println("precision: " + result.truePositives + "/" + (result.truePositives+result.falsePositives));
-		System.out.println("recall: " + result.truePositives + "/" + result.total);
-		double precision = result.truePositives / (double)(result.truePositives + result.falsePositives);
-		double recall = result.truePositives / (double)result.total;
-		System.out.println("F-score: " + fMeasure(precision, recall, 1));
-		System.out.println("F3: " + fMeasure(precision, recall, 3));
-	}
-	
-	private double fMeasure(double precision, double recall, double beta){
-		return (1+Math.pow(beta, 2)) * (precision*recall)/(Math.pow(beta, 2)*precision + recall);
-	}
-	
-	public Result run(Citer citer, String mainAuthor, String referencedText, ContextDataSet dataset){
-		
+	public ClassificationResultImpl run(Citer citer, String mainAuthor, String referencedText, ContextDataSet dataset){
 //		System.out.println("run - citer: " + citer.title + "...");
-		
 		List<String> sentences = citer.sentences.stream().sequential()
 				.map(s -> s.text)
 				.collect(Collectors.toCollection(ArrayList::new));
@@ -79,7 +74,7 @@ public class MRF {
 	 * @param sentenceTexts
 	 * @param mainAuthor
 	 */
-	public Result run(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
+	public ClassificationResultImpl run(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
 		this.sentenceTexts = sentenceTexts;
 		this.sentenceTypes = sentenceTypes;
 		sentenceVectors = new ArrayList<HashMap<String,Double>>();
@@ -94,7 +89,7 @@ public class MRF {
 			oneLoop();	
 		}
 		
-		return getResults(0.7);
+		return getClassificationResults(0.7);
 	}
 	
 	private void setup(String mainAuthor, String referencedText, ContextDataSet dataset){
@@ -155,7 +150,7 @@ public class MRF {
 		return 0.01 + explicit + detWork + det + cosSim + acronyms + hooks; //TODO mult. cossim
 	}
 	
-	private Result getResults(double beliefThreshold){
+	private ClassificationResultImpl getClassificationResults(double beliefThreshold){
 		int truePos = 0;
 		int falsePos = 0;
 		int pos = 0;
@@ -175,7 +170,7 @@ public class MRF {
 			}
 		}
 		
-		return new Result(truePos, falsePos, pos);
+		return new ClassificationResultImpl(truePos, falsePos, pos);
 	}
 	
 	private double[] finalBelief(int sentence){
@@ -334,23 +329,7 @@ public class MRF {
 			+ (Texts.instance().startsWithConnector(words)? 1:0));
 	}
 	
-	private static class Result{
-		private int truePositives;
-		private int falsePositives;
-		private int total;
-		
-		public Result(int truePositives, int falsePositives, int total){
-			this.truePositives = truePositives;
-			this.falsePositives = falsePositives;
-			this.total = total;
-		}
-		
-		public void add(Result other){
-			truePositives += other.truePositives;
-			falsePositives += other.falsePositives;
-			total += other.total;
-		}
-	}
+	
 
 	
 }

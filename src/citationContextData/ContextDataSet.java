@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import util.IntegerMap;
+import util.Printer;
 import util.Texts;
 
 
@@ -26,6 +27,8 @@ public class ContextDataSet {
 	public List<Citer> citers;
 	public Set<String> acronyms;
 	public Set<String> lexicalHooks;
+	
+	private static Printer printer = new Printer(false);
 
 	public ContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
 		this.citedMainAuthor = citedMainAuthor;
@@ -37,9 +40,9 @@ public class ContextDataSet {
 	private void setup(){
 		acronyms = findAcronyms();
 		lexicalHooks = findLexicalHooks(5);
-		System.out.println("DATASET FOR " + citedMainAuthor);
-		System.out.println(acronyms);
-		System.out.println(lexicalHooks);
+		printer.println("DATASET FOR " + citedMainAuthor);
+		printer.println(acronyms);
+		printer.println(lexicalHooks);
 		lexicalHooks.remove(citedMainAuthor);
 	}
 	

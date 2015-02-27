@@ -1,6 +1,6 @@
 package sentenceFeaturesToWeka;
 
-enum SentenceFeature{
+public enum FeatureName{
 	//Sentence contains a determiner followed by a work noun
 	DET_WORK,
 	

@@ -6,7 +6,8 @@ public class MRF_WithConcepts extends MRF{
 
 	ConceptGraph conceptGraph;
 	
-	public MRF_WithConcepts(ConceptGraph conceptGraph) {
+	public MRF_WithConcepts(int neighbourhod, ConceptGraph conceptGraph) {
+		super(neighbourhod);
 		this.conceptGraph = conceptGraph;
 	}
 	

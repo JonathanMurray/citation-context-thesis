@@ -29,12 +29,7 @@ import util.Printer;
  */
 public class GraphCreator {
 	
-//	public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
-//		buildLinksAndSaveToFile("indexToPhrase.ser", "phraseToIndex.ser", "links.ser");
-////		testPerformance();
-//	}
-	
-	
+	private static Printer printer = new Printer(false);
 	
 	public static ConceptGraph loadConceptGraph(String linksPath, String indicesPath){
 		try{
@@ -48,7 +43,7 @@ public class GraphCreator {
 	}
 	
 	public static  HashMap<Integer, TIntArrayList> deserializeLinks(String filepath) throws FileNotFoundException, IOException, ClassNotFoundException{
-		System.out.println("Loading map from file ...");
+		printer.println("Loading map from file ...");
 		try(ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(filepath)))){
 			int size = ois.readInt();
 			HashMap<Integer, TIntArrayList> map = new HashMap<Integer, TIntArrayList>();
@@ -56,15 +51,15 @@ public class GraphCreator {
 				Integer key = ois.readInt();
 				TIntArrayList value = (TIntArrayList) ois.readObject();
 				map.put(key, value);
-				Printer.printProgress(i, 500000, 20);
+				printer.printProgress(i, 500000, 20);
 			}
-			System.out.println("Load successful. Read " + map.size() + " entries.");
+			printer.println("Load successful. Read " + map.size() + " entries.");
 			return map;
 		}
 	}
 	
 	public static HashMap<String, Integer> deserializeIndices(String filepath){
-		System.out.println("Loading map<string,int> from file ...");
+		printer.println("Loading map<string,int> from file ...");
 		try(ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(filepath)))){
 			int size = ois.readInt();
 			HashMap<String, Integer> map = new HashMap<String, Integer>();
@@ -72,9 +67,9 @@ public class GraphCreator {
 				String key = (String)ois.readObject();
 				int value = ois.readInt();
 				map.put(key, value);
-				Printer.printProgress(i, 500000, 20);
+				printer.printProgress(i, 500000, 20);
 			}
-			System.out.println("Load successful. Read " + map.size() + " entries.");
+			printer.println("Load successful. Read " + map.size() + " entries.");
 			return map;
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
@@ -124,7 +119,7 @@ public class GraphCreator {
 	}
 	
 	public static Structures createDataFromFiles(File linksFile, File titlesFile) throws IOException, InterruptedException{
-		System.out.println("Creating data from files: " + linksFile.getPath() + ",  " + titlesFile.getPath());
+		printer.println("Creating data from files: " + linksFile.getPath() + ",  " + titlesFile.getPath());
 		try(BufferedReader linksReader = new BufferedReader(new FileReader(linksFile))){
 			try (BufferedReader titlesReader = new BufferedReader(new FileReader(titlesFile))) {
 				return createDataFromReaders(linksReader, titlesReader);
@@ -136,7 +131,7 @@ public class GraphCreator {
 		ConcurrentHashMap<String,Integer> phraseToIndex = new ConcurrentHashMap<String,Integer>();
 		ConcurrentHashMap<Integer, TIntArrayList> links = new ConcurrentHashMap<Integer, TIntArrayList>(); 
 		
-		System.out.println("Adding titles...");
+		printer.println("Adding titles...");
 		{
 			Iterator<String> titleLines = titlesReader.lines().iterator();
 			int i = 1;
@@ -146,13 +141,13 @@ public class GraphCreator {
 			}
 		}
 		
-		System.out.println("Adding links...");
+		printer.println("Adding links...");
 		
 		//NOTE!
 		//lines().parallel is extremely slow when running for a long time, due to garbage collection.
 		//Crashes with "gc limit exceeded" after being almost stuck for several minutes at around 4'800'000
 		linksReader.lines().forEach(linksLine -> {
-			Printer.printProgress(links.size(), 100000, 10);
+			printer.printProgress(links.size(), 100000, 10);
 			int pos = linksLine.indexOf(' ') + 1;
 			int citer = Integer.parseInt(linksLine.substring(0, pos-2));
 			TIntArrayList cited = new TIntArrayList();
@@ -169,7 +164,7 @@ public class GraphCreator {
 	
 
 	public static <K,V> void serialize(ConcurrentHashMap<K, V> map, String filepath, BiConsumer<K, ObjectOutputStream> serializeKey, BiConsumer<V, ObjectOutputStream> serializeValue) throws FileNotFoundException, IOException{
-		System.out.println("Saving map to file ...");
+		printer.println("Saving map to file ...");
 		
 		try(ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filepath)))){
 			oos.writeInt(map.size());
@@ -178,9 +173,9 @@ public class GraphCreator {
 				serializeKey.accept(e.getKey(), oos);
 				serializeValue.accept(e.getValue(), oos);
 				i++;
-				Printer.printProgress(i, 100000, 10);
+				printer.printProgress(i, 100000, 10);
 			}
-			System.out.println("Save successful. Wrote " + i + " entries.");
+			printer.println("Save successful. Wrote " + i + " entries.");
 		}
 	}
 	
