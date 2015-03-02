@@ -27,15 +27,15 @@ import util.Printer;
  * @author jonathan
  *
  */
-public class GraphCreator {
+public class WikiGraphFactory {
 	
 	private static Printer printer = new Printer(false);
 	
-	public static ConceptGraph loadConceptGraph(String linksPath, String indicesPath){
+	public static WikiGraph loadConceptGraph(String linksPath, String indicesPath){
 		try{
-			HashMap<Integer, TIntArrayList> links = GraphCreator.deserializeLinks(linksPath);
-			HashMap<String, Integer> indices = GraphCreator.deserializeIndices(indicesPath);
-			return new ConceptGraph(links, indices);
+			HashMap<Integer, TIntArrayList> links = WikiGraphFactory.deserializeLinks(linksPath);
+			HashMap<String, Integer> indices = WikiGraphFactory.deserializeIndices(indicesPath);
+			return new WikiGraph(links, indices);
 		}catch(IOException | ClassNotFoundException e){
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -81,8 +81,8 @@ public class GraphCreator {
 		String dir = "/home/jonathan/Documents/exjobb/data/wikipedia/";
 		try {
 			Structures structures = createDataFromFiles(dir + "links-simple-sorted.txt", dir + "titles-sorted.txt");
-			serialize(structures.phraseToIndex, toIndexPath, GraphCreator::writeString, GraphCreator::writeInt);
-			serialize(structures.links, linksPath, GraphCreator::writeInt, GraphCreator::writeObject);
+			serialize(structures.phraseToIndex, toIndexPath, WikiGraphFactory::writeString, WikiGraphFactory::writeInt);
+			serialize(structures.links, linksPath, WikiGraphFactory::writeInt, WikiGraphFactory::writeObject);
 		} catch (IOException | InterruptedException e) {
 			
 			e.printStackTrace();

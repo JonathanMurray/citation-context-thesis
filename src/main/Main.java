@@ -24,7 +24,7 @@ import citationContextData.ContextDataSet;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
-import conceptGraph.ConceptGraph;
+import conceptGraph.WikiGraph;
 
 public class Main {
 	
@@ -35,8 +35,8 @@ public class Main {
 	
 	public static void main(String[] args) {
 //		convertDataToArff("C98-2122");
-//		compareClassifiers("A92-1018");
-		WekaClassifier.NaiveBayes().ROC(WekaClassifier.fromFiles(new File("arff/C98-2122.html.arff")));
+		compareClassifiers("A92-1018");
+//		WekaClassifier.NaiveBayes().ROC(WekaClassifier.fromFiles(new File("arff/C98-2122.html.arff")));
 	}
 	
 	public static void convertAllDataToArff(File dir){
@@ -74,7 +74,7 @@ public class Main {
 				new File("arff/"), new File("arff/" + filename + ".html.arff")));
 		
 		MRF mrf = new MRF(4);
-		ConceptGraph conceptGraph = ConceptGraph.fromFiles("links.ser", "phraseToIndex.ser");
+		WikiGraph conceptGraph = WikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
 		conceptGraph.setSimilarityMultiplier(0.01);
 		MRF_WithConcepts mrfWithConcepts = new MRF_WithConcepts(4, conceptGraph);
 		
@@ -121,7 +121,7 @@ public class Main {
 	}
 	
 	public static void conceptSimilarity(){
-		ConceptGraph graph = ConceptGraph.fromFiles("", "");
+		WikiGraph graph = WikiGraph.fromFiles("", "");
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Enter 2 sentences to compare: ");
 		while(true){

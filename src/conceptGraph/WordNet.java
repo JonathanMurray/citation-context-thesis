@@ -1,10 +1,8 @@
-package wordnet;
+package conceptGraph;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,11 +15,11 @@ import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
 
-public class WordNet {
+public class WordNet implements ConceptGraph{
 
 	public static void main(String[] args) throws IOException {
 		WordNet jwi = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
-		System.out.println(jwi.getRelated("part_of_speech"));
+		System.out.println(jwi.getRelated("part_of_speech", POS.NOUN));
 	}
 	
 	private IDictionary dict;
@@ -47,30 +45,30 @@ public class WordNet {
 		}
 	}
 	
-	public Set<String> getRelated(String wordString){
-		IIndexWord indexWord = dict.getIndexWord(wordString, POS.NOUN);
+	public Set<String> getRelated(String wordString, POS posTag){
+		IIndexWord indexWord = dict.getIndexWord(wordString, posTag);
 		if(indexWord == null){
-//			System.out.println("Unknown word");
 			return new HashSet<String>();
 		}
 		
-		ArrayList<String> result = new ArrayList<String>();
+		HashSet<String> result = new HashSet<String>();
 		
 		for(IWordID wordID : indexWord.getWordIDs()){
 			IWord word = dict.getWord(wordID);
 			ISynset synset = word.getSynset();
 			
-			List<String> words = synset.getWords().stream().map(w -> w.getLemma()).collect(Collectors.toList());
-			result.addAll(words);
+			for(IWord w : synset.getWords()){
+				result.add(w.getLemma());
+			}
 			
 			for(ISynsetID relatedID : synset.getRelatedSynsets()){
 				ISynset related = dict.getSynset(relatedID);
-//				System.out.println(related.getWords() + " " +  related.getGloss());
-				List<String> relatedWords = related.getWords().stream().map(w -> w.getLemma()).collect(Collectors.toList());
-				result.addAll(relatedWords);
+				for(IWord w : related.getWords()){
+					result.add(w.getLemma());
+				}
 			}
 		}
-		return new HashSet<String>(result);
+		return result;
 	}
 	
 	public void printSynsetAndRelated(String searchWord){
@@ -95,5 +93,27 @@ public class WordNet {
 			}
 			System.out.println();
 		}
+	}
+
+	@Override
+	public double similarity(String[] sentence1, String[] sentence2) {
+		double sum = 0;
+		for(String word1 : sentence1){
+			for(String related1 : getRelated(word1, POS.NOUN)){
+				if(contains(related1, sentence2)){
+					sum += 1;
+				}
+			}
+		}
+		return sum / (double)sentence1.length;
+	}
+	
+	private <T> boolean contains(T element, T[] array){
+		for(int i = 0; i < array.length; i++){
+			if(array[i].equals(element)){
+				return true;
+			}
+		}
+		return false;
 	}
 }
