@@ -1,4 +1,4 @@
-package jwi_test;
+package wordnet;
 
 import java.io.IOException;
 import java.net.URL;
@@ -17,16 +17,16 @@ import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
 
-public class JWIMain {
+public class WordNet {
 
 	public static void main(String[] args) throws IOException {
-		JWIMain jwi = JWIMain.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
+		WordNet jwi = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
 		System.out.println(jwi.getRelated("part_of_speech"));
 	}
 	
 	private IDictionary dict;
 	
-	public JWIMain(IDictionary dict){
+	public WordNet(IDictionary dict){
 		try {
 			this.dict = dict;
 			dict.open();
@@ -35,11 +35,11 @@ public class JWIMain {
 		}
 	}
 	
-	public static JWIMain fromFile(String dictDir){
+	public static WordNet fromFile(String dictDir){
 		try{
 			URL dictUrl = new URL("file", null, dictDir);
 			IDictionary dict = new Dictionary(dictUrl);
-			return new JWIMain(dict);
+			return new WordNet(dict);
 		}catch(IOException e){
 			e.printStackTrace();
 			System.exit(0);
