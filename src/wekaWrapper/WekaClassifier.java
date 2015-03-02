@@ -17,6 +17,7 @@ import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.evaluation.ThresholdCurve;
+import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
@@ -57,7 +58,14 @@ public class WekaClassifier {
 		}
 	}
 	
-	
+	public static WekaClassifier NeuralNetwork(){
+		try{
+			MultilayerPerceptron mlp = new MultilayerPerceptron();
+			return new WekaClassifier(mlp);
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
+	}
 	
 	private static SMO setupSMO() throws Exception{
 		SMO classifier = new SMO();
@@ -205,7 +213,8 @@ public class WekaClassifier {
 			Evaluation eval = new Evaluation(data);
 			
 //			eval.evaluateModel(classifier, data);
-			eval.crossValidateModel(classifier, data, 10, new Random());
+			
+			eval.crossValidateModel(classifier, data, 2, new Random());
 		
 			// generate curve
 			ThresholdCurve tc = new ThresholdCurve();
