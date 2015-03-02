@@ -1,12 +1,12 @@
 package markovRandomField;
 
-import conceptGraph.WikiGraph;
+import conceptGraph.ConceptGraph;
 
 public class MRF_WithConcepts extends MRF{
 
-	WikiGraph conceptGraph;
+	ConceptGraph conceptGraph;
 	
-	public MRF_WithConcepts(int neighbourhod, WikiGraph conceptGraph) {
+	public MRF_WithConcepts(int neighbourhod, ConceptGraph conceptGraph) {
 		super(neighbourhod);
 		this.conceptGraph = conceptGraph;
 	}

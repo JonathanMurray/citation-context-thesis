@@ -39,6 +39,13 @@ public class Main {
 //		WekaClassifier.NaiveBayes().ROC(WekaClassifier.fromFiles(new File("arff/C98-2122.html.arff")));
 	}
 	
+	public static void compareConceptGraphs(){
+		WikiGraph conceptGraph = WikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
+		conceptGraph.setSimilarityMultiplier(0.01);
+		MRF_WithConcepts wikiMrf = new MRF_WithConcepts(4, conceptGraph);
+		
+	}
+	
 	public static void convertAllDataToArff(File dir){
 		for(File htmlFile : dir.listFiles()){
 			convertDataToArff(htmlFile);
