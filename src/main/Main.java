@@ -25,6 +25,8 @@ import citationContextData.ContextHTML_Parser;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
 import conceptGraph.WikiGraph;
+import conceptGraph.WordNet;
+import edu.mit.jwi.item.POS;
 
 public class Main {
 	
@@ -34,16 +36,29 @@ public class Main {
 	
 	
 	public static void main(String[] args) {
-//		convertDataToArff("C98-2122");
-		compareClassifiers("A92-1018");
+		
+		
+//		WordNet wordnet = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
+//		System.out.println(wordnet.getRelated("tagger", POS.NOUN));
+		
+		
+
+//		compareConceptGraphs();
+		
+		convertAllDataToArff(SENTIMENT_CORPUS_DIR);
+//		compareClassifiers("A92-1018");
 //		WekaClassifier.NaiveBayes().ROC(WekaClassifier.fromFiles(new File("arff/C98-2122.html.arff")));
 	}
 	
 	public static void compareConceptGraphs(){
-		WikiGraph conceptGraph = WikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
-		conceptGraph.setSimilarityMultiplier(0.01);
-		MRF_WithConcepts wikiMrf = new MRF_WithConcepts(4, conceptGraph);
-		
+		WikiGraph wikiGraph = WikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
+		wikiGraph.setSimilarityMultiplier(0.01);
+		MRF_WithConcepts wikiMrf = new MRF_WithConcepts(4, wikiGraph);
+		WordNet wordnet = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
+		MRF_WithConcepts wordnetMrf = new MRF_WithConcepts(4, wordnet);
+		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
+		System.out.println(wikiGraph.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
+		System.out.println(wordnet.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
 	}
 	
 	public static void convertAllDataToArff(File dir){

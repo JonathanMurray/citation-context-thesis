@@ -3,13 +3,9 @@ package citationContextData;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,7 +14,6 @@ import java.util.stream.Stream;
 
 import util.IntegerMap;
 import util.Printer;
-import util.Texts;
 
 
 public class ContextDataSet {
@@ -29,6 +24,10 @@ public class ContextDataSet {
 	public Set<String> lexicalHooks;
 	
 	private static Printer printer = new Printer(false);
+	
+	public static ContextDataSet fromHTML_File(File file){
+		return ContextHTML_Parser.parseHTML(file);
+	}
 
 	public ContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
 		this.citedMainAuthor = citedMainAuthor;
@@ -150,28 +149,28 @@ public class ContextDataSet {
 //		return ngramCounts;
 //	}
 	
-	IntegerMap<String> getNgrams(int n, Stream<Sentence> sentences){
-		if(n < 2){
-			throw new IllegalArgumentException("use unigrams()");
-		} 
-		List<String> words = sentences.flatMap(s -> Arrays.asList(s.text.split(" +")).stream())
-				.map(s -> s.toLowerCase())
-				.collect(Collectors.toCollection(ArrayList::new));
-		List<String> stopwords = readStopwords();
-		stopwords.add(Texts.NUMBER_TAG);
-		IntegerMap<String> ngramCounts = new IntegerMap<String>();
-		for(int i = n - 1; i < words.size(); i++){
-			List<String> ngramWords = words.subList(i - n + 1, i + 1);
-			boolean ngramContainsStopword = ngramWords.stream()
-					.anyMatch(stopwords::contains);
-			if(!ngramContainsStopword){
-				Optional<String> ngram = ngramWords.stream()
-						.reduce((s1,s2) -> s1 + " " + s2);
-				ngramCounts.increment(ngram.get(), 1);
-			}
-		}
-		return ngramCounts;
-	}
+//	IntegerMap<String> getNgrams(int n, Stream<Sentence> sentences){
+//		if(n < 2){
+//			throw new IllegalArgumentException("use unigrams()");
+//		} 
+//		List<String> words = sentences.flatMap(s -> Arrays.asList(s.text.split(" +")).stream())
+//				.map(s -> s.toLowerCase())
+//				.collect(Collectors.toCollection(ArrayList::new));
+//		List<String> stopwords = readStopwords();
+//		stopwords.add(Texts.NUMBER_TAG);
+//		IntegerMap<String> ngramCounts = new IntegerMap<String>();
+//		for(int i = n - 1; i < words.size(); i++){
+//			List<String> ngramWords = words.subList(i - n + 1, i + 1);
+//			boolean ngramContainsStopword = ngramWords.stream()
+//					.anyMatch(stopwords::contains);
+//			if(!ngramContainsStopword){
+//				Optional<String> ngram = ngramWords.stream()
+//						.reduce((s1,s2) -> s1 + " " + s2);
+//				ngramCounts.increment(ngram.get(), 1);
+//			}
+//		}
+//		return ngramCounts;
+//	}
 //	
 //	IncrementableMap<String> getBigramsInImplicitReferences(){
 //		return getNgrams(2, implicitReferences());
@@ -189,15 +188,15 @@ public class ContextDataSet {
 //		return getNgrams(3, nonReferences());
 //	}
 	
-	List<String> readStopwords(){
-		try {
-			return Files.lines(Paths.get("src/ml/data/stopwords.txt")).collect(Collectors.toList());
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(0);
-			return null;
-		}
-	}
+//	List<String> readStopwords(){
+//		try {
+//			return Files.lines(Paths.get("src/ml/data/stopwords.txt")).collect(Collectors.toList());
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			System.exit(0);
+//			return null;
+//		}
+//	}
 	
 //	private Stream<String> words(Stream<Sentence> sentences){
 //		return sentences
