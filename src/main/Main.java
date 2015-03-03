@@ -2,8 +2,11 @@ package main;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -16,11 +19,11 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.pdfbox.ExtractText;
-import org.apache.pdfbox.PDFBox;
-
 import markovRandomField.MRF;
 import markovRandomField.MRF_WithConcepts;
+
+import org.apache.pdfbox.ExtractText;
+
 import util.ClassificationResult;
 import util.NonThrowingFileWriter;
 import weka.core.Instances;
@@ -40,26 +43,10 @@ public class Main {
 	public static final File DATA_DIR = Paths.get("/home/jonathan/Documents/exjobb/data/").toFile();
 	public static final File CFC_DIR = new File(DATA_DIR, "CFC_distribution/2006_paper_training/");
 	public static final File SENTIMENT_CORPUS_DIR = new File(DATA_DIR, "teufel-citation-context-corpus/");
-	
+	public static final String WORDNET_DICT = "/home/jonathan/Documents/exjobb/data/wordnet-dict"; 
 	
 	public static void main(String[] args) throws IOException {
-		
-		convertAllPDFsToText(SENTIMENT_CORPUS_DIR);
-		
-		
-		
-		
-//		WordNet wordnet = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
-//		System.out.println(wordnet.getRelated("tagger", POS.NOUN));
-		
-		
-		
-
-//		compareConceptGraphs();
-		
-//		convertAllDataToArff(SENTIMENT_CORPUS_DIR);
-//		compareClassifiers("A92-1018");
-//		WekaClassifier.NaiveBayes().ROC(WekaClassifier.fromFiles(new File("arff/C98-2122.html.arff")));
+		compareClassifiers("A92-1018");
 	}
 	
 	public static void convertAllPDFsToText(File dir){
@@ -149,12 +136,11 @@ public class Main {
 		
 		ContextDataSet contextDataset = ContextHTML_Parser.parseHTML(new File(SENTIMENT_CORPUS_DIR, filename + ".html"));
 		
-		String citedAbstract = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements. Only a lexicon and some unlabeled training text are required. Accuracy exceeds 96%. We describe implementation strategies and optimizations which result in high-speed operation. Three applications for tagging are described: phrase recognition; word sense disambiguation; and grammatical function assignment.";
-		//TODO Hardcoded to one test file
+		String citedContent = readTextfile(new File(SENTIMENT_CORPUS_DIR, filename + ".txt"));
 		
 		
 		Instances wekaInstances = WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff"));
-		DataSet dataset = new DataSet(contextDataset, citedAbstract, wekaInstances);
+		DataSet dataset = new DataSet(contextDataset, citedContent, wekaInstances);
 		
 		
 		WekaClassifier classifier = WekaClassifier.SMO();
@@ -162,15 +148,30 @@ public class Main {
 				new File("arff/"), new File("arff/" + filename + ".html.arff")));
 		
 		MRF mrf = new MRF(4);
-		WikiGraph conceptGraph = WikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
-		conceptGraph.setSimilarityMultiplier(0.01);
-		MRF_WithConcepts mrfWithConcepts = new MRF_WithConcepts(4, conceptGraph);
+//		WikiGraph conceptGraph = WikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
+//		conceptGraph.setSimilarityMultiplier(0.01);
+//		MRF_WithConcepts mrfWithConcepts = new MRF_WithConcepts(4, conceptGraph);
 		
 		compareClassifiers(dataset, 
-				new Classifier("Weka", classifier), 
-				new Classifier("MRF", mrf), 
-				new Classifier("MRF - Concepts", mrfWithConcepts)
+				new Classifier("MRF", mrf) ,
+				new Classifier("Weka", classifier) 
+				
+//				new Classifier("MRF - Concepts", mrfWithConcepts)
 		);
+	}
+	
+	private static String readTextfile(File f){
+		try(Scanner sc = new Scanner(new BufferedReader(new FileReader(f)))) {
+			StringBuilder s = new StringBuilder();
+			while(sc.hasNextLine()){
+				s.append(sc.nextLine() + "\n");
+			}
+			return s.toString();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			System.exit(0);
+			return null;
+		}
 	}
 	
 	public static void compareClassifiers(DataSet dataset, Classifier... classifiers){

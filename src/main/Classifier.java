@@ -23,7 +23,7 @@ public class Classifier {
 		if(wekaClassifier != null){
 			return wekaClassifier.testOnData(dataset.wekaInstances);
 		}else{
-			return mrf.runMany(dataset.contextDataset.citers, dataset.citedAbstract, dataset.contextDataset);
+			return mrf.runMany(dataset.contextDataset.citers, dataset.citedArticleContent, dataset.contextDataset);
 		}
 	}
 	

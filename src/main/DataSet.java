@@ -5,13 +5,13 @@ import citationContextData.ContextDataSet;
 
 public class DataSet {
 	ContextDataSet contextDataset;
-	String citedAbstract;
+	String citedArticleContent;
 	Instances wekaInstances;
 	
 	
-	public DataSet(ContextDataSet contextDataset, String citedAbstract, Instances wekaInstances) {
+	public DataSet(ContextDataSet contextDataset, String citedArticleContent, Instances wekaInstances) {
 		this.contextDataset = contextDataset;
-		this.citedAbstract = citedAbstract;
+		this.citedArticleContent = citedArticleContent;
 		this.wekaInstances = wekaInstances;
 	}
 }

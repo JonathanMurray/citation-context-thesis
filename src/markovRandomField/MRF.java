@@ -48,7 +48,7 @@ public class MRF {
 		ClassificationResultImpl result = new ClassificationResultImpl(0,0,0);
 		int i = 0;
 		for(Citer citer : citers){
-			result.add(run(citer, referencedText, dataset));
+			result.add(run(citer, textToWordVec(referencedText), dataset));
 			i++;
 			System.out.print(i + " ");
 		}
@@ -56,7 +56,7 @@ public class MRF {
 		return result;
 	}
 	
-	public ClassificationResultImpl run(Citer citer, String referencedText, ContextDataSet dataset){
+	public ClassificationResultImpl run(Citer citer, HashMap<String,Double> referencedText, ContextDataSet dataset){
 //		System.out.println("run - citer: " + citer.title + "...");
 		List<String> sentences = citer.sentences.stream().sequential()
 				.map(s -> s.text)
@@ -74,7 +74,7 @@ public class MRF {
 	 * @param sentenceTexts
 	 * @param mainAuthor
 	 */
-	public ClassificationResultImpl run(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, String referencedText, ContextDataSet dataset){
+	public ClassificationResultImpl run(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, HashMap<String,Double> referencedText, ContextDataSet dataset){
 		this.sentenceTexts = sentenceTexts;
 		this.sentenceTypes = sentenceTypes;
 		sentenceVectors = new ArrayList<HashMap<String,Double>>();
@@ -92,14 +92,14 @@ public class MRF {
 		return getClassificationResults(0.7);
 	}
 	
-	private void setup(String mainAuthor, String referencedText, ContextDataSet dataset){
+	private void setup(String mainAuthor, HashMap<String,Double> referencedText, ContextDataSet dataset){
 		List<Double> unnormalizedBeliefs = new ArrayList<Double>();
 		
 		for(String text : sentenceTexts){
 			HashMap<String, Double> vector = textToWordVec(text); 
 			sentenceVectors.add(vector);
 			bigramVectors.add(Texts.instance().getNGrams(2, text));
-			unnormalizedBeliefs.add(selfBelief(text, vector, mainAuthor, textToWordVec(referencedText), dataset));
+			unnormalizedBeliefs.add(selfBelief(text, vector, mainAuthor, referencedText, dataset));
 		}
 		
 		double maxBelief = unnormalizedBeliefs.stream().max(Double::compareTo).get();
