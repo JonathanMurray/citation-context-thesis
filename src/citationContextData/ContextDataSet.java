@@ -17,6 +17,7 @@ import util.Printer;
 
 
 public class ContextDataSet {
+	public String datasetLabel;
 	public String citedMainAuthor;
 	public String citedTitle;
 	public List<Citer> citers;
@@ -29,7 +30,8 @@ public class ContextDataSet {
 		return ContextHTML_Parser.parseHTML(file);
 	}
 
-	public ContextDataSet(String citedMainAuthor, String citedTitle, List<Citer> citers){
+	public ContextDataSet(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers){
+		this.datasetLabel = datasetLabel;
 		this.citedMainAuthor = citedMainAuthor;
 		this.citedTitle = citedTitle;
 		this.citers = citers;

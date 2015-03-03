@@ -28,7 +28,6 @@ public class ContextHTML_Parser {
 		Document doc;
 		try {
 			doc = Jsoup.parse(file, null);
-		
 			String citedTitle = doc.select(".dstPaperTitle").get(0).text();
 			String[] citedAuthors = doc.select(".dstPaperAuthors").get(0).text().split(";");
 			String mainAuthorLastName = citedAuthors[0].split(",")[0];
@@ -50,7 +49,8 @@ public class ContextHTML_Parser {
 				}
 				citers.add(new Citer(citerTitle, sentences));
 			}
-			return new ContextDataSet(mainAuthorLastName, citedTitle, citers);
+			String datasetLabel = file.getName().substring(0, file.getName().length() - 5);
+			return new ContextDataSet(datasetLabel, mainAuthorLastName, citedTitle, citers);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);

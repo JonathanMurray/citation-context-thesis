@@ -1,6 +1,11 @@
 package main;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -10,6 +15,9 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.apache.pdfbox.ExtractText;
+import org.apache.pdfbox.PDFBox;
 
 import markovRandomField.MRF;
 import markovRandomField.MRF_WithConcepts;
@@ -26,7 +34,6 @@ import citationContextData.Sentence;
 import citationContextData.SentenceClass;
 import conceptGraph.WikiGraph;
 import conceptGraph.WordNet;
-import edu.mit.jwi.item.POS;
 
 public class Main {
 	
@@ -35,19 +42,45 @@ public class Main {
 	public static final File SENTIMENT_CORPUS_DIR = new File(DATA_DIR, "teufel-citation-context-corpus/");
 	
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
+		
+		convertAllPDFsToText(SENTIMENT_CORPUS_DIR);
+		
+		
 		
 		
 //		WordNet wordnet = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
 //		System.out.println(wordnet.getRelated("tagger", POS.NOUN));
 		
 		
+		
 
 //		compareConceptGraphs();
 		
-		convertAllDataToArff(SENTIMENT_CORPUS_DIR);
+//		convertAllDataToArff(SENTIMENT_CORPUS_DIR);
 //		compareClassifiers("A92-1018");
 //		WekaClassifier.NaiveBayes().ROC(WekaClassifier.fromFiles(new File("arff/C98-2122.html.arff")));
+	}
+	
+	public static void convertAllPDFsToText(File dir){
+		for(File pdfFile : dir.listFiles()){
+			if(pdfFile.getName().endsWith(".pdf")){
+				String baseName = pdfFile.getName().split("\\.pdf")[0];
+				File textFile = new File(dir, baseName + ".txt");
+				pdfToText(pdfFile, textFile);
+			}
+		}
+	}
+	
+	public static void pdfToText(File pdfFile, File textFile){
+		try {
+			System.out.print("Converting " + pdfFile.getName() + " to " + textFile.getName() + "...  ");
+			ExtractText.main(new String[]{pdfFile.getAbsolutePath(), textFile.getAbsolutePath()});
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		System.out.println(textFile.exists()? "SUCCESS" : "FAIL");
 	}
 	
 	public static void compareConceptGraphs(){
@@ -59,6 +92,39 @@ public class Main {
 		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
 		System.out.println(wikiGraph.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
 		System.out.println(wordnet.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
+	}
+	
+	public static void downloadPDFsForHTML_Files() throws IOException{
+		for(File f : SENTIMENT_CORPUS_DIR.listFiles()){
+			if(f.getName().endsWith(".html")){
+				ContextDataSet dataset = ContextDataSet.fromHTML_File(f);
+				String name = dataset.datasetLabel;
+				URL url = new URL("http://www.aclweb.org/anthology/" + name);
+				BufferedInputStream in = new BufferedInputStream(url.openStream());
+				File newFile = new File(SENTIMENT_CORPUS_DIR, name + ".pdf");
+				System.out.println("new file: " + newFile.getAbsolutePath());
+				BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(newFile));
+				int b;
+				while((b = in.read()) != -1){
+					fos.write(b);
+				}
+				in.close();
+				fos.flush();
+				fos.close();
+			}
+		}
+	}
+	
+	public static void printInfoFromAllHTML_Files(){
+		for(File f : SENTIMENT_CORPUS_DIR.listFiles()){
+			if(f.getName().endsWith(".html")){
+				ContextDataSet dataset = ContextDataSet.fromHTML_File(f);
+				System.out.println(dataset.datasetLabel);
+				System.out.println(dataset.citedMainAuthor);
+				System.out.println(dataset.citedTitle);
+				System.out.println();
+			}
+		}
 	}
 	
 	public static void convertAllDataToArff(File dir){
