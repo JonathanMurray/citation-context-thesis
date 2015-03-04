@@ -2,13 +2,14 @@ package util;
 
 import weka.classifiers.Evaluation;
 
-public class ClassificationResultWrapper implements ClassificationResult{
+public class ClassificationResultWrapper extends ClassificationResult{
 	
 	private Evaluation wekaEvaluation;
 	private final static int POSITIVE_CLASS = 0;
 	
 	public ClassificationResultWrapper(Evaluation wekaEvaluation){
 		this.wekaEvaluation = wekaEvaluation;
+		
 	}
 
 	@Override
@@ -24,6 +25,11 @@ public class ClassificationResultWrapper implements ClassificationResult{
 	@Override
 	public double fMeasure() {
 		return wekaEvaluation.weightedFMeasure();
+	}
+
+	@Override
+	public double[][] confusionMatrix() {
+		return wekaEvaluation.confusionMatrix();
 	}
 	
 	

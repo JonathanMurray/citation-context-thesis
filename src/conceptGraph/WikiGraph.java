@@ -7,24 +7,29 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import util.Texts;
+
 public abstract class WikiGraph implements ConceptGraph{
 	public static final double DEFAULT_SIMILARITY_MULTIPLIER = 0.01;
+	public static final boolean DEFAULT_ALLOW_STOPWORDS_AS_CONCEPTS = false;
 	private double similarityMultiplier;
+	private boolean allowStopwordsAsConcepts;
 	
-	public WikiGraph(double similarityMultiplier){
+	public WikiGraph(double similarityMultiplier, boolean allowStopwordsAsConcepts){
 		this.similarityMultiplier = similarityMultiplier;
+		this.allowStopwordsAsConcepts = allowStopwordsAsConcepts;
 	}
 	
 	public WikiGraph(){
-		this(DEFAULT_SIMILARITY_MULTIPLIER);
-	}
-	
-	public static WikiGraph fromFiles(String linksPath, String indicesPath){
-		return WikiGraphFactory.buildWikiGraph(linksPath, indicesPath);
+		this(DEFAULT_SIMILARITY_MULTIPLIER, DEFAULT_ALLOW_STOPWORDS_AS_CONCEPTS);
 	}
 	
 	final public void setSimilarityMultiplier(double mult){
 		similarityMultiplier = mult;
+	}
+	
+	final public void setAllowStopwordsAsConcepts(boolean allow){
+		allowStopwordsAsConcepts = allow;
 	}
 	
 	final public double similarity(String[] sentence1, String[] sentence2){
@@ -54,10 +59,12 @@ public abstract class WikiGraph implements ConceptGraph{
 		for(int i = 0; i < sentence.length; i++){
 			String wordLowerCase = sentence[i].toLowerCase();
 			try{
-				int phraseIndex = getPhraseIndex(wordLowerCase);
-				concepts.add(phraseToConcept(phraseIndex));
+				if(allowStopwordsAsConcepts || !Texts.instance().isStopword(wordLowerCase)){
+					int phraseIndex = getPhraseIndex(wordLowerCase);
+					concepts.add(phraseToConcept(phraseIndex));	
+				}
 			}catch(NoSuchElementException e){
-				//That's fine
+				//phrase is not a registered concept
 			}
 		}
 		return concepts;
@@ -71,7 +78,7 @@ public abstract class WikiGraph implements ConceptGraph{
 				related.add(other);
 			}
 		}catch(NoSuchElementException e){
-			//That's fine
+			//No links from phrase found
 		}
 		
 		return new Concept(related); 

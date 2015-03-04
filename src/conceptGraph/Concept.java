@@ -23,4 +23,5 @@ public class Concept{
 	public String toString(){
 		return indices.toString();
 	}
+	
 }

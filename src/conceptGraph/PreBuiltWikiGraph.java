@@ -12,17 +12,14 @@ public class PreBuiltWikiGraph extends WikiGraph{
 //	private HashMap<Integer, TIntArrayList> links;
 	private TObjectIntHashMap<String> indices;
 //	private HashMap<String, Integer> indices;
-	
-	public static PreBuiltWikiGraph fromFiles(String linksPath, String indicesPath){
-		return WikiGraphFactory.buildWikiGraph(linksPath, indicesPath);
-	}
+
 	
 	public PreBuiltWikiGraph(TIntObjectHashMap<TIntArrayList> links, TObjectIntHashMap<String> indices){
-		this(links, indices, DEFAULT_SIMILARITY_MULTIPLIER);
+		this(links, indices, DEFAULT_SIMILARITY_MULTIPLIER, DEFAULT_ALLOW_STOPWORDS_AS_CONCEPTS);
 	}
 	
-	public PreBuiltWikiGraph(TIntObjectHashMap<TIntArrayList> links, TObjectIntHashMap<String> indices, double similarityMultiplier){
-		super(similarityMultiplier);
+	public PreBuiltWikiGraph(TIntObjectHashMap<TIntArrayList> links, TObjectIntHashMap<String> indices, double similarityMultiplier, boolean allowStopwordsAsConcepts){
+		super(similarityMultiplier, allowStopwordsAsConcepts);
 		this.links = links;
 		this.indices = indices;
 	}

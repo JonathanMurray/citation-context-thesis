@@ -50,7 +50,7 @@ public class WikiGraphFactory {
 //		}
 //	}
 	
-	public static PreBuiltWikiGraph buildWikiGraph(String linksPath, String indicesPath){
+	public static PreBuiltWikiGraph loadWikiGraph(String linksPath, String indicesPath, double similarityMultiplier, boolean allowStopwordConcepts){
 		try{
 			printer.print("Loading links from " + linksPath + " ... ");
 			TIntObjectHashMap<TIntArrayList> links = (TIntObjectHashMap<TIntArrayList>) new ObjectInputStream(new FileInputStream(linksPath)).readObject();
@@ -58,7 +58,7 @@ public class WikiGraphFactory {
 			printer.print("Loading indices from " + indicesPath + " ... ");
 			TObjectIntHashMap<String> indices = (TObjectIntHashMap<String>) new ObjectInputStream(new FileInputStream(indicesPath)).readObject();
 			printer.println("DONE.");
-			return new PreBuiltWikiGraph(links, indices);
+			return new PreBuiltWikiGraph(links, indices, similarityMultiplier, allowStopwordConcepts);
 		}catch(IOException | ClassNotFoundException e){
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -103,10 +103,10 @@ public class WikiGraphFactory {
 //		}
 //	}
 
-	public static void buildLinksAndSaveToFile(String toIndexPath, String linksPath, boolean onlySingleWords){
+	public static void readDataBuildLinksAndSaveToFile(String toIndexPath, String linksPath, boolean onlySingleWords){
 		File dir = new File("/home/jonathan/Documents/exjobb/data/wikipedia/");
 		try {
-			Structures structures = createDataFromFiles(new File(dir,"links-simple-sorted.txt"), new File(dir, "titles-sorted.txt"), onlySingleWords);
+			Structures structures = readDataAndBuildLinks(new File(dir,"links-simple-sorted.txt"), new File(dir, "titles-sorted.txt"), onlySingleWords);
 
 			try(ObjectOutputStream toIndexStream = new ObjectOutputStream(new FileOutputStream(new File(toIndexPath)))){
 				toIndexStream.writeObject(structures.phraseToIndex);
@@ -151,16 +151,16 @@ public class WikiGraphFactory {
 //		}
 //	}
 
-	public static Structures createDataFromFiles(File linksFile, File titlesFile, boolean onlySingleWordIndices) throws IOException, InterruptedException{
+	public static Structures readDataAndBuildLinks(File linksFile, File titlesFile, boolean onlySingleWordIndices) throws IOException, InterruptedException{
 		printer.println("Creating data from files: " + linksFile.getPath() + ",  " + titlesFile.getPath());
 		try(BufferedReader linksReader = new BufferedReader(new FileReader(linksFile))){
 			try (BufferedReader titlesReader = new BufferedReader(new FileReader(titlesFile))) {
-				return createDataFromReaders(linksReader, titlesReader, onlySingleWordIndices);
+				return readDataAndBuildLinks(linksReader, titlesReader, onlySingleWordIndices);
 			}
 		}
 	}
 	
-	public static Structures createDataFromReaders(BufferedReader linksReader, BufferedReader titlesReader, boolean onlySingleWords) throws IOException{
+	public static Structures readDataAndBuildLinks(BufferedReader linksReader, BufferedReader titlesReader, boolean onlySingleWords) throws IOException{
 		TObjectIntHashMap<String> phraseToIndex = new TObjectIntHashMap<String>();
 		TIntObjectHashMap<TIntArrayList> links = new TIntObjectHashMap<TIntArrayList>(); 
 		TIntHashSet oneWordIndices = new TIntHashSet();
@@ -216,21 +216,21 @@ public class WikiGraphFactory {
 	
 	
 
-	public static <K,V> void serialize(ConcurrentHashMap<K, V> map, String filepath, BiConsumer<K, ObjectOutputStream> serializeKey, BiConsumer<V, ObjectOutputStream> serializeValue) throws FileNotFoundException, IOException{
-		printer.println("Saving map to file ...");
-		
-		try(ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filepath)))){
-			oos.writeInt(map.size());
-			int i = 0; 
-			for(Entry<K, V> e : map.entrySet()){
-				serializeKey.accept(e.getKey(), oos);
-				serializeValue.accept(e.getValue(), oos);
-				i++;
-				printer.printProgress(i, 100000, 10);
-			}
-			printer.println("Save successful. Wrote " + i + " entries.");
-		}
-	}
+//	public static <K,V> void serialize(ConcurrentHashMap<K, V> map, String filepath, BiConsumer<K, ObjectOutputStream> serializeKey, BiConsumer<V, ObjectOutputStream> serializeValue) throws FileNotFoundException, IOException{
+//		printer.println("Saving map to file ...");
+//		
+//		try(ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filepath)))){
+//			oos.writeInt(map.size());
+//			int i = 0; 
+//			for(Entry<K, V> e : map.entrySet()){
+//				serializeKey.accept(e.getKey(), oos);
+//				serializeValue.accept(e.getValue(), oos);
+//				i++;
+//				printer.printProgress(i, 100000, 10);
+//			}
+//			printer.println("Save successful. Wrote " + i + " entries.");
+//		}
+//	}
 	
 	private static class Structures{
 		

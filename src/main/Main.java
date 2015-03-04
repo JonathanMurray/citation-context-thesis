@@ -37,6 +37,7 @@ import citationContextData.Sentence;
 import citationContextData.SentenceClass;
 import conceptGraph.PreBuiltWikiGraph;
 import conceptGraph.QuickWikiGraph;
+import conceptGraph.WikiGraph;
 import conceptGraph.WikiGraphFactory;
 import conceptGraph.WordNet;
 
@@ -52,12 +53,12 @@ public class Main {
 		
 //		WikiGraphFactory.buildLinksAndSaveToFile("toIndexSingleWords.ser", "linksSingleWords.ser", true);
 		
-		PreBuiltWikiGraph graph = PreBuiltWikiGraph.fromFiles("linksSingleWords.ser", "toIndexSingleWords.ser");
-		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
-		System.out.println(graph.similarity(sentences[0].split(" +"), sentences[1].split(" +")));
+//		PreBuiltWikiGraph graph = PreBuiltWikiGraph.fromFiles("linksSingleWords.ser", "toIndexSingleWords.ser");
+//		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
+//		
+//		conceptSimilarity(graph);
 		
-//		compareConceptGraphs();
-//		compareClassifiers("A92-1018");
+		compareClassifiers("A92-1018");
 	}
 	
 	public static  void testQuickWikiGraph(){
@@ -92,7 +93,7 @@ public class Main {
 	
 	public static void compareConceptGraphs(){
 		System.out.println("CREATING wikigraph from ser files");
-		PreBuiltWikiGraph wikiGraph = PreBuiltWikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
+		PreBuiltWikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph("links.ser", "phraseToIndex.ser", 0.01, false);
 		System.out.println("created wikigraph from ser-files");
 		wikiGraph.setSimilarityMultiplier(0.01);
 		MRF_WithConcepts wikiMrf = new MRF_WithConcepts(4, wikiGraph);
@@ -165,21 +166,20 @@ public class Main {
 		DataSet dataset = new DataSet(contextDataset, citedContent, wekaInstances);
 		
 		
-		WekaClassifier classifier = WekaClassifier.SMO();
-		classifier.trainOnData(WekaClassifier.fromDirExcept(
+		WekaClassifier weka = WekaClassifier.SMO();
+		weka.trainOnData(WekaClassifier.fromDirExcept(
 				new File("arff/"), new File("arff/" + filename + ".html.arff")));
 		
 		MRF mrf = new MRF(4);
-//		WikiGraph conceptGraph = WikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
-//		conceptGraph.setSimilarityMultiplier(0.01);
-//		MRF_WithConcepts mrfWithConcepts = new MRF_WithConcepts(4, conceptGraph);
+		double simMult = 0.01;
+		WikiGraph conceptGraph = WikiGraphFactory.loadWikiGraph("linksSingleWords.ser", "toIndexSingleWords.ser", simMult, false);
+		MRF_WithConcepts mrfConcepts = new MRF_WithConcepts(4, conceptGraph);
 		
-		compareClassifiers(dataset, 
-				new Classifier("MRF", mrf) ,
-				new Classifier("Weka", classifier) 
-				
-//				new Classifier("MRF - Concepts", mrfWithConcepts)
-		);
+		testClassifierPrintResults(dataset, new Classifier("MRF", mrf));
+		testClassifierPrintResults(dataset, new Classifier("MRF - Concepts", mrfConcepts));
+		testClassifierPrintResults(dataset, new Classifier("WEKA", weka));
+//		conceptGraph.setAllowStopwordsAsConcepts(true);
+//		testPrintClassifier(dataset, new Classifier("MRF - Concepts (stopwords)", new MRF_WithConcepts(4, conceptGraph)));
 	}
 	
 	private static String readTextfile(File f){
@@ -196,12 +196,10 @@ public class Main {
 		}
 	}
 	
-	public static void compareClassifiers(DataSet dataset, Classifier... classifiers){
-		for(Classifier classifier : classifiers){
-			System.out.println("Testing " + classifier + "...");
-			ClassificationResult res = classifier.testOn(dataset);
-			printResult(classifier.toString(), res);
-		}
+	public static void testClassifierPrintResults(DataSet dataset, Classifier classifier){
+		System.out.print("Testing " + classifier + "...  ");
+		ClassificationResult res = classifier.testOn(dataset);
+		printResult(classifier.toString(), res);
 	}
 	
 	public static void printResult(String title, ClassificationResult result){
@@ -209,9 +207,13 @@ public class Main {
 		System.out.println();
 		System.out.println(title);
 		System.out.println("-------------------------");
+		System.out.println(result.confusionMatrixToString());
 		System.out.println("precision: " + f.format(result.precision()));
 		System.out.println("recall: " + f.format(result.recall()));
-		System.out.println("F: " + f.format(result.fMeasure()));
+		System.out.println("F1: " + f.format(result.fMeasure(1)));
+		System.out.println("F2: " + f.format(result.fMeasure(2)));
+		System.out.println("F3: " + f.format(result.fMeasure(3)));
+		System.out.println("F4: " + f.format(result.fMeasure(4)));
 		System.out.println();
 	}
 	
@@ -231,8 +233,7 @@ public class Main {
 		return instances;
 	}
 	
-	public static void conceptSimilarity(){
-		PreBuiltWikiGraph graph = PreBuiltWikiGraph.fromFiles("", "");
+	public static void conceptSimilarity(WikiGraph graph){
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Enter 2 sentences to compare: ");
 		while(true){

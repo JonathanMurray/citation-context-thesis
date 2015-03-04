@@ -45,7 +45,7 @@ public class MRF {
 	}
 	
 	public ClassificationResultImpl runMany(List<Citer> citers, String referencedText, ContextDataSet dataset){
-		ClassificationResultImpl result = new ClassificationResultImpl(0,0,0);
+		ClassificationResultImpl result = new ClassificationResultImpl(0,0,0,0);
 		int i = 0;
 		for(Citer citer : citers){
 			result.add(run(citer, textToWordVec(referencedText), dataset));
@@ -153,24 +153,28 @@ public class MRF {
 	private ClassificationResultImpl getClassificationResults(double beliefThreshold){
 		int truePos = 0;
 		int falsePos = 0;
-		int pos = 0;
+		int trueNeg = 0;
+		int falseNeg = 0;
 		
 		for(int i = 0; i < numSentences; i++){
 			double[] belief = finalBelief(i);
 //			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(beliefs.get(i)) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
-			if(sentenceTypes.get(i) != SentenceClass.NOT_REFERENCE){
-				pos ++;
-			}
 			if(belief[1] > beliefThreshold){
 				if(sentenceTypes.get(i) == SentenceClass.NOT_REFERENCE){
 					falsePos ++;
 				}else{
 					truePos ++;
 				}
+			}else{
+				if(sentenceTypes.get(i) == SentenceClass.NOT_REFERENCE){
+					trueNeg ++;
+				}else{
+					falseNeg ++;
+				}
 			}
 		}
 		
-		return new ClassificationResultImpl(truePos, falsePos, pos);
+		return new ClassificationResultImpl(truePos, falsePos, trueNeg, falseNeg);
 	}
 	
 	private double[] finalBelief(int sentence){

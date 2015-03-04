@@ -2,27 +2,30 @@ package util;
 
 
 
-public class ClassificationResultImpl implements ClassificationResult{
+public class ClassificationResultImpl extends ClassificationResult{
 	private int truePositives;
 	private int falsePositives;
-	private int total;
+	private int trueNegatives;
+	private int falseNegatives;
 	
-	public ClassificationResultImpl(int truePositives, int falsePositives, int total){
+	public ClassificationResultImpl(int truePositives, int falsePositives, int trueNegatives, int falseNegatives){
 		this.truePositives = truePositives;
 		this.falsePositives = falsePositives;
-		this.total = total;
+		this.trueNegatives = trueNegatives;
+		this.falseNegatives = falseNegatives;
 	}
 	
 	public void add(ClassificationResultImpl other){
 		truePositives += other.truePositives;
 		falsePositives += other.falsePositives;
-		total += other.total;
+		trueNegatives += other.trueNegatives;
+		falseNegatives += other.falseNegatives;
 	}
 	
 	public String toString(){
 		StringBuilder s = new StringBuilder();
 		s.append("precision: " + truePositives + "/" + (truePositives+falsePositives) + "\n");
-		s.append("recall: " + truePositives + "/" + total + "\n");
+		s.append("recall: " + truePositives + "/" + (truePositives+falseNegatives) + "\n");
 		double precision = precision();
 		double recall = recall();
 		s.append("F-score: " + fMeasure(precision, recall, 1) + "\n");
@@ -37,18 +40,14 @@ public class ClassificationResultImpl implements ClassificationResult{
 	}
 	
 	public double recall(){
-		return truePositives / (double)total;
+		return truePositives / ((double)truePositives + falseNegatives);
 	}
 	
-	public double fMeasure(){
-		return fMeasure(1);
-	}
-	
-	public double fMeasure(double beta){
-		return fMeasure(precision(), recall(), beta);
-	}
-	
-	private double fMeasure(double precision, double recall, double beta){
-		return (1+Math.pow(beta, 2)) * (precision*recall)/(Math.pow(beta, 2)*precision + recall);
+	@Override
+	public double[][] confusionMatrix() {
+		return new double[][]{
+				new double[]{	truePositives, 	falseNegatives}, 
+				new double[]{	falsePositives, trueNegatives}
+		};
 	}
 }

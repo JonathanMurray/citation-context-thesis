@@ -5,12 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import citationContextData.Sentence;
 
 public class Texts {
 	
@@ -18,7 +17,7 @@ public class Texts {
 	private List<String> workNouns;
 	private List<String> thirdPersonPronouns;
 	private List<String> connectors;
-	private List<String> stopwords;
+	private HashSet<String> stopwords;
 	
 	public static final String NUMBER_TAG = "<NUMBER>";
 	public static final String HEADER_PATTERN = "\\d+\\.\\d+.*";
@@ -47,7 +46,7 @@ public class Texts {
 		workNouns = readLines("src/" + packageName + "/data/workNouns.txt");
 		thirdPersonPronouns = readLines("src/" + packageName + "/data/thirdPersonPronouns.txt");
 		connectors = readLines("src/" + packageName + "/data/connectors.txt");
-		stopwords = readLines("src/" + packageName + "/data/stopwords.txt");
+		stopwords = readLinesToSet("src/" + packageName + "/data/stopwords.txt");
 	}
 	
 	public List<String> removeStopwords(String[] words){
@@ -58,6 +57,14 @@ public class Texts {
 			}
 		}
 		return filtered;
+	}
+	
+	public boolean isStopword(String word){
+		return stopwords.contains(word);
+	}
+	
+	private HashSet<String> readLinesToSet(String filePath) throws IOException{
+		return Files.lines(Paths.get(filePath)).collect(Collectors.toCollection(HashSet::new));
 	}
 	
 	private List<String> readLines(String filePath) throws IOException{
@@ -133,7 +140,7 @@ public class Texts {
 		List<String> words = Arrays.asList(sentence.split(" +")).stream()
 				.map(s -> s.toLowerCase())
 				.collect(Collectors.toCollection(ArrayList::new));
-		List<String> stopwords = this.stopwords;
+		HashSet<String> stopwords = new HashSet<String>(this.stopwords); //TODO Expensive
 		stopwords.add(Texts.NUMBER_TAG);
 		DoubleMap<String> ngramCounts = new DoubleMap<String>();
 		for(int i = n - 1; i < words.size(); i++){
