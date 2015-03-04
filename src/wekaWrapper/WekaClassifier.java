@@ -21,6 +21,7 @@ import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
+import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -51,23 +52,22 @@ public class WekaClassifier {
 	}
 	
 	public static WekaClassifier NaiveBayes(){
-		try {
-			return new WekaClassifier(new NaiveBayes());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		return new WekaClassifier(new NaiveBayes());
 	}
 	
 	public static WekaClassifier NeuralNetwork(){
-		try{
-			MultilayerPerceptron mlp = new MultilayerPerceptron();
-			return new WekaClassifier(mlp);
-		}catch(Exception e){
-			throw new RuntimeException(e);
-		}
+		MultilayerPerceptron mlp = new MultilayerPerceptron();
+		return new WekaClassifier(mlp);
+	}
+	
+	public static WekaClassifier J48(){
+		J48 j48 = new J48();
+		return new WekaClassifier(j48);
 	}
 	
 	private static SMO setupSMO() throws Exception{
+		
+		
 		SMO classifier = new SMO();
 		String classifierOptions = "-C 1.0 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1";
 		String kernelOptions = "-E 1.0 -C 250007";
@@ -81,6 +81,11 @@ public class WekaClassifier {
 		return classifier;
 	}
 	
+	/**
+	 * Train the classifier on given data. The data might be modified
+	 * in the process, so don't reuse the data for another classifier!
+	 * @param data
+	 */
 	public void trainOnData(Instances data){
 		try{
 			printer.println("Training on " + data.size() + " instances");
@@ -187,8 +192,8 @@ public class WekaClassifier {
 		printer.println("class counts: " + Arrays.toString(classCounts));
 		int quotient = classCounts[1] / classCounts[0];
 		int i = 0;
-		Instances balanced = new Instances(data);
-		Iterator<Instance> it = balanced.iterator();
+		Iterator<Instance> it = data.iterator();
+		int sizeBefore = data.size();
 		while(it.hasNext()){
 			Instance instance = it.next();
 			if(instance.classValue() == 1){
@@ -200,8 +205,8 @@ public class WekaClassifier {
 				}
 			}
 		}
-		printer.println("Balancing changed data size from " + data.size() + " to " + balanced.size());
-		return balanced;
+		printer.println("Balancing changed data size from " + sizeBefore + " to " + data.size());
+		return data;
 	}
 	
 	public void ROC(Instances data){

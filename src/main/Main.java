@@ -161,23 +161,40 @@ public class Main {
 		
 		String citedContent = readTextfile(new File(CITATION_DIR, filename + ".txt"));
 		
+		File testFile = new File("arff/" + filename + ".html.arff");
 		
-		Instances wekaInstances = WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff"));
-		DataSet dataset = new DataSet(contextDataset, citedContent, wekaInstances);
+		Instances wekaTestSet = WekaClassifier.fromFiles(testFile);
+		DataSet dataset = new DataSet(contextDataset, citedContent, wekaTestSet);
 		
 		
-		WekaClassifier weka = WekaClassifier.SMO();
-		weka.trainOnData(WekaClassifier.fromDirExcept(
-				new File("arff/"), new File("arff/" + filename + ".html.arff")));
+		WekaClassifier wekaSMO = WekaClassifier.SMO();
+		WekaClassifier wekaNB = WekaClassifier.NaiveBayes();
+		WekaClassifier wekaTree = WekaClassifier.J48();
 		
-		MRF mrf = new MRF(4);
-		double simMult = 0.01;
-		WikiGraph conceptGraph = WikiGraphFactory.loadWikiGraph("linksSingleWords.ser", "toIndexSingleWords.ser", simMult, false);
-		MRF_WithConcepts mrfConcepts = new MRF_WithConcepts(4, conceptGraph);
+		Instances wekaTrain = WekaClassifier.fromDirExcept(new File("arff/"), testFile);
+		Instances wekaTrain2 = new Instances(wekaTrain);
+		Instances wekaTrain3 = new Instances(wekaTrain);
 		
-		testClassifierPrintResults(dataset, new Classifier("MRF", mrf));
-		testClassifierPrintResults(dataset, new Classifier("MRF - Concepts", mrfConcepts));
-		testClassifierPrintResults(dataset, new Classifier("WEKA", weka));
+		System.out.println(wekaTrain.equals(wekaTrain2));
+		
+		
+		
+		
+		
+		
+//		MRF mrf = new MRF(4);
+//		double simMult = 0.01;
+//		WikiGraph conceptGraph = WikiGraphFactory.loadWikiGraph("linksSingleWords.ser", "toIndexSingleWords.ser", simMult, false);
+//		MRF_WithConcepts mrfConcepts = new MRF_WithConcepts(4, conceptGraph);
+		
+//		testClassifierPrintResults(dataset, new Classifier("MRF", mrf));
+//		testClassifierPrintResults(dataset, new Classifier("MRF - Concepts", mrfConcepts));
+		wekaSMO.trainOnData(wekaTrain);
+		testClassifierPrintResults(dataset, new Classifier("WEKA - SMO", wekaSMO));
+		wekaNB.trainOnData(wekaTrain2);
+		testClassifierPrintResults(dataset, new Classifier("WEKA - NB", wekaNB));
+		wekaTree.trainOnData(wekaTrain3);
+		testClassifierPrintResults(dataset, new Classifier("WEKA - NN", wekaTree));
 //		conceptGraph.setAllowStopwordsAsConcepts(true);
 //		testPrintClassifier(dataset, new Classifier("MRF - Concepts (stopwords)", new MRF_WithConcepts(4, conceptGraph)));
 	}

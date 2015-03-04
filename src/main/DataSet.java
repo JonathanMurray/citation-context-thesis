@@ -6,12 +6,12 @@ import citationContextData.ContextDataSet;
 public class DataSet {
 	ContextDataSet contextDataset;
 	String citedArticleContent;
-	Instances wekaInstances;
+	Instances wekaTestSet;
 	
 	
-	public DataSet(ContextDataSet contextDataset, String citedArticleContent, Instances wekaInstances) {
+	public DataSet(ContextDataSet contextDataset, String citedArticleContent, Instances wekaTestSet) {
 		this.contextDataset = contextDataset;
 		this.citedArticleContent = citedArticleContent;
-		this.wekaInstances = wekaInstances;
+		this.wekaTestSet = wekaTestSet;
 	}
 }

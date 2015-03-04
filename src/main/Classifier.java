@@ -21,7 +21,7 @@ public class Classifier {
 	
 	ClassificationResult testOn(DataSet dataset){
 		if(wekaClassifier != null){
-			return wekaClassifier.testOnData(dataset.wekaInstances);
+			return wekaClassifier.testOnData(dataset.wekaTestSet);
 		}else{
 			return mrf.runMany(dataset.contextDataset.citers, dataset.citedArticleContent, dataset.contextDataset);
 		}
