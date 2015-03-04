@@ -28,7 +28,7 @@ import util.ClassificationResult;
 import util.NonThrowingFileWriter;
 import weka.core.Instances;
 import wekaWrapper.InstanceHandler;
-import wekaWrapper.SimpleInstance;
+import wekaWrapper.SentenceInstance;
 import wekaWrapper.WekaClassifier;
 import citationContextData.Citer;
 import citationContextData.ContextDataSet;
@@ -146,7 +146,7 @@ public class Main {
 	private static void convertDataToArff(File... htmlFiles){
 		for(File htmlFile : htmlFiles){
 			ContextDataSet dataset = ContextHTML_Parser.parseHTML(htmlFile);
-			List<SimpleInstance> instances = InstanceHandler.createInstances(dataset);
+			List<SentenceInstance> instances = InstanceHandler.createInstances(dataset);
 			InstanceHandler.writeToArffFile(instances, Paths.get("arff/" + htmlFile.getName() + ".arff"));
 		}
 	}
@@ -217,11 +217,11 @@ public class Main {
 		System.out.println();
 	}
 	
-	public static List<SimpleInstance> createInstancesFromFiles(File[] files){
+	public static List<SentenceInstance> createInstancesFromFiles(File[] files){
 		List<ContextDataSet> datasets = Arrays.asList(files).stream()
 				.map(f -> ContextHTML_Parser.parseHTML(f))
 				.collect(Collectors.toList());
-		ArrayList<SimpleInstance> instances = datasets.stream()
+		ArrayList<SentenceInstance> instances = datasets.stream()
 				.flatMap(dataset -> InstanceHandler.createInstances(dataset).stream())
 				.collect(Collectors.toCollection(ArrayList::new));
 				

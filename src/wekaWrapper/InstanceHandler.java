@@ -17,7 +17,7 @@ import citationContextData.SentenceClass;
 
 public class InstanceHandler {
 	
-	public static void writeToArffFile(List<SimpleInstance> instances, Path path){
+	public static void writeToArffFile(List<SentenceInstance> instances, Path path){
 		
 		System.out.println("writeInstanceToFile - " + path + " ...");
 		
@@ -54,8 +54,8 @@ public class InstanceHandler {
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	public static List<SimpleInstance> createInstances(ContextDataSet dataset){
-		List<SimpleInstance> instances = new ArrayList<SimpleInstance>();
+	public static List<SentenceInstance> createInstances(ContextDataSet dataset){
+		List<SentenceInstance> instances = new ArrayList<SentenceInstance>();
 		for(Citer citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
 				Sentence previous = i > 0 ? citer.sentences.get(i-1) : null;
@@ -65,7 +65,7 @@ public class InstanceHandler {
 				if(sentence.type == SentenceClass.EXPLICIT_REFERENCE){
 					continue; //Excluded
 				}
-				instances.add(new SimpleInstance(features, sentence.type));
+				instances.add(new SentenceInstance(features, sentence.type));
 			}
 		}
 		System.out.println("extractInstances - done");
