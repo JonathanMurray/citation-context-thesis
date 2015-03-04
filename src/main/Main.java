@@ -35,18 +35,38 @@ import citationContextData.ContextDataSet;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
-import conceptGraph.WikiGraph;
+import conceptGraph.PreBuiltWikiGraph;
+import conceptGraph.QuickWikiGraph;
+import conceptGraph.WikiGraphFactory;
 import conceptGraph.WordNet;
 
 public class Main {
 	
 	public static final File DATA_DIR = Paths.get("/home/jonathan/Documents/exjobb/data/").toFile();
 	public static final File CFC_DIR = new File(DATA_DIR, "CFC_distribution/2006_paper_training/");
-	public static final File SENTIMENT_CORPUS_DIR = new File(DATA_DIR, "teufel-citation-context-corpus/");
+	public static final File CITATION_DIR = new File(DATA_DIR, "teufel-citation-context-corpus/");
+	public static final File WIKI_DIR = new File(DATA_DIR, "wikipedia");
 	public static final String WORDNET_DICT = "/home/jonathan/Documents/exjobb/data/wordnet-dict"; 
 	
 	public static void main(String[] args) throws IOException {
-		compareClassifiers("A92-1018");
+		
+//		WikiGraphFactory.buildLinksAndSaveToFile("toIndexSingleWords.ser", "linksSingleWords.ser", true);
+		
+		PreBuiltWikiGraph graph = PreBuiltWikiGraph.fromFiles("linksSingleWords.ser", "toIndexSingleWords.ser");
+		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
+		System.out.println(graph.similarity(sentences[0].split(" +"), sentences[1].split(" +")));
+		
+//		compareConceptGraphs();
+//		compareClassifiers("A92-1018");
+	}
+	
+	public static  void testQuickWikiGraph(){
+		QuickWikiGraph g = new QuickWikiGraph(
+				new File(WIKI_DIR, "titles-sorted.txt"),
+				new File(WIKI_DIR, "links-simple-sorted.txt"));
+		
+		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
+		System.out.println(g.similarity(sentences[0].split(" +"), sentences[1].split(" +")));
 	}
 	
 	public static void convertAllPDFsToText(File dir){
@@ -71,7 +91,9 @@ public class Main {
 	}
 	
 	public static void compareConceptGraphs(){
-		WikiGraph wikiGraph = WikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
+		System.out.println("CREATING wikigraph from ser files");
+		PreBuiltWikiGraph wikiGraph = PreBuiltWikiGraph.fromFiles("links.ser", "phraseToIndex.ser");
+		System.out.println("created wikigraph from ser-files");
 		wikiGraph.setSimilarityMultiplier(0.01);
 		MRF_WithConcepts wikiMrf = new MRF_WithConcepts(4, wikiGraph);
 		WordNet wordnet = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
@@ -82,13 +104,13 @@ public class Main {
 	}
 	
 	public static void downloadPDFsForHTML_Files() throws IOException{
-		for(File f : SENTIMENT_CORPUS_DIR.listFiles()){
+		for(File f : CITATION_DIR.listFiles()){
 			if(f.getName().endsWith(".html")){
 				ContextDataSet dataset = ContextDataSet.fromHTML_File(f);
 				String name = dataset.datasetLabel;
 				URL url = new URL("http://www.aclweb.org/anthology/" + name);
 				BufferedInputStream in = new BufferedInputStream(url.openStream());
-				File newFile = new File(SENTIMENT_CORPUS_DIR, name + ".pdf");
+				File newFile = new File(CITATION_DIR, name + ".pdf");
 				System.out.println("new file: " + newFile.getAbsolutePath());
 				BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(newFile));
 				int b;
@@ -103,7 +125,7 @@ public class Main {
 	}
 	
 	public static void printInfoFromAllHTML_Files(){
-		for(File f : SENTIMENT_CORPUS_DIR.listFiles()){
+		for(File f : CITATION_DIR.listFiles()){
 			if(f.getName().endsWith(".html")){
 				ContextDataSet dataset = ContextDataSet.fromHTML_File(f);
 				System.out.println(dataset.datasetLabel);
@@ -134,9 +156,9 @@ public class Main {
 		System.out.println("--------------------------------------------------");
 		System.out.println();
 		
-		ContextDataSet contextDataset = ContextHTML_Parser.parseHTML(new File(SENTIMENT_CORPUS_DIR, filename + ".html"));
+		ContextDataSet contextDataset = ContextHTML_Parser.parseHTML(new File(CITATION_DIR, filename + ".html"));
 		
-		String citedContent = readTextfile(new File(SENTIMENT_CORPUS_DIR, filename + ".txt"));
+		String citedContent = readTextfile(new File(CITATION_DIR, filename + ".txt"));
 		
 		
 		Instances wekaInstances = WekaClassifier.fromFiles(new File("arff/" + filename + ".html.arff"));
@@ -210,7 +232,7 @@ public class Main {
 	}
 	
 	public static void conceptSimilarity(){
-		WikiGraph graph = WikiGraph.fromFiles("", "");
+		PreBuiltWikiGraph graph = PreBuiltWikiGraph.fromFiles("", "");
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Enter 2 sentences to compare: ");
 		while(true){
