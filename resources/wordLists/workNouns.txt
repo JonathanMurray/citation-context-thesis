@@ -1,0 +1,17 @@
+technique
+method
+algorithm
+approach
+procedure
+routine
+style
+system
+usage
+design
+practice
+process
+scheme
+work
+result
+example
+model

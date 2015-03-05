@@ -60,6 +60,7 @@ public class InstanceHandler {
 	 * @return
 	 */
 	public static List<SentenceInstance> createInstancesFromHTMLFiles(File[] htmlFiles, boolean onlyText, boolean balanceData){
+		
 		List<ContextDataSet> datasets = Arrays.asList(htmlFiles).stream()
 				.filter(f -> f.getName().endsWith(".html")) 
 				.map(f -> ContextHTML_Parser.parseHTML(f))
