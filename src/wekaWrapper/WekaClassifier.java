@@ -246,7 +246,9 @@ public class WekaClassifier {
 		try {
 			return new Instances(new BufferedReader(new FileReader(arffFile)));
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			e.printStackTrace();
+			System.exit(0);
+			return null;
 		}
 	}
 	
