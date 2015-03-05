@@ -29,6 +29,10 @@ public enum FeatureName{
 	CONTAINS_ACRONYM,
 	
 	//Contains Capitalized words that were mentioned often in explicit references
-	CONTAINS_LEXICAL_HOOK;
+	CONTAINS_LEXICAL_HOOK,
+	
+	SENTENCE_NUMBER,
+	
+	TEXT;
 	
 }

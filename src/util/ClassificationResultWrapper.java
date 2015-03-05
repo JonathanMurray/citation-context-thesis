@@ -9,11 +9,13 @@ public class ClassificationResultWrapper extends ClassificationResult{
 	private Evaluation wekaEvaluation;
 	private List<Integer> falsePositives;
 	private List<Integer> falseNegatives;
+	private long passedMillis;
 	
-	public ClassificationResultWrapper(Evaluation wekaEvaluation, List<Integer> falsePositives, List<Integer> falseNegatives){
+	public ClassificationResultWrapper(Evaluation wekaEvaluation, List<Integer> falsePositives, List<Integer> falseNegatives, long passedMillis){
 		this.wekaEvaluation = wekaEvaluation;
 		this.falsePositives = falsePositives;
 		this.falseNegatives = falseNegatives;
+		this.passedMillis = passedMillis;
 	}
 
 	@Override
@@ -29,5 +31,10 @@ public class ClassificationResultWrapper extends ClassificationResult{
 	@Override
 	public List<Integer> falseNegativeIndices() {
 		return falseNegatives;
+	}
+
+	@Override
+	public long getPassedMillis() {
+		return passedMillis;
 	}
 }

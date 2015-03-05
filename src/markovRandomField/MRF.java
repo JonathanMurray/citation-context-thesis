@@ -179,7 +179,7 @@ public class MRF {
 			}
 		}
 		
-		return new ClassificationResultImpl(truePos, falsePos, trueNeg, falseNeg, fpIndices, fnIndices);
+		return new ClassificationResultImpl(truePos, falsePos, trueNeg, falseNeg, fpIndices, fnIndices, 0); //TODO
 	}
 	
 	private double[] finalBelief(int sentence){

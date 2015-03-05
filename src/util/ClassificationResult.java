@@ -28,17 +28,7 @@ public abstract class ClassificationResult {
 		return negRecall;
 	}
 	
-//	public double precision(){
-//		double[][] m = confusionMatrix();
-//		double precision = (m[0][0] + m[1][1]) / (m[0][0]+m[1][0]+m[0][1]+m[1][1]);
-//		return precision;
-//	}
-//	
-//	public double precision(){
-//		double[][] m = confusionMatrix();
-//		double precision = (m[0][0] + m[1][1]) / (m[0][0]+m[1][0]+m[0][1]+m[1][1]);
-//		return precision;
-//	}
+	public abstract long getPassedMillis();
 	
 	public abstract List<Integer> falsePositiveIndices();
 	public abstract List<Integer> falseNegativeIndices();

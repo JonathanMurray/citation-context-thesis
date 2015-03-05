@@ -37,13 +37,14 @@ import weka.gui.visualize.ThresholdVisualizePanel;
 public class WekaClassifier {
 	
 	private static Printer printer = new Printer(true);
+	private static Printer debug = new Printer(false);
 	
 	private AbstractClassifier classifier;
 	private StringToWordVector filter;
 	
 	public WekaClassifier(AbstractClassifier classifier){
 		this.classifier = classifier;
-		printer.println("Classifier-options: " + Arrays.toString(classifier.getOptions()));
+		debug.println("Classifier-options: " + Arrays.toString(classifier.getOptions()));
 	}
 	
 	public static WekaClassifier SMO(){
@@ -146,8 +147,7 @@ public class WekaClassifier {
 					falseNegatives.add(i);
 				}
 			}
-			System.out.println("Testing took " + t.stop().getSecString());
-			return new ClassificationResultWrapper(eval, falsePositives, falseNegatives);
+			return new ClassificationResultWrapper(eval, falsePositives, falseNegatives, t.getMillis());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -155,7 +155,7 @@ public class WekaClassifier {
 	
 	public ClassificationResult trainAndCrossValidate(Instances data, int numFolds, boolean balanceData){
 		try{
-			printer.println("Cross validating " + numFolds + " folds");
+			printer.println(classifier.getClass().getName() + " - Cross validation (" + numFolds + " folds)");
 			Timer t = new Timer();
 			if(balanceData){
 				data = balanceData(data, countClasses(data));
@@ -164,8 +164,7 @@ public class WekaClassifier {
 			data = filterData(data, filter);
 			Evaluation eval = new Evaluation(data);
 			eval.crossValidateModel(classifier, data, numFolds, new Random());
-			System.out.println("Cross validation took " + t.getSecString());
-			return new ClassificationResultWrapper(eval, new ArrayList<Integer>(), new ArrayList<Integer>()); //TODO no lists 
+			return new ClassificationResultWrapper(eval, new ArrayList<Integer>(), new ArrayList<Integer>(), t.getMillis()); //TODO no lists 
 		}catch(Exception e){
 			throw new RuntimeException(e);
 		}
@@ -254,7 +253,7 @@ public class WekaClassifier {
 	private Instances filterData(Instances data, StringToWordVector filter) throws Exception{
 		data.setClassIndex(data.numAttributes() - 1);
 		Instances filteredData = Filter.useFilter(data, filter);
-//		System.out.println("Filtering changed # attributes from " + data.numAttributes() + " to " + filteredData.numAttributes());
+		debug.println("Filtering changed # attributes from " + data.numAttributes() + " to " + filteredData.numAttributes());
 		return filteredData;
 	}
 	
@@ -262,7 +261,7 @@ public class WekaClassifier {
 		data.setClassIndex(data.numAttributes() - 1);
 		String ngramOptions = "-max " + maxNgram + " -min " + minNgram + " -delimiters \" \\r\\n\\t.,;:\\\'\\\"()?!\"";
 		String[] ngramOptionsVec = weka.core.Utils.splitOptions(ngramOptions);
-		int textAttributeNumber = 11;
+		int textAttributeNumber = data.numAttributes() - 1; //Number rather than index
 		String str2WordOptions = "-R " + textAttributeNumber + " -P NGRAMS_ -W 1000 -prune-rate -1.0 -N 0 -L -stemmer weka.core.stemmers.LovinsStemmer -stopwords-handler weka.core.stopwords.Rainbow -M 1";
 		String[] string2WordOptions = weka.core.Utils.splitOptions(str2WordOptions);
 		
@@ -273,7 +272,7 @@ public class WekaClassifier {
 		string2WordVec.setOptions(string2WordOptions);
 		string2WordVec.setTokenizer(ngramTokenizer);
 		string2WordVec.setInputFormat(data);
-		printer.println("Filter-options: " + Arrays.toString(string2WordVec.getOptions()));
+		debug.println("Filter-options: " + Arrays.toString(string2WordVec.getOptions()));
 		return string2WordVec;
 	}
 	
@@ -294,7 +293,7 @@ public class WekaClassifier {
 				}
 			}
 		}
-		printer.println("Balancing changed data size from " + sizeBefore + " to " + data.size());
+		debug.println("Balancing changed data size from " + sizeBefore + " to " + data.size());
 		return data;
 	}
 	

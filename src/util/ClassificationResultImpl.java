@@ -12,18 +12,20 @@ public class ClassificationResultImpl extends ClassificationResult{
 	private int falseNegatives;
 	private List<Integer> fpIndices;
 	private List<Integer> fnIndices;
+	private long passedMillis;
 	
 	public ClassificationResultImpl(){
-		this(0,0,0,0,new ArrayList<Integer>(),new ArrayList<Integer>());
+		this(0,0,0,0,new ArrayList<Integer>(),new ArrayList<Integer>(), 0);
 	}
 	
-	public ClassificationResultImpl(int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Integer> fpIndices, List<Integer> fnIndices){
+	public ClassificationResultImpl(int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Integer> fpIndices, List<Integer> fnIndices, long passedMillis){
 		this.truePositives = truePositives;
 		this.falsePositives = falsePositives;
 		this.trueNegatives = trueNegatives;
 		this.falseNegatives = falseNegatives;
 		this.fpIndices = fpIndices;
 		this.fnIndices = fnIndices;
+		this.passedMillis = passedMillis;
 	}
 	
 	public void add(ClassificationResultImpl other){
@@ -51,5 +53,10 @@ public class ClassificationResultImpl extends ClassificationResult{
 	@Override
 	public List<Integer> falseNegativeIndices() {
 		return fnIndices;
+	}
+
+	@Override
+	public long getPassedMillis() {
+		return passedMillis;
 	}
 }
