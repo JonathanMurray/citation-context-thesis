@@ -41,12 +41,12 @@ public class Texts {
 	}
 	
 	private void setup() throws IOException{
-		String packageName = getClass().getPackage().getName();
-		determiners = readLines("src/" + packageName + "/data/determinerWords.txt");
-		workNouns = readLines("src/" + packageName + "/data/workNouns.txt");
-		thirdPersonPronouns = readLines("src/" + packageName + "/data/thirdPersonPronouns.txt");
-		connectors = readLines("src/" + packageName + "/data/connectors.txt");
-		stopwords = readLinesToSet("src/" + packageName + "/data/stopwords.txt");
+		String dir = Dirs.exjobbHome() + "/resources/wordLists/";
+		determiners = readLines(dir + "/determinerWords.txt");
+		workNouns = readLines(dir + "/workNouns.txt");
+		thirdPersonPronouns = readLines(dir + "/thirdPersonPronouns.txt");
+		connectors = readLines(dir + "/connectors.txt");
+		stopwords = readLinesToSet(dir + "/stopwords.txt");
 	}
 	
 	public List<String> removeStopwords(String[] words){

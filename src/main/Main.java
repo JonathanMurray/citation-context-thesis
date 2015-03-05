@@ -42,7 +42,7 @@ import conceptGraph.WordNet;
 
 public class Main {
 	
-	public static final File DATA_DIR = Paths.get("/home/jonathan/Documents/exjobb/data/").toFile();
+	public static final File DATA_DIR = new File(System.getenv("RESOURCES_DIR"));// Paths.get("/home/jonathan/Documents/exjobb/data/").toFile();
 	public static final File CFC_DIR = new File(DATA_DIR, "CFC_distribution/2006_paper_training/");
 	public static final File CITATION_DIR = new File(DATA_DIR, "teufel-citation-context-corpus/");
 	public static final File WIKI_DIR = new File(DATA_DIR, "wikipedia");
@@ -50,8 +50,6 @@ public class Main {
 	
 	public static void main(String[] args) throws IOException {
 		
-		List<SentenceInstance> instances = InstanceHandler.createInstancesFromHTMLFiles(CITATION_DIR.listFiles(), true, true);
-		InstanceHandler.writeToArffFile(instances, new File("arff/balanced-ngrams-full-dataset.arff"));
 		
 //		WikiGraphFactory.buildLinksAndSaveToFile("toIndexSingleWords.ser", "linksSingleWords.ser", true);
 		
