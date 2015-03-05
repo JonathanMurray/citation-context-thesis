@@ -19,7 +19,6 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import markovRandomField.MRF;
 import markovRandomField.MRF_WithConcepts;
 
 import org.apache.pdfbox.ExtractText;
@@ -58,7 +57,7 @@ public class Main {
 //		
 //		conceptSimilarity(graph);
 		
-		compareClassifiers("A92-1018");
+		compareClassifiers();
 	}
 	
 	public static  void testQuickWikiGraph(){
@@ -151,36 +150,33 @@ public class Main {
 		}
 	}
 
-	public static void compareClassifiers(String filename){
+	public static void compareClassifiers(){
 		
-		System.out.println("Comparing classifiers on [" + filename + "]");
+//		System.out.println("Comparing classifiers on [" + filename + "]");
 		System.out.println("--------------------------------------------------");
 		System.out.println();
 		
-		ContextDataSet contextDataset = ContextHTML_Parser.parseHTML(new File(CITATION_DIR, filename + ".html"));
+//		ContextDataSet contextDataset = ContextHTML_Parser.parseHTML(new File(CITATION_DIR, filename + ".html"));
+//		String citedContent = readTextfile(new File(CITATION_DIR, filename + ".txt"));
+//		File testFile = new File("arff/" + filename + ".html.arff");
+		Instances wekaSet = WekaClassifier.fromFiles(new File("arff").listFiles());
+
+		//		DataSet dataset = new DataSet(contextDataset, citedContent, wekaTestSet);
 		
-		String citedContent = readTextfile(new File(CITATION_DIR, filename + ".txt"));
-		
-		File testFile = new File("arff/" + filename + ".html.arff");
-		
-		Instances wekaTestSet = WekaClassifier.fromFiles(testFile);
-		DataSet dataset = new DataSet(contextDataset, citedContent, wekaTestSet);
-		
+//		ArrayList<String> testSentences = contextDataset.citers.stream()
+//				.flatMap(citer -> citer.sentences.stream())
+//				.map(sentence -> sentence.unprocessedText)
+//				.collect(Collectors.toCollection(ArrayList::new));
 		
 		WekaClassifier wekaSMO = WekaClassifier.SMO();
 		WekaClassifier wekaNB = WekaClassifier.NaiveBayes();
 		WekaClassifier wekaTree = WekaClassifier.J48();
+		WekaClassifier wekaKnn = WekaClassifier.KNN();
 		
-		Instances wekaTrain = WekaClassifier.fromDirExcept(new File("arff/"), testFile);
-		Instances wekaTrain2 = new Instances(wekaTrain);
-		Instances wekaTrain3 = new Instances(wekaTrain);
-		
-		System.out.println(wekaTrain.equals(wekaTrain2));
-		
-		
-		
-		
-		
+//		Instances wekaTrain = WekaClassifier.fromDirExcept(new File("arff/"), testFile);
+//		Instances wekaTrain2 = new Instances(wekaTrain);
+//		Instances wekaTrain3 = new Instances(wekaTrain);
+//		Instances wekaTrain4 = new Instances(wekaTrain);
 		
 //		MRF mrf = new MRF(4);
 //		double simMult = 0.01;
@@ -189,14 +185,14 @@ public class Main {
 		
 //		testClassifierPrintResults(dataset, new Classifier("MRF", mrf));
 //		testClassifierPrintResults(dataset, new Classifier("MRF - Concepts", mrfConcepts));
-		wekaSMO.trainOnData(wekaTrain);
-		testClassifierPrintResults(dataset, new Classifier("WEKA - SMO", wekaSMO));
-		wekaNB.trainOnData(wekaTrain2);
-		testClassifierPrintResults(dataset, new Classifier("WEKA - NB", wekaNB));
-		wekaTree.trainOnData(wekaTrain3);
-		testClassifierPrintResults(dataset, new Classifier("WEKA - NN", wekaTree));
-//		conceptGraph.setAllowStopwordsAsConcepts(true);
-//		testPrintClassifier(dataset, new Classifier("MRF - Concepts (stopwords)", new MRF_WithConcepts(4, conceptGraph)));
+//		wekaSMO.trainOnData(wekaTrain);
+		int numFolds = 10;
+		boolean balanceData = true;
+		
+		printResult("SMO", wekaSMO.trainAndCrossValidate(wekaSet, numFolds, balanceData));
+		printResult("NB", wekaNB.trainAndCrossValidate(wekaSet, numFolds, balanceData));
+		printResult("Tree", wekaTree.trainAndCrossValidate(wekaSet, numFolds, balanceData));
+		printResult("KNN", wekaKnn.trainAndCrossValidate(wekaSet, numFolds, balanceData));
 	}
 	
 	private static String readTextfile(File f){
@@ -213,25 +209,37 @@ public class Main {
 		}
 	}
 	
-	public static void testClassifierPrintResults(DataSet dataset, Classifier classifier){
-		System.out.print("Testing " + classifier + "...  ");
-		ClassificationResult res = classifier.testOn(dataset);
-		printResult(classifier.toString(), res);
+//	public static void testClassifierPrintResults(DataSet dataset, Evaluator classifier, List<String> testSentences){
+//		System.out.print("Testing " + classifier + "...    ");
+//		ClassificationResult res = classifier.evaluate(dataset);
+//		printResult(classifier.toString(), res, testSentences);
+//	}
+	
+	public static void printResult(String title, ClassificationResult result, List<String> testSentences){
+		printResult(title, result);;
+		System.out.println("\nFalse negatives:");
+		result.falseNegativeIndices().stream()
+				.limit(2)
+				.map(i -> testSentences.get(i))
+				.forEach(System.out::println);
+		
+		System.out.println("\nFalse positives:");
+		result.falsePositiveIndices().stream()
+				.limit(2)
+				.map(i -> testSentences.get(i))
+				.forEach(System.out::println);
 	}
 	
 	public static void printResult(String title, ClassificationResult result){
 		NumberFormat f = new DecimalFormat("#.000"); 
-		System.out.println();
+		System.out.println("\n\n");
 		System.out.println(title);
 		System.out.println("-------------------------");
 		System.out.println(result.confusionMatrixToString());
-		System.out.println("precision: " + f.format(result.precision()));
-		System.out.println("recall: " + f.format(result.recall()));
-		System.out.println("F1: " + f.format(result.fMeasure(1)));
-		System.out.println("F2: " + f.format(result.fMeasure(2)));
-		System.out.println("F3: " + f.format(result.fMeasure(3)));
-		System.out.println("F4: " + f.format(result.fMeasure(4)));
-		System.out.println();
+		System.out.println("pos F: " + f.format(result.positiveFMeasure(1)));
+		System.out.println("neg F: " + f.format(result.negativeFMeasure(1)));
+		System.out.println("Micro avg. F: " + f.format(result.microAvgFMeasure(1)));
+		System.out.println("Macro avg. F: " + f.format(result.macroAvgFMeasure(1)));
 	}
 	
 	public static List<SentenceInstance> createInstancesFromFiles(File[] files){

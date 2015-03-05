@@ -1,36 +1,33 @@
 package util;
 
+import java.util.List;
+
 import weka.classifiers.Evaluation;
 
 public class ClassificationResultWrapper extends ClassificationResult{
 	
 	private Evaluation wekaEvaluation;
-	private final static int POSITIVE_CLASS = 0;
+	private List<Integer> falsePositives;
+	private List<Integer> falseNegatives;
 	
-	public ClassificationResultWrapper(Evaluation wekaEvaluation){
+	public ClassificationResultWrapper(Evaluation wekaEvaluation, List<Integer> falsePositives, List<Integer> falseNegatives){
 		this.wekaEvaluation = wekaEvaluation;
-		
-	}
-
-	@Override
-	public double precision() {
-		return wekaEvaluation.precision(POSITIVE_CLASS);
-	}
-
-	@Override
-	public double recall() {
-	return wekaEvaluation.recall(POSITIVE_CLASS);
-	}
-
-	@Override
-	public double fMeasure() {
-		return wekaEvaluation.weightedFMeasure();
+		this.falsePositives = falsePositives;
+		this.falseNegatives = falseNegatives;
 	}
 
 	@Override
 	public double[][] confusionMatrix() {
 		return wekaEvaluation.confusionMatrix();
 	}
-	
-	
+
+	@Override
+	public List<Integer> falsePositiveIndices() {
+		return falsePositives;
+	}
+
+	@Override
+	public List<Integer> falseNegativeIndices() {
+		return falseNegatives;
+	}
 }

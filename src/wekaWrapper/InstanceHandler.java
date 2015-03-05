@@ -76,7 +76,7 @@ public class InstanceHandler {
 	private static Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, ContextDataSet dataset){
 		Texts texts = Texts.instance();
 		Map<String, Comparable> features = new HashMap<String, Comparable>();
-		String[] words = sentence.text.split(" ");
+		String[] words = sentence.text.split(" +");
 		String[] prevWords = previous != null? previous.text.split(" ") : new String[0];
 		features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(words));
 		features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(words));
