@@ -2,7 +2,5 @@
 .project
 .settings
 bin/
-*.arff
-*.json
-*.ser
 notes/
+resources/
