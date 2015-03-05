@@ -62,7 +62,7 @@ public class InstanceHandler {
 				Sentence sentence = citer.sentences.get(i);
 				Sentence next = i < citer.sentences.size() - 1? citer.sentences.get(i+1) : null;
 				Map<String, Comparable> features = extractFeatures(previous, sentence, next, dataset);
-				if(sentence.type == SentenceClass.EXPLICIT_REFERENCE){
+				if(sentence.type == SentenceClass.EXPLICIT_REFERENCE){ //TODO
 					continue; //Excluded
 				}
 				instances.add(new SentenceInstance(features, sentence.type));
@@ -70,6 +70,30 @@ public class InstanceHandler {
 		}
 		System.out.println("extractInstances - done");
 		return instances;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static List<SentenceInstance> createNGramInstances(ContextDataSet dataset){
+		List<SentenceInstance> instances = new ArrayList<SentenceInstance>();
+		for(Citer citer : dataset.citers){
+			for(int i = 0; i < citer.sentences.size(); i++){
+				Sentence sentence = citer.sentences.get(i);
+				Map<String, Comparable> features = extractOnlyTextFeature(sentence);
+				if(sentence.type == SentenceClass.EXPLICIT_REFERENCE){ //TODO
+					continue; //Excluded
+				}
+				instances.add(new SentenceInstance(features, sentence.type));
+			}
+		}
+		System.out.println("extractNGramInstances - done");
+		return instances;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private static Map<String, Comparable> extractOnlyTextFeature(Sentence sentence){
+		Map<String, Comparable> features = new HashMap<String, Comparable>();
+		features.put("TEXT", "'" + sentence.text + "'");
+		return features;
 	}
 	
 	@SuppressWarnings("rawtypes")
