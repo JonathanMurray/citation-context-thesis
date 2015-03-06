@@ -7,13 +7,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 
-import citationContextData.ContextDataSet;
+import citationContextData.SingleCitedDataSet;
 
 public class DownloadPDFs {
 	public static void downloadPDFsForHTML_Files(File htmlDir) throws IOException{
 		for(File f : htmlDir.listFiles()){
 			if(f.getName().endsWith(".html")){
-				ContextDataSet dataset = ContextDataSet.fromHTML_File(f);
+				SingleCitedDataSet dataset = SingleCitedDataSet.fromHTMLFile(f);
 				String name = dataset.datasetLabel;
 				URL url = new URL("http://www.aclweb.org/anthology/" + name);
 				BufferedInputStream in = new BufferedInputStream(url.openStream());

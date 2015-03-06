@@ -3,18 +3,28 @@ package util;
 public class Printer {
 	
 	private boolean enabled;
+	private boolean backspaceProgress;
+	private int lastProgressStrLen;
 	
 	public Printer(boolean enabled){
 		this.enabled = enabled;
+		backspaceProgress = Environment.exjobbInTerminal();
 	}
 	
-	public void printProgress(int i, int period, int printsPerLine){
+	public void progress(int i, int period){
 		if(enabled){
-			if(i % period == 0){
-				System.out.print(i + "    ");
-			}
-			if(i % (period*printsPerLine) == 0){
-				System.out.println();
+			if(backspaceProgress){
+				if(i % period == 0){
+					for(int c = 0; c < lastProgressStrLen; c++){
+						System.out.print("\b");
+					}
+					System.out.print(i);
+					lastProgressStrLen = Integer.toString(i).length();
+				}
+			}else{
+				if(i % period == 0){
+					System.out.print(i + "  ");
+				}
 			}
 		}
 	}

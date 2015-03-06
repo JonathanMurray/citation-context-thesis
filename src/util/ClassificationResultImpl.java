@@ -35,6 +35,7 @@ public class ClassificationResultImpl extends ClassificationResult{
 		falseNegatives += other.falseNegatives;
 		fpIndices.addAll(other.fpIndices);
 		fnIndices.addAll(other.fnIndices);
+		passedMillis += other.passedMillis;
 	}
 	
 	@Override

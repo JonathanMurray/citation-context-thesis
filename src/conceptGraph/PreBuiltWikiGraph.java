@@ -99,7 +99,7 @@ public class PreBuiltWikiGraph extends WikiGraph{
 //				return 1;
 //			}
 //			if(other.contains(phrase)){
-////				double numWordsInExpression = 1.0+(double)expression.split("\\w+").length;
+////				double numWordsInExpression = 1.0+(double)expression.split("\\s+").length;
 //				System.out.print(other + ", ");
 //				sim += 1;
 //			}

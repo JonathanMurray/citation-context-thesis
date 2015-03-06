@@ -30,7 +30,7 @@ import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
 import wekaWrapper.WekaClassifier;
 import citationContextData.Citer;
-import citationContextData.ContextDataSet;
+import citationContextData.SingleCitedDataSet;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
@@ -66,26 +66,26 @@ public class Main {
 				new File(WIKI_DIR, "links-simple-sorted.txt"));
 		
 		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
-		System.out.println(g.similarity(sentences[0].split(" +"), sentences[1].split(" +")));
+		System.out.println(g.similarity(sentences[0].split("\\s+"), sentences[1].split("\\s+")));
 	}
 	
 	public static void compareConceptGraphs(){
-		System.out.println("CREATING wikigraph from ser files");
-		PreBuiltWikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph("links.ser", "phraseToIndex.ser", 0.01, false);
-		System.out.println("created wikigraph from ser-files");
-		wikiGraph.setSimilarityMultiplier(0.01);
-		MRF_WithConcepts wikiMrf = new MRF_WithConcepts(4, wikiGraph);
-		WordNet wordnet = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
-		MRF_WithConcepts wordnetMrf = new MRF_WithConcepts(4, wordnet);
-		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
-		System.out.println(wikiGraph.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
-		System.out.println(wordnet.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
+//		System.out.println("CREATING wikigraph from ser files");
+//		PreBuiltWikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph("links.ser", "phraseToIndex.ser", 0.01, false);
+//		System.out.println("created wikigraph from ser-files");
+//		wikiGraph.setSimilarityMultiplier(0.01);
+//		MRF_WithConcepts wikiMrf = new MRF_WithConcepts(4, wikiGraph);
+//		WordNet wordnet = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
+//		MRF_WithConcepts wordnetMrf = new MRF_WithConcepts(4, wordnet);
+//		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
+//		System.out.println(wikiGraph.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
+//		System.out.println(wordnet.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
 	}
 	
 	public static void printInfoFromAllHTML_Files(){
 		for(File f : CITATION_DIR.listFiles()){
 			if(f.getName().endsWith(".html")){
-				ContextDataSet dataset = ContextDataSet.fromHTML_File(f);
+				SingleCitedDataSet dataset = SingleCitedDataSet.fromHTMLFile(f);
 				System.out.println(dataset.datasetLabel);
 				System.out.println(dataset.citedMainAuthor);
 				System.out.println(dataset.citedTitle);
@@ -102,7 +102,7 @@ public class Main {
 
 	private static void convertDataToArff(File... htmlFiles){
 		for(File htmlFile : htmlFiles){
-			ContextDataSet dataset = ContextHTML_Parser.parseHTML(htmlFile);
+			SingleCitedDataSet dataset = ContextHTML_Parser.parseHTML(htmlFile);
 			List<SentenceInstance> instances = InstanceHandler.createInstances(dataset, false, true);
 			InstanceHandler.writeToArffFile(instances, Paths.get("arff/" + "balanced-" + htmlFile.getName() + ".arff").toFile());
 		}
@@ -126,7 +126,7 @@ public class Main {
 	
 	public static void readDatasetWriteSentences(){
 		File inFile = Paths.get("/home/jonathan/Documents/exjobb/data/teufel-citation-context-corpus/A92-1018.html").toFile();
-		ContextDataSet dataset = new ContextHTML_Parser().parseHTML(inFile);
+		SingleCitedDataSet dataset = new ContextHTML_Parser().parseHTML(inFile);
 		Citer citer = dataset.citers.get(0);
 		NonThrowingFileWriter writer = new NonThrowingFileWriter(Paths.get("SENTENCES-TEST.txt").toFile());
 		for(Sentence s : citer.sentences){

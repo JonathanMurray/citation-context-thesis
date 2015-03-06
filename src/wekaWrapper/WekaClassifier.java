@@ -85,16 +85,19 @@ public class WekaClassifier {
 	}
 	
 	public static Instances fromFiles(File... files){
-		printer.println("Creating instances from files: " + Arrays.toString(files));
+		printer.print("Creating WEKA-instances from files: " + Arrays.toString(files) + " ... ");
 		try{
 			Instances instances = null;
-			for(File file : files){
+			for(int i = 0; i < files.length; i++){
+				File file = files[i];
+				printer.progress(i, 1);
 				if(instances == null){
 					instances = fromFile(file);
 				}else{
 					instances = merge(instances, fromFile(file));
 				}
 			}
+			System.out.println(" [x]");
 			return instances;
 		}catch(Exception e){
 			throw new RuntimeException(e);

@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 import util.NonThrowingFileWriter;
 import util.Texts;
 import citationContextData.Citer;
-import citationContextData.ContextDataSet;
+import citationContextData.SingleCitedDataSet;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
@@ -61,7 +61,7 @@ public class InstanceHandler {
 	 */
 	public static List<SentenceInstance> createInstancesFromHTMLFiles(File[] htmlFiles, boolean onlyText, boolean balanceData){
 		
-		List<ContextDataSet> datasets = Arrays.asList(htmlFiles).stream()
+		List<SingleCitedDataSet> datasets = Arrays.asList(htmlFiles).stream()
 				.filter(f -> f.getName().endsWith(".html")) 
 				.map(f -> ContextHTML_Parser.parseHTML(f))
 				.collect(Collectors.toList());
@@ -83,7 +83,7 @@ public class InstanceHandler {
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	public static List<SentenceInstance> createInstances(ContextDataSet dataset, boolean onlyText, boolean balanceData){
+	public static List<SentenceInstance> createInstances(SingleCitedDataSet dataset, boolean onlyText, boolean balanceData){
 		List<SentenceInstance> instances = new ArrayList<SentenceInstance>();
 		for(Citer citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
@@ -125,11 +125,11 @@ public class InstanceHandler {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private static Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, ContextDataSet dataset, boolean onlyText, int sentenceNumber){
+	private static Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, SingleCitedDataSet dataset, boolean onlyText, int sentenceNumber){
 		Texts texts = Texts.instance();
 		Map<String, Comparable> features = new HashMap<String, Comparable>();
-		String[] words = sentence.text.split(" +");
-		String[] prevWords = previous != null? previous.text.split(" ") : new String[0];
+		String[] words = sentence.text.split("\\s+");
+		String[] prevWords = previous != null? previous.text.split("\\s+") : new String[0];
 		if(!onlyText){
 			features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(words));
 			features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(words));

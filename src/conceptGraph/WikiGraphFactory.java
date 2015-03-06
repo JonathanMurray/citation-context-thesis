@@ -50,14 +50,21 @@ public class WikiGraphFactory {
 //		}
 //	}
 	
+	@SuppressWarnings("unchecked")
 	public static PreBuiltWikiGraph loadWikiGraph(File linksFile, File indicesFile, double similarityMultiplier, boolean allowStopwordConcepts){
 		try{
-			printer.print("Loading links from " + linksFile + " ... ");
-			TIntObjectHashMap<TIntArrayList> links = (TIntObjectHashMap<TIntArrayList>) new ObjectInputStream(new FileInputStream(linksFile)).readObject();
-			printer.println("DONE.");
-			printer.print("Loading indices from " + indicesFile + " ... ");
-			TObjectIntHashMap<String> indices = (TObjectIntHashMap<String>) new ObjectInputStream(new FileInputStream(indicesFile)).readObject();
-			printer.println("DONE.");
+			TIntObjectHashMap<TIntArrayList> links;
+			TObjectIntHashMap<String> indices;
+			try(ObjectInputStream linksIn = new ObjectInputStream(new FileInputStream(linksFile))){
+				printer.print("Loading links from " + linksFile + " ... ");
+				links = (TIntObjectHashMap<TIntArrayList>) linksIn.readObject();
+				printer.println("DONE.");
+			}
+			try(ObjectInputStream indicesIn = new ObjectInputStream(new FileInputStream(indicesFile))){
+				printer.print("Loading indices from " + indicesFile + " ... ");
+				indices = (TObjectIntHashMap<String>) indicesIn.readObject();
+				printer.println("DONE.");
+			}
 			return new PreBuiltWikiGraph(links, indices, similarityMultiplier, allowStopwordConcepts);
 		}catch(IOException | ClassNotFoundException e){
 			e.printStackTrace();
@@ -192,7 +199,7 @@ public class WikiGraphFactory {
 		while(linksLines.hasNext()){
 			progress++;
 			String linksLine = linksLines.next();
-			printer.printProgress(progress, 100000, 10);
+			printer.progress(progress, 100000);
 			int pos = linksLine.indexOf(' ') + 1;
 			int citer = Integer.parseInt(linksLine.substring(0, pos-2));
 			if(onlySingleWords && !oneWordIndices.contains(citer)){

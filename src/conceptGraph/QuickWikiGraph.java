@@ -73,7 +73,7 @@ public class QuickWikiGraph extends WikiGraph{
 			String line = linksSortedFile.nextLine();
 			linksLineNumber ++;
 			if(linksLineNumber == index){
-				String[] tokens = line.split(" ");
+				String[] tokens = line.split("\\s+");
 				TIntArrayList links = new TIntArrayList(tokens.length - 1);
 				for(int j = 1; j < tokens.length; j++){
 					int otherIndex = Integer.parseInt(tokens[j]);

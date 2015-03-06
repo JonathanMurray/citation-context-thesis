@@ -1,11 +1,16 @@
 package citationContextData;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,37 +19,67 @@ import java.util.stream.Stream;
 
 import util.IntegerMap;
 import util.Printer;
+import util.Texts;
 
 
-public class ContextDataSet {
+public class SingleCitedDataSet {
 	public String datasetLabel;
 	public String citedMainAuthor;
 	public String citedTitle;
+	public String citedContent;
+	public HashMap<String,Double> citedContentUnigrams;
 	public List<Citer> citers;
 	public Set<String> acronyms;
 	public Set<String> lexicalHooks;
 	
 	private static Printer printer = new Printer(false);
 	
-	public static ContextDataSet fromHTML_File(File file){
-		return ContextHTML_Parser.parseHTML(file);
+	public static SingleCitedDataSet fromHTMLFile(File htmlFile){
+		return ContextHTML_Parser.parseHTML(htmlFile);
+	}
+	
+	public static SingleCitedDataSet fromFiles(File htmlFile, File citedContentTextFile){
+		SingleCitedDataSet dataset = ContextHTML_Parser.parseHTML(htmlFile);
+		dataset.citedContent = readTextFile(citedContentTextFile);
+		dataset.setup();
+		return dataset;
+	}
+	
+	private static String readTextFile(File f){
+		try(Scanner sc = new Scanner(new BufferedReader(new FileReader(f)))) {
+			StringBuilder s = new StringBuilder();
+			while(sc.hasNextLine()){
+				s.append(sc.nextLine() + "\n");
+			}
+			return s.toString();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			System.exit(0);
+			return null;
+		}
+	}
+	
+	public SingleCitedDataSet(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers){
+		this(datasetLabel, citedMainAuthor, citedTitle, citers, null);
 	}
 
-	public ContextDataSet(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers){
+	public SingleCitedDataSet(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers, String citedContent){
 		this.datasetLabel = datasetLabel;
 		this.citedMainAuthor = citedMainAuthor;
 		this.citedTitle = citedTitle;
+		this.citedContent = citedContent;
 		this.citers = citers;
-		setup();
 	}
 	
-	private void setup(){
+	public void setup(){
 		acronyms = findAcronyms();
 		lexicalHooks = findLexicalHooks(5);
+		lexicalHooks.remove(citedMainAuthor);
+		citedContentUnigrams = Texts.instance().getNgrams(1, citedContent, true, true);
+		
 		printer.println("DATASET FOR " + citedMainAuthor);
 		printer.println(acronyms);
 		printer.println(lexicalHooks);
-		lexicalHooks.remove(citedMainAuthor);
 	}
 	
 	

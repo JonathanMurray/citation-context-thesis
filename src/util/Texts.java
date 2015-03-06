@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Texts {
 	
@@ -41,7 +41,7 @@ public class Texts {
 	}
 	
 	private void setup() throws IOException{
-		String dir = Dirs.exjobbHome() + "/resources/wordLists/";
+		String dir = Environment.exjobbHome() + "/resources/wordLists/";
 		determiners = readLines(dir + "/determinerWords.txt");
 		workNouns = readLines(dir + "/workNouns.txt");
 		thirdPersonPronouns = readLines(dir + "/thirdPersonPronouns.txt");
@@ -83,19 +83,19 @@ public class Texts {
 	}
 	
 	public boolean startsWithDetWork(String[] words){
-		return looseContains(determiners, words[0]) && looseContains(workNouns, words[1]);
+		return words.length >= 2 && looseContains(determiners, words[0]) && looseContains(workNouns, words[1]);
 	}
 	
 	public boolean startsWithLimitedDet(String[] words){
-		return words[0].equalsIgnoreCase("this") || words[0].toLowerCase().equalsIgnoreCase("such");
+		return words.length >= 1 && (words[0].equalsIgnoreCase("this") || words[0].toLowerCase().equalsIgnoreCase("such"));
 	}
 	
 	public boolean startsWith3rdPersonPronoun(String[] words){
-		return looseContains(thirdPersonPronouns, words[0]);
+		return words.length >= 1 && looseContains(thirdPersonPronouns, words[0]);
 	}
 	
 	public boolean startsWithConnector(String[] words){
-		return looseContains(connectors, words[0]);
+		return words.length >= 1 && looseContains(connectors, words[0]);
 	}
 	
 	
@@ -136,29 +136,36 @@ public class Texts {
 		return false;
 	}
 
-	/**
-	 * Won't return n-grams that contain stopwords
-	 * @param n
-	 * @param sentence
-	 * @return
-	 */
-	public DoubleMap<String> getNGrams(int n, String sentence){
-		List<String> words = Arrays.asList(sentence.split(" +")).stream()
+	public DoubleMap<String> getNgrams(int n, String text, final boolean skipStopwords, final boolean stem){
+		if(text == null){
+			throw new IllegalArgumentException("text == null");
+		}
+		List<String> words = Arrays.asList(text.split("\\s+")).stream()
 				.map(s -> s.toLowerCase())
 				.collect(Collectors.toCollection(ArrayList::new));
-		HashSet<String> stopwords = new HashSet<String>(this.stopwords); //TODO Expensive
-		stopwords.add(Texts.NUMBER_TAG);
+		
 		DoubleMap<String> ngramCounts = new DoubleMap<String>();
 		for(int i = n - 1; i < words.size(); i++){
 			List<String> ngramWords = words.subList(i - n + 1, i + 1);
-			boolean ngramContainsStopword = ngramWords.stream()
-					.anyMatch(stopwords::contains);
-			if(!ngramContainsStopword){
-				Optional<String> ngram = ngramWords.stream()
-						.reduce((s1,s2) -> s1 + " " + s2);
-				ngramCounts.increment(ngram.get(), 1.0);
+			if(skipStopwords){
+				if(ngramWords.stream().anyMatch(w -> stopwords.contains(w) || w.equals(NUMBER_TAG))){
+					continue;
+				}
 			}
+			Stream<String> ngramWordsStream = ngramWords.stream();
+			if(stem){
+				ngramWordsStream = ngramWordsStream.map(Texts::stem);
+			}
+			String ngram = ngramWordsStream.reduce((s1,s2) -> s1 + " " + s2).get();
+			ngramCounts.increment(ngram, 1.0);
 		}
 		return ngramCounts;
+	}
+	
+	private static String stem(String word){
+		Stemmer s = new Stemmer();
+		s.add(word);
+		s.stem();
+		return s.toString();
 	}
 }
