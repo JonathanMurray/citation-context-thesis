@@ -136,6 +136,12 @@ public class Texts {
 		return false;
 	}
 
+	/**
+	 * Won't return n-grams that contain stopwords
+	 * @param n
+	 * @param sentence
+	 * @return
+	 */
 	public DoubleMap<String> getNGrams(int n, String sentence){
 		List<String> words = Arrays.asList(sentence.split(" +")).stream()
 				.map(s -> s.toLowerCase())
