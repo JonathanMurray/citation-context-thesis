@@ -37,7 +37,7 @@ public class CompareClassifiers {
 		
 		Instances ngramsSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-ngrams-full-dataset.arff"));
 		Instances fullSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-features-full-dataset.arff"));
-		ArrayList<SingleCitedDataSet> datasets = datasetsFromDir(new File(resourcesDir, "teufel-citation-context-corpus"));
+		ArrayList<SingleCitedDataSet> datasets = SingleCitedDataSet.datasetsFromDir(new File(resourcesDir, "teufel-citation-context-corpus"));
 		
 //		DataSet dataset = new DataSet(contextDataset, citedContent, wekaTestSet);
 		
