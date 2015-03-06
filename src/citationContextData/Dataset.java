@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
@@ -17,6 +16,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import util.DoubleMap;
 import util.IntegerMap;
 import util.Printer;
 import util.Texts;
@@ -27,10 +27,7 @@ public class Dataset {
 	public String citedMainAuthor;
 	public String citedTitle;
 	public String citedContent;
-	public HashMap<String,Double> citedContentUnigrams;
 	public List<Citer> citers;
-	public Set<String> acronyms;
-	public Set<String> lexicalHooks;
 	
 	private static Printer printer = new Printer(false);
 	
@@ -38,8 +35,8 @@ public class Dataset {
 		return ContextHTML_Parser.parseHTML(htmlFile);
 	}
 	
-	public static ArrayList<Dataset> datasetsFromDir(File dir){
-		ArrayList<Dataset> datasets = new ArrayList<Dataset>();
+	public static ArrayList<EnhancedDataset> datasetsFromDir(File dir){
+		ArrayList<EnhancedDataset> datasets = new ArrayList<EnhancedDataset>();
 		File[] files = dir.listFiles();
 		System.out.print("Creating citation data set from dir " + dir.getAbsolutePath() + ": ");
 		for(int i = 0; i < files.length; i++){
@@ -50,7 +47,7 @@ public class Dataset {
 			}
 			String baseName = htmlFile.getName().substring(0, htmlFile.getName().length()-5);
 			File textFile = new File(dir, baseName + ".txt");
-			datasets.add(Dataset.fromFiles(htmlFile, textFile));
+			datasets.add(Dataset.fromFiles(htmlFile, textFile).getEnhanced());
 		}
 		System.out.println(" [x]");
 		return datasets;
@@ -59,7 +56,7 @@ public class Dataset {
 	public static Dataset fromFiles(File htmlFile, File citedContentTextFile){
 		Dataset dataset = ContextHTML_Parser.parseHTML(htmlFile);
 		dataset.citedContent = readTextFile(citedContentTextFile);
-		dataset.enhance();
+		dataset.getEnhanced();
 		return dataset;
 	}
 	
@@ -77,6 +74,10 @@ public class Dataset {
 		}
 	}
 	
+	public Dataset(Dataset dataset){
+		this(dataset.datasetLabel, dataset.citedMainAuthor, dataset.citedTitle, dataset.citers, dataset.citedContent);
+	}
+	
 	public Dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers){
 		this(datasetLabel, citedMainAuthor, citedTitle, citers, null);
 	}
@@ -89,15 +90,12 @@ public class Dataset {
 		this.citers = citers;
 	}
 	
-	public void enhance(){
-		acronyms = findAcronyms();
-		lexicalHooks = findLexicalHooks(5);
+	public EnhancedDataset getEnhanced(){
+		DoubleMap<String> citedContentUnigrams = Texts.instance().getNgrams(1, citedContent, true, true);
+		Set<String> acronyms = findAcronyms();
+		Set<String> lexicalHooks = findLexicalHooks(5);
 		lexicalHooks.remove(citedMainAuthor);
-		citedContentUnigrams = Texts.instance().getNgrams(1, citedContent, true, true);
-		
-		printer.println("DATASET FOR " + citedMainAuthor);
-		printer.println(acronyms);
-		printer.println(lexicalHooks);
+		return new EnhancedDataset(this, citedContentUnigrams, acronyms, lexicalHooks);
 	}
 	
 	
@@ -148,115 +146,6 @@ public class Dataset {
 				.flatMap(c -> c.sentences.stream())
 				.filter(s -> s.type == SentenceClass.EXPLICIT_REFERENCE);
 	}
-//	
-//	private Stream<Sentence> implicitReferences(){
-//		return citers.stream()
-//				.flatMap(c -> c.sentences.stream())
-//				.filter(s -> s.type == SentenceClass.IMPLICIT_REFERENCE);
-//	}
-//	
-//	private Stream<Sentence> sentences(){
-//		return citers.stream()
-//				.flatMap(c -> c.sentences.stream());
-//	}
-//	
-//	private Stream<Sentence> nonReferences(){
-//		return citers.stream()
-//				.flatMap(c -> c.sentences.stream())
-//				.filter(s -> s.type == SentenceClass.NOT_REFERENCE);
-//	}
-	
-//	
-//	
-//	IncrementableMap<String> getUnigramsInImplicitReferences(){
-//		return getUnigrams(implicitReferences());
-//	}
-//	
-//	IncrementableMap<String> getUnigramsInNonReferences(){
-//		return getUnigrams(nonReferences());
-//	}
-//	
-//	private IncrementableMap<String> getUnigrams(Stream<Sentence> sentences){
-//		final List<String> stopwords = readStopwords();
-//		IncrementableMap<String> wordCounts = new IncrementableMap<String>();
-//		words(sentences).filter(word -> !stopwords.contains(word.toLowerCase()))
-//			.forEach(word -> wordCounts.increment(word, 1));
-//		return wordCounts;
-//	}
-	
-//	IntegerMap<String> getNGrams(int n, Sentence sentence){
-//		List<String> words = Arrays.asList(sentence.text.split(" +")).stream()
-//				.map(s -> s.toLowerCase())
-//				.collect(Collectors.toCollection(ArrayList::new));
-//		List<String> stopwords = readStopwords();
-//		stopwords.add(Texts.NUMBER_TAG);
-//		IntegerMap<String> ngramCounts = new IntegerMap<String>();
-//		for(int i = n - 1; i < words.size(); i++){
-//			List<String> ngramWords = words.subList(i - n + 1, i + 1);
-//			boolean ngramContainsStopword = ngramWords.stream()
-//					.anyMatch(stopwords::contains);
-//			if(!ngramContainsStopword){
-//				Optional<String> ngram = ngramWords.stream()
-//						.reduce((s1,s2) -> s1 + " " + s2);
-//				ngramCounts.increment(ngram.get(), 1);
-//			}
-//		}
-//		return ngramCounts;
-//	}
-	
-//	IntegerMap<String> getNgrams(int n, Stream<Sentence> sentences){
-//		if(n < 2){
-//			throw new IllegalArgumentException("use unigrams()");
-//		} 
-//		List<String> words = sentences.flatMap(s -> Arrays.asList(s.text.split(" +")).stream())
-//				.map(s -> s.toLowerCase())
-//				.collect(Collectors.toCollection(ArrayList::new));
-//		List<String> stopwords = readStopwords();
-//		stopwords.add(Texts.NUMBER_TAG);
-//		IntegerMap<String> ngramCounts = new IntegerMap<String>();
-//		for(int i = n - 1; i < words.size(); i++){
-//			List<String> ngramWords = words.subList(i - n + 1, i + 1);
-//			boolean ngramContainsStopword = ngramWords.stream()
-//					.anyMatch(stopwords::contains);
-//			if(!ngramContainsStopword){
-//				Optional<String> ngram = ngramWords.stream()
-//						.reduce((s1,s2) -> s1 + " " + s2);
-//				ngramCounts.increment(ngram.get(), 1);
-//			}
-//		}
-//		return ngramCounts;
-//	}
-//	
-//	IncrementableMap<String> getBigramsInImplicitReferences(){
-//		return getNgrams(2, implicitReferences());
-//	}
-//	
-//	IncrementableMap<String> getBigramsInNonReferences(){
-//		return getNgrams(2, nonReferences());
-//	}
-//
-//	IncrementableMap<String> getTrigramsInImplicitReferences(){
-//		return getNgrams(3, implicitReferences());
-//	}
-//	
-//	IncrementableMap<String> getTrigramsInNonReferences(){
-//		return getNgrams(3, nonReferences());
-//	}
-	
-//	List<String> readStopwords(){
-//		try {
-//			return Files.lines(Paths.get("src/ml/data/stopwords.txt")).collect(Collectors.toList());
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.exit(0);
-//			return null;
-//		}
-//	}
-	
-//	private Stream<String> words(Stream<Sentence> sentences){
-//		return sentences
-//			.flatMap(s -> Arrays.asList(NGrams.cleanString(s.text).split(" +")).stream());
-//	}
 	
 	/**
 	 * Writes a json structure of the whole data set

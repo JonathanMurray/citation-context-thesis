@@ -14,6 +14,9 @@ public class Printer {
 	public void progress(int i, int period){
 		if(enabled){
 			if(backspaceProgress){
+				if(i == 0){
+					lastProgressStrLen = 0; //new task, with no previously printed progress
+				}
 				if(i % period == 0){
 					for(int c = 0; c < lastProgressStrLen; c++){
 						System.out.print("\b");

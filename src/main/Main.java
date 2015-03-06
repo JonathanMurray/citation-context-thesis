@@ -1,44 +1,21 @@
 package main;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import markovRandomField.MRF_WithConcepts;
-
-import org.apache.pdfbox.ExtractText;
-
-import util.ClassificationResult;
 import util.NonThrowingFileWriter;
-import weka.core.Instances;
 import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
-import wekaWrapper.WekaClassifier;
 import citationContextData.Citer;
-import citationContextData.Dataset;
 import citationContextData.ContextHTML_Parser;
+import citationContextData.Dataset;
+import citationContextData.EnhancedDataset;
 import citationContextData.Sentence;
-import citationContextData.SentenceClass;
-import conceptGraph.PreBuiltWikiGraph;
 import conceptGraph.QuickWikiGraph;
 import conceptGraph.WikiGraph;
-import conceptGraph.WikiGraphFactory;
-import conceptGraph.WordNet;
 
 public class Main {
 	
@@ -102,7 +79,7 @@ public class Main {
 
 	private static void convertDataToArff(File... htmlFiles){
 		for(File htmlFile : htmlFiles){
-			Dataset dataset = ContextHTML_Parser.parseHTML(htmlFile);
+			EnhancedDataset dataset = ContextHTML_Parser.parseHTML(htmlFile).getEnhanced();
 			List<SentenceInstance> instances = InstanceHandler.createInstances(dataset, false, true);
 			InstanceHandler.writeToArffFile(instances, Paths.get("arff/" + "balanced-" + htmlFile.getName() + ".arff").toFile());
 		}
