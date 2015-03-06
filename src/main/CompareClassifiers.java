@@ -9,10 +9,13 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Scanner;
 
+import markovRandomField.MRF;
 import util.ClassificationResult;
 import util.Dirs;
 import weka.core.Instances;
 import wekaWrapper.WekaClassifier;
+import citationContextData.ContextDataSet;
+import citationContextData.ContextHTML_Parser;
 
 public class CompareClassifiers {
 	
@@ -22,8 +25,8 @@ public class CompareClassifiers {
 		System.out.println("--------------------------------------------------");
 		System.out.println();
 		
-//		ContextDataSet contextDataset = ContextHTML_Parser.parseHTML(new File(CITATION_DIR, filename + ".html"));
-//		String citedContent = readTextfile(new File(CITATION_DIR, filename + ".txt"));
+		ContextDataSet contextDataset = ContextHTML_Parser.parseHTML(new File(CITATION_DIR, filename + ".html"));
+		String citedContent = readTextfile(new File(CITATION_DIR, filename + ".txt"));
 //		File testFile = new File("arff/" + filename + ".html.arff");
 		
 		
@@ -33,8 +36,10 @@ public class CompareClassifiers {
 //			.toArray(new File[0]);
 //		Instances wekaSet = WekaClassifier.fromFiles(htmlArffFiles);
 		
-		Instances ngramsSet = WekaClassifier.fromFiles(new File(Dirs.resources(), "arff/balanced-ngrams-full-dataset.arff"));
-		Instances fullSet = WekaClassifier.fromFiles(new File(Dirs.resources(), "arff/balanced-features-full-dataset.arff"));
+		String resourcesDir = Dirs.resources();
+		
+		Instances ngramsSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-ngrams-full-dataset.arff"));
+		Instances fullSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-features-full-dataset.arff"));
 
 		//		DataSet dataset = new DataSet(contextDataset, citedContent, wekaTestSet);
 		
@@ -48,9 +53,9 @@ public class CompareClassifiers {
 		WekaClassifier wekaTree = WekaClassifier.J48();
 		WekaClassifier wekaKnn = WekaClassifier.KNN();
 		
-//		MRF mrf = new MRF(4);
-//		double simMult = 0.01;
-//		WikiGraph conceptGraph = WikiGraphFactory.loadWikiGraph("linksSingleWords.ser", "toIndexSingleWords.ser", simMult, false);
+		MRF mrf = new MRF(4);
+		double simMult = 0.01;
+//		WikiGraph conceptGraph = WikiGraphFactory.loadWikiGraph(new File(resourcesDir, "linksSingleWords.ser"), new File(resourcesDir, "toIndexSingleWords.ser"), simMult, false);
 //		MRF_WithConcepts mrfConcepts = new MRF_WithConcepts(4, conceptGraph);
 		
 //		testClassifierPrintResults(dataset, new Classifier("MRF", mrf));
@@ -62,15 +67,17 @@ public class CompareClassifiers {
 		boolean balanceData = false; //dataset is already balanced
 		List<String> testSentences = null;
 		
-		printResult("SMO+", wekaSMO.trainAndCrossValidate(fullSet, numFolds, balanceData), testSentences);
-		printResult("NB+", wekaNB.trainAndCrossValidate(fullSet, numFolds, balanceData), testSentences);
-		printResult("Tree+", wekaTree.trainAndCrossValidate(fullSet, numFolds, balanceData), testSentences);
-		printResult("KNN+", wekaKnn.trainAndCrossValidate(fullSet, numFolds, balanceData), testSentences);
+		printResult("MRF", mrf.run, testSentences);
 		
-		printResult("SMO", wekaSMO.trainAndCrossValidate(ngramsSet, numFolds, balanceData), testSentences);
-		printResult("NB", wekaNB.trainAndCrossValidate(ngramsSet, numFolds, balanceData), testSentences);
-		printResult("Tree", wekaTree.trainAndCrossValidate(ngramsSet, numFolds, balanceData), testSentences);
-		printResult("KNN", wekaKnn.trainAndCrossValidate(ngramsSet, numFolds, balanceData), testSentences);
+		printResult("SMO+", wekaSMO.crossValidate(fullSet, numFolds, balanceData), testSentences);
+		printResult("NB+", wekaNB.crossValidate(fullSet, numFolds, balanceData), testSentences);
+		printResult("Tree+", wekaTree.crossValidate(fullSet, numFolds, balanceData), testSentences);
+		printResult("KNN+", wekaKnn.crossValidate(fullSet, numFolds, balanceData), testSentences);
+		
+		printResult("SMO", wekaSMO.crossValidate(ngramsSet, numFolds, balanceData), testSentences);
+		printResult("NB", wekaNB.crossValidate(ngramsSet, numFolds, balanceData), testSentences);
+		printResult("Tree", wekaTree.crossValidate(ngramsSet, numFolds, balanceData), testSentences);
+		printResult("KNN", wekaKnn.crossValidate(ngramsSet, numFolds, balanceData), testSentences);
 	}
 	
 	private static String readTextfile(File f){

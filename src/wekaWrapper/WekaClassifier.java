@@ -153,7 +153,7 @@ public class WekaClassifier {
 		}
 	}
 	
-	public ClassificationResult trainAndCrossValidate(Instances data, int numFolds, boolean balanceData){
+	public ClassificationResult crossValidate(Instances data, int numFolds, boolean balanceData){
 		try{
 			printer.println(classifier.getClass().getName() + " - Cross validation (" + numFolds + " folds)");
 			Timer t = new Timer();

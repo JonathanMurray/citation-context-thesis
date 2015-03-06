@@ -50,13 +50,13 @@ public class WikiGraphFactory {
 //		}
 //	}
 	
-	public static PreBuiltWikiGraph loadWikiGraph(String linksPath, String indicesPath, double similarityMultiplier, boolean allowStopwordConcepts){
+	public static PreBuiltWikiGraph loadWikiGraph(File linksFile, File indicesFile, double similarityMultiplier, boolean allowStopwordConcepts){
 		try{
-			printer.print("Loading links from " + linksPath + " ... ");
-			TIntObjectHashMap<TIntArrayList> links = (TIntObjectHashMap<TIntArrayList>) new ObjectInputStream(new FileInputStream(linksPath)).readObject();
+			printer.print("Loading links from " + linksFile + " ... ");
+			TIntObjectHashMap<TIntArrayList> links = (TIntObjectHashMap<TIntArrayList>) new ObjectInputStream(new FileInputStream(linksFile)).readObject();
 			printer.println("DONE.");
-			printer.print("Loading indices from " + indicesPath + " ... ");
-			TObjectIntHashMap<String> indices = (TObjectIntHashMap<String>) new ObjectInputStream(new FileInputStream(indicesPath)).readObject();
+			printer.print("Loading indices from " + indicesFile + " ... ");
+			TObjectIntHashMap<String> indices = (TObjectIntHashMap<String>) new ObjectInputStream(new FileInputStream(indicesFile)).readObject();
 			printer.println("DONE.");
 			return new PreBuiltWikiGraph(links, indices, similarityMultiplier, allowStopwordConcepts);
 		}catch(IOException | ClassNotFoundException e){
