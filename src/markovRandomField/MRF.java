@@ -22,10 +22,10 @@ import citationContextData.SentenceClass;
 
 public class MRF {
 	
-	static final int NO = 0;
-	static final int YES = 1;
+	private static final int NO = 0;
+	private static final int YES = 1;
 	
-	int numSentences;
+	private int numSentences;
 	protected List<HashMap<String,Double>> sentenceVectors;
 	protected List<HashMap<String,Double>> bigramVectors;
 	protected List<String> sentenceTexts;
@@ -34,7 +34,7 @@ public class MRF {
 	List<Map<Integer,double[]>> allReceivedMessages;
 	
 	public final static int DEFAULT_NEIGHBOURHOOD = 4;
-	int neighbourhood;
+	private int neighbourhood;
 	
 	public MRF(){
 		this(DEFAULT_NEIGHBOURHOOD);
