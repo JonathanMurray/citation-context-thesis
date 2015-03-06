@@ -85,23 +85,7 @@ public class CompareClassifiers {
 //		printResult(classifier.toString(), res, testSentences);
 //	}
 	
-	private static ArrayList<SingleCitedDataSet> datasetsFromDir(File dir){
-		ArrayList<SingleCitedDataSet> datasets = new ArrayList<SingleCitedDataSet>();
-		File[] files = dir.listFiles();
-		System.out.print("Creating citation data set from files: ");
-		for(int i = 0; i < files.length; i++){
-			printer.progress(i, 1);
-			File htmlFile = files[i];
-			if(!htmlFile.getName().endsWith(".html")){
-				continue;
-			}
-			String baseName = htmlFile.getName().substring(0, htmlFile.getName().length()-5);
-			File textFile = new File(dir, baseName + ".txt");
-			datasets.add(SingleCitedDataSet.fromFiles(htmlFile, textFile));
-		}
-		System.out.println(" [x]");
-		return datasets;
-	}
+	
 	
 	private static void printResult(String title, ClassificationResult result, List<String> testSentences){
 		

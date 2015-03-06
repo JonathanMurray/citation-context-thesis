@@ -38,6 +38,24 @@ public class SingleCitedDataSet {
 		return ContextHTML_Parser.parseHTML(htmlFile);
 	}
 	
+	public static ArrayList<SingleCitedDataSet> datasetsFromDir(File dir){
+		ArrayList<SingleCitedDataSet> datasets = new ArrayList<SingleCitedDataSet>();
+		File[] files = dir.listFiles();
+		System.out.print("Creating citation data set from dir " + dir.getAbsolutePath() + ": ");
+		for(int i = 0; i < files.length; i++){
+			printer.progress(i, 1);
+			File htmlFile = files[i];
+			if(!htmlFile.getName().endsWith(".html")){
+				continue;
+			}
+			String baseName = htmlFile.getName().substring(0, htmlFile.getName().length()-5);
+			File textFile = new File(dir, baseName + ".txt");
+			datasets.add(SingleCitedDataSet.fromFiles(htmlFile, textFile));
+		}
+		System.out.println(" [x]");
+		return datasets;
+	}
+	
 	public static SingleCitedDataSet fromFiles(File htmlFile, File citedContentTextFile){
 		SingleCitedDataSet dataset = ContextHTML_Parser.parseHTML(htmlFile);
 		dataset.citedContent = readTextFile(citedContentTextFile);
