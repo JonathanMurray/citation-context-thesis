@@ -13,7 +13,7 @@ import util.Environment;
 import util.Printer;
 import weka.core.Instances;
 import wekaWrapper.WekaClassifier;
-import citationContextData.SingleCitedDataSet;
+import citationContextData.Dataset;
 import conceptGraph.WikiGraph;
 import conceptGraph.WikiGraphFactory;
 
@@ -37,7 +37,7 @@ public class CompareClassifiers {
 		
 		Instances ngramsSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-ngrams-full-dataset.arff"));
 		Instances fullSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-features-full-dataset.arff"));
-		ArrayList<SingleCitedDataSet> datasets = SingleCitedDataSet.datasetsFromDir(new File(resourcesDir, "teufel-citation-context-corpus"));
+		ArrayList<Dataset> datasets = Dataset.datasetsFromDir(new File(resourcesDir, "teufel-citation-context-corpus"));
 		
 //		DataSet dataset = new DataSet(contextDataset, citedContent, wekaTestSet);
 		

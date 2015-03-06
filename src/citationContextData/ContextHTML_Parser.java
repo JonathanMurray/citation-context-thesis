@@ -17,14 +17,14 @@ public class ContextHTML_Parser {
 	public static final String dataDir = "/home/jonathan/Documents/exjobb/data/";
 	public static final String corpusDir = dataDir + "teufel-citation-context-corpus/";
 	
-	public static SingleCitedDataSet parseHTML_Default(){
+	public static Dataset parseHTML_Default(){
 		final String dataDir = "/home/jonathan/Documents/exjobb/data/";
 		String corpusDir = dataDir + "teufel-citation-context-corpus/";
 		String filepath = corpusDir + "A92-1018.html";
 		return parseHTML(Paths.get(filepath).toFile());
 	}
 	
-	public static SingleCitedDataSet parseHTML(File file){
+	public static Dataset parseHTML(File file){
 		Document doc;
 		try {
 			doc = Jsoup.parse(file, null);
@@ -50,7 +50,7 @@ public class ContextHTML_Parser {
 				citers.add(new Citer(citerTitle, sentences));
 			}
 			String datasetLabel = file.getName().substring(0, file.getName().length() - 5);
-			return new SingleCitedDataSet(datasetLabel, mainAuthorLastName, citedTitle, citers);
+			return new Dataset(datasetLabel, mainAuthorLastName, citedTitle, citers);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);

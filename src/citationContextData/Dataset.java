@@ -22,7 +22,7 @@ import util.Printer;
 import util.Texts;
 
 
-public class SingleCitedDataSet {
+public class Dataset {
 	public String datasetLabel;
 	public String citedMainAuthor;
 	public String citedTitle;
@@ -34,12 +34,12 @@ public class SingleCitedDataSet {
 	
 	private static Printer printer = new Printer(false);
 	
-	public static SingleCitedDataSet fromHTMLFile(File htmlFile){
+	public static Dataset fromHTMLFile(File htmlFile){
 		return ContextHTML_Parser.parseHTML(htmlFile);
 	}
 	
-	public static ArrayList<SingleCitedDataSet> datasetsFromDir(File dir){
-		ArrayList<SingleCitedDataSet> datasets = new ArrayList<SingleCitedDataSet>();
+	public static ArrayList<Dataset> datasetsFromDir(File dir){
+		ArrayList<Dataset> datasets = new ArrayList<Dataset>();
 		File[] files = dir.listFiles();
 		System.out.print("Creating citation data set from dir " + dir.getAbsolutePath() + ": ");
 		for(int i = 0; i < files.length; i++){
@@ -50,16 +50,16 @@ public class SingleCitedDataSet {
 			}
 			String baseName = htmlFile.getName().substring(0, htmlFile.getName().length()-5);
 			File textFile = new File(dir, baseName + ".txt");
-			datasets.add(SingleCitedDataSet.fromFiles(htmlFile, textFile));
+			datasets.add(Dataset.fromFiles(htmlFile, textFile));
 		}
 		System.out.println(" [x]");
 		return datasets;
 	}
 	
-	public static SingleCitedDataSet fromFiles(File htmlFile, File citedContentTextFile){
-		SingleCitedDataSet dataset = ContextHTML_Parser.parseHTML(htmlFile);
+	public static Dataset fromFiles(File htmlFile, File citedContentTextFile){
+		Dataset dataset = ContextHTML_Parser.parseHTML(htmlFile);
 		dataset.citedContent = readTextFile(citedContentTextFile);
-		dataset.setup();
+		dataset.enhance();
 		return dataset;
 	}
 	
@@ -77,11 +77,11 @@ public class SingleCitedDataSet {
 		}
 	}
 	
-	public SingleCitedDataSet(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers){
+	public Dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers){
 		this(datasetLabel, citedMainAuthor, citedTitle, citers, null);
 	}
 
-	public SingleCitedDataSet(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers, String citedContent){
+	public Dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers, String citedContent){
 		this.datasetLabel = datasetLabel;
 		this.citedMainAuthor = citedMainAuthor;
 		this.citedTitle = citedTitle;
@@ -89,7 +89,7 @@ public class SingleCitedDataSet {
 		this.citers = citers;
 	}
 	
-	public void setup(){
+	public void enhance(){
 		acronyms = findAcronyms();
 		lexicalHooks = findLexicalHooks(5);
 		lexicalHooks.remove(citedMainAuthor);
@@ -148,23 +148,23 @@ public class SingleCitedDataSet {
 				.flatMap(c -> c.sentences.stream())
 				.filter(s -> s.type == SentenceClass.EXPLICIT_REFERENCE);
 	}
-	
-	private Stream<Sentence> implicitReferences(){
-		return citers.stream()
-				.flatMap(c -> c.sentences.stream())
-				.filter(s -> s.type == SentenceClass.IMPLICIT_REFERENCE);
-	}
-	
-	private Stream<Sentence> sentences(){
-		return citers.stream()
-				.flatMap(c -> c.sentences.stream());
-	}
-	
-	private Stream<Sentence> nonReferences(){
-		return citers.stream()
-				.flatMap(c -> c.sentences.stream())
-				.filter(s -> s.type == SentenceClass.NOT_REFERENCE);
-	}
+//	
+//	private Stream<Sentence> implicitReferences(){
+//		return citers.stream()
+//				.flatMap(c -> c.sentences.stream())
+//				.filter(s -> s.type == SentenceClass.IMPLICIT_REFERENCE);
+//	}
+//	
+//	private Stream<Sentence> sentences(){
+//		return citers.stream()
+//				.flatMap(c -> c.sentences.stream());
+//	}
+//	
+//	private Stream<Sentence> nonReferences(){
+//		return citers.stream()
+//				.flatMap(c -> c.sentences.stream())
+//				.filter(s -> s.type == SentenceClass.NOT_REFERENCE);
+//	}
 	
 //	
 //	

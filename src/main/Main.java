@@ -30,7 +30,7 @@ import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
 import wekaWrapper.WekaClassifier;
 import citationContextData.Citer;
-import citationContextData.SingleCitedDataSet;
+import citationContextData.Dataset;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
@@ -85,7 +85,7 @@ public class Main {
 	public static void printInfoFromAllHTML_Files(){
 		for(File f : CITATION_DIR.listFiles()){
 			if(f.getName().endsWith(".html")){
-				SingleCitedDataSet dataset = SingleCitedDataSet.fromHTMLFile(f);
+				Dataset dataset = Dataset.fromHTMLFile(f);
 				System.out.println(dataset.datasetLabel);
 				System.out.println(dataset.citedMainAuthor);
 				System.out.println(dataset.citedTitle);
@@ -102,7 +102,7 @@ public class Main {
 
 	private static void convertDataToArff(File... htmlFiles){
 		for(File htmlFile : htmlFiles){
-			SingleCitedDataSet dataset = ContextHTML_Parser.parseHTML(htmlFile);
+			Dataset dataset = ContextHTML_Parser.parseHTML(htmlFile);
 			List<SentenceInstance> instances = InstanceHandler.createInstances(dataset, false, true);
 			InstanceHandler.writeToArffFile(instances, Paths.get("arff/" + "balanced-" + htmlFile.getName() + ".arff").toFile());
 		}
@@ -126,7 +126,7 @@ public class Main {
 	
 	public static void readDatasetWriteSentences(){
 		File inFile = Paths.get("/home/jonathan/Documents/exjobb/data/teufel-citation-context-corpus/A92-1018.html").toFile();
-		SingleCitedDataSet dataset = new ContextHTML_Parser().parseHTML(inFile);
+		Dataset dataset = new ContextHTML_Parser().parseHTML(inFile);
 		Citer citer = dataset.citers.get(0);
 		NonThrowingFileWriter writer = new NonThrowingFileWriter(Paths.get("SENTENCES-TEST.txt").toFile());
 		for(Sentence s : citer.sentences){
