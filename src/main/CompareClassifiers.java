@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import markovRandomField.MRF;
-import markovRandomField.MRF_WithConcepts;
+import markovRandomField.MRF_withConcepts;
 import markovRandomField.MRF_dataset;
 import util.ClassificationResult;
 import util.Environment;
@@ -55,7 +55,7 @@ public class CompareClassifiers {
 		MRF mrf = new MRF(4);
 		double simMult = 0.01;
 		WikiGraph conceptGraph = WikiGraphFactory.loadWikiGraph(new File(resourcesDir, "ser/linksSingleWords.ser"), new File(resourcesDir, "ser/toIndexSingleWords.ser"), simMult, false);
-		MRF_WithConcepts mrfConcepts = new MRF_WithConcepts(4, conceptGraph);
+		MRF_withConcepts mrfConcepts = new MRF_withConcepts(4, conceptGraph);
 		
 //		testClassifierPrintResults(dataset, new Classifier("MRF", mrf));
 //		testClassifierPrintResults(dataset, new Classifier("MRF - Concepts", mrfConcepts));

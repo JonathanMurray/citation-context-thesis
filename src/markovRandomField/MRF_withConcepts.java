@@ -2,11 +2,11 @@ package markovRandomField;
 
 import conceptGraph.ConceptGraph;
 
-public class MRF_WithConcepts extends MRF{
+public class MRF_withConcepts extends MRF{
 
 	ConceptGraph conceptGraph;
 	
-	public MRF_WithConcepts(int neighbourhod, ConceptGraph conceptGraph) {
+	public MRF_withConcepts(int neighbourhod, ConceptGraph conceptGraph) {
 		super(neighbourhod);
 		this.conceptGraph = conceptGraph;
 	}
