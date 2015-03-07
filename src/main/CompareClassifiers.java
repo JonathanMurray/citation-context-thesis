@@ -66,10 +66,10 @@ public class CompareClassifiers {
 		boolean balanceData = false; //dataset is already balanced
 		List<String> testSentences = null;
 		
-		MRF_dataset mrfDataset = datasets.get(0).getMRF_dataset();
+		MRF_dataset mrfDataset = datasets.get(0).getMRF_dataset(20, 5, true, true);
 		
-		printResult("MRF", mrf.classify(mrfDataset), testSentences);
-		printResult("MRF+", mrfConcepts.classify(mrfDataset), testSentences);
+		printResult("MRF", mrf.classify(mrfDataset, 0.7), testSentences);
+		printResult("MRF+", mrfConcepts.classify(mrfDataset, 0.7), testSentences);
 		
 		printResult("SMO+", wekaSMO.crossValidate(fullSet, numFolds, balanceData), testSentences);
 		printResult("NB+", wekaNB.crossValidate(fullSet, numFolds, balanceData), testSentences);

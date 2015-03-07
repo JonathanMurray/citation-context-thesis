@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import util.ClassificationResultImpl;
 import util.CosineSimilarity;
@@ -16,6 +15,7 @@ import util.Printer;
 import util.Texts;
 import util.Timer;
 import citationContextData.Citer;
+import citationContextData.Sentence;
 import citationContextData.SentenceClass;
 
 
@@ -24,13 +24,12 @@ public class MRF {
 	private static final int NO = 0;
 	private static final int YES = 1;
 	
-	private static Printer printer = new Printer(true);
+	protected static Printer printer = new Printer(true);
 	
-	private int numSentences;
-	protected List<HashMap<String,Double>> unigramVectors;
-	protected List<HashMap<String,Double>> bigramVectors;
-	protected List<String> sentenceTexts;
-	protected List<SentenceClass> sentenceTypes;
+	protected MRF_dataset data;
+	protected Citer currentCiter;
+	protected MRF_citerNgrams currentCiterNgrams;
+	
 	List<double[]> beliefs;
 	List<Map<Integer,double[]>> allReceivedMessages;
 	
@@ -45,64 +44,39 @@ public class MRF {
 		this.neighbourhood = neighbourhood;
 	}
 	
-	public ClassificationResultImpl classify(MRF_dataset dataset){
+	public ClassificationResultImpl classify(MRF_dataset dataset, double beliefThreshold){
 		ClassificationResultImpl result = new ClassificationResultImpl();
 		printer.print("MRF classifying citers: ");
 		for(int i = 0; i < dataset.citers.size(); i++){
 			printer.progress(i, 1);
-			result.add(classifyOneCiter(i, dataset));
+			result.add(classifyOneCiter(i, dataset, beliefThreshold));
 		}
 		System.out.println();
 		return result;
 	}
 	
-	public ClassificationResultImpl classifyOneCiter(int citerIndex, MRF_dataset dataset){
-		Citer citer = dataset.citers.get(citerIndex);
-		List<String> sentences = citer.sentences.stream().sequential()
-				.map(s -> s.text)
-				.collect(Collectors.toCollection(ArrayList::new));
-		
-		List<SentenceClass> sentenceTypes = citer.sentences.stream().sequential()
-				.map(s -> s.type)
-				.collect(Collectors.toCollection(ArrayList::new));
-		
-		return classifyOneCiter(sentences, sentenceTypes, dataset.citedMainAuthor, dataset.citedContentUnigrams, dataset);
-	}
-	
-	public ClassificationResultImpl classifyOneCiter(
-			List<String> sentenceTexts, 
-			List<SentenceClass> sentenceTypes, 
-			String mainAuthor, 
-			HashMap<String,Double> citedContentNGrams, 
-			MRF_dataset dataset){
-
+	public ClassificationResultImpl classifyOneCiter(int citerIndex, MRF_dataset dataset, double beliefThreshold){
 		Timer t = new Timer();
-		
-		setup(sentenceTexts, sentenceTypes, mainAuthor, citedContentNGrams, dataset);
+		setup(citerIndex, dataset);
 		initMessages();
 		for(int i = 0; i < 5; i++){
 			oneLoop();	
 		}
-		
-		return getClassificationResults(0.7, t.getMillis());
+		return getClassificationResults(beliefThreshold, t.getMillis());
 	}
 	
-	private void setup(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, HashMap<String,Double> citedContentUnigrams, MRF_dataset dataset){
-		
-		this.sentenceTexts = sentenceTexts;
-		this.sentenceTypes = sentenceTypes;
-		unigramVectors = new ArrayList<HashMap<String,Double>>();
-		bigramVectors = new ArrayList<HashMap<String,Double>>();
+	private void setup(int citerIndex, MRF_dataset dataset){
+		this.data = dataset;
+		this.currentCiter = dataset.citers.get(citerIndex);
+		this.currentCiterNgrams = dataset.citersNgrams.get(citerIndex);
 		beliefs = new ArrayList<double[]>();
-		numSentences = sentenceTexts.size();
 		
 		List<Double> unnormalizedBeliefs = new ArrayList<Double>();
 		
-		for(String text : sentenceTexts){
-			HashMap<String, Double> sentenceUnigrams = Texts.instance().getNgrams(1, text, true, true); 
-			unigramVectors.add(sentenceUnigrams);
-			bigramVectors.add(Texts.instance().getNgrams(2, text, true, true));
-			unnormalizedBeliefs.add(selfBelief(text, sentenceUnigrams, mainAuthor, citedContentUnigrams, dataset.acronyms, dataset.lexicalHooks));
+		for(int i = 0; i < currentCiter.sentences.size(); i++){
+			String text = currentCiter.sentences.get(i).text;
+			HashMap<String,Double> unigrams = currentCiterNgrams.sentencesUnigrams.get(i);
+			unnormalizedBeliefs.add(selfBelief(text, unigrams, dataset.citedMainAuthor, dataset.citedContentUnigrams, dataset.acronyms, dataset.lexicalHooks));
 		}
 		
 		double maxBelief = unnormalizedBeliefs.stream().max(Double::compareTo).get();
@@ -154,18 +128,18 @@ public class MRF {
 		ArrayList<Integer> fpIndices = new ArrayList<Integer>();
 		ArrayList<Integer> fnIndices = new ArrayList<Integer>();
 		
-		for(int i = 0; i < numSentences; i++){
+		for(int i = 0; i < currentCiter.sentences.size(); i++){
+			Sentence sentence = currentCiter.sentences.get(i);
 			double[] belief = finalBelief(i);
-//			System.out.println(sentenceTypes.get(i) + " - " + beliefToString(beliefs.get(i)) + " -> " + beliefToString(belief) + ":  " + sentenceTexts.get(i));
 			if(belief[1] > beliefThreshold){
-				if(sentenceTypes.get(i) == SentenceClass.NOT_REFERENCE){
+				if(sentence.type == SentenceClass.NOT_REFERENCE){
 					fpIndices.add(i);
 					falsePos ++;
 				}else{
 					truePos ++;
 				}
 			}else{
-				if(sentenceTypes.get(i) == SentenceClass.NOT_REFERENCE){
+				if(sentence.type == SentenceClass.NOT_REFERENCE){
 					trueNeg ++;
 				}else{
 					fnIndices.add(i);
@@ -196,6 +170,7 @@ public class MRF {
 	
 	private void initMessages(){
 		allReceivedMessages = new ArrayList<Map<Integer,double[]>>();
+		int numSentences = currentCiter.sentences.size();
 		for(int s = 0; s < numSentences; s++){
 			Map<Integer, double[]> receivedMessages = new HashMap<Integer, double[]>();
 			for(int m = Math.max(0, s-neighbourhood); m <= Math.min(s+neighbourhood, numSentences-1); m++){
@@ -208,6 +183,7 @@ public class MRF {
 	}
 	
 	private void oneLoop(){
+		int numSentences = currentCiter.sentences.size();
 		for(int from = 0; from < numSentences; from++){
 			double[] belief = beliefs.get(from);
 			Map<Integer, double[]> receivedMessages = allReceivedMessages.get(from);
@@ -293,24 +269,24 @@ public class MRF {
 	private double relatedness(int s1, int s2){
 		double sim = similarity(s1, s2);
 		if(s2 == s1 + 1){
-			return sim + relatedToPrevious(s2);
+			return sim + relatednessToPrevious(s2);
 		}
 		if(s1 == s2 + 1){
-			return sim + relatedToPrevious(s1);
+			return sim + relatednessToPrevious(s1);
 		}
 		return sim;
 	}
 	
 	protected double similarity(int s1, int s2){
-		HashMap<String,Double> s1Vec = unigramVectors.get(s1);
-		HashMap<String,Double> s2Vec = unigramVectors.get(s2);
+		HashMap<String,Double> s1Vec = currentCiterNgrams.sentencesUnigrams.get(s1);
+		HashMap<String,Double> s2Vec = currentCiterNgrams.sentencesUnigrams.get(s2);
 		double cosSim = 0;
 		if(s1Vec.size() > 0 && s2Vec.size() > 0){
 			cosSim = CosineSimilarity.calculateCosineSimilarity(s1Vec, s2Vec);
 		}
 		
-		HashMap<String,Double> bigramVec1 = bigramVectors.get(s1);
-		HashMap<String,Double> bigramVec2 = bigramVectors.get(s2);
+		HashMap<String,Double> bigramVec1 = currentCiterNgrams.sentencesBigrams.get(s1);
+		HashMap<String,Double> bigramVec2 = currentCiterNgrams.sentencesBigrams.get(s2);
 
 		double bigramSim = 0;
 		if(bigramVec1.size() > 0 && bigramVec2.size() > 0){
@@ -321,8 +297,8 @@ public class MRF {
 	
 	
 	
-	private double relatedToPrevious(int sentence){
-		String[] words = sentenceTexts.get(sentence).split("\\s+");
+	private double relatednessToPrevious(int sentenceIndex){
+		String[] words = currentCiter.sentences.get(sentenceIndex).text.split("\\s+");
 		return 4 * ((Texts.instance().containsDetWork(words)? 1:0)
 			+ (Texts.instance().startsWith3rdPersonPronoun(words)? 1:0)
 			+ (Texts.instance().startsWithConnector(words)? 1:0));

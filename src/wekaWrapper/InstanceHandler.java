@@ -58,12 +58,12 @@ public class InstanceHandler {
 	 * @param onlyText
 	 * @return
 	 */
-	public static List<SentenceInstance> createInstancesFromHTMLFiles(File[] htmlFiles, boolean onlyText, boolean balanceData){
+	public static List<SentenceInstance> createInstancesFromHTMLFiles(File[] htmlFiles, int authorProxyBoundary, int numLexicalHooks, boolean onlyText, boolean balanceData){
 		
 		List<WekaDataset> datasets = Arrays.asList(htmlFiles).stream()
 				.filter(f -> f.getName().endsWith(".html")) 
 				.map(f -> ContextHTML_Parser.parseHTML(f))
-				.map(Dataset::getWekaDataset)
+				.map(d -> d.getWekaDataset(authorProxyBoundary, numLexicalHooks))
 				.collect(Collectors.toList());
 		ArrayList<SentenceInstance> instances = datasets.stream()
 				.flatMap(dataset -> InstanceHandler.createInstances(dataset, onlyText, balanceData).stream())

@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import markovRandomField.MRF_citerNgrams;
 import markovRandomField.MRF_dataset;
 import util.DoubleMap;
 import util.IntegerMap;
@@ -31,7 +32,7 @@ public class Dataset {
 	public String citedContent;
 	public List<Citer> citers;
 	
-	private static Printer printer = new Printer(false);
+	private static Printer printer = new Printer(true);
 	
 	public static Dataset fromHTMLFile(File htmlFile){
 		return ContextHTML_Parser.parseHTML(htmlFile);
@@ -40,7 +41,7 @@ public class Dataset {
 	public static ArrayList<Dataset> datasetsFromDir(File dir){
 		ArrayList<Dataset> datasets = new ArrayList<Dataset>();
 		File[] files = dir.listFiles();
-		System.out.print("Creating citation data set from dir " + dir.getAbsolutePath() + ": ");
+		printer.print("Creating citation data set from dir " + dir.getAbsolutePath() + ": ");
 		for(int i = 0; i < files.length; i++){
 			printer.progress(i, 1);
 			File htmlFile = files[i];
@@ -51,7 +52,7 @@ public class Dataset {
 			File textFile = new File(dir, baseName + ".txt");
 			datasets.add(Dataset.fromFiles(htmlFile, textFile));
 		}
-		System.out.println(" [x]");
+		printer.println(" [x]");
 		return datasets;
 	}
 	
@@ -91,30 +92,34 @@ public class Dataset {
 		this.citers = citers;
 	}
 	
-	public MRF_dataset getMRF_dataset(){
+	public MRF_dataset getMRF_dataset(int authorProxyBoundary, int numLexicalHooks, boolean ngramsIgnoreStopwords, boolean ngramsStem){
 		DoubleMap<String> citedContentUnigrams = Texts.instance().getNgrams(1, citedContent, true, true);
-		Set<String> acronyms = findAcronyms();
-		Set<String> lexicalHooks = findLexicalHooks(5);
+		Set<String> acronyms = findAcronyms(authorProxyBoundary);
+		Set<String> lexicalHooks = findLexicalHooks(authorProxyBoundary, numLexicalHooks);
 		lexicalHooks.remove(citedMainAuthor);
-		return new MRF_dataset(this, citedContentUnigrams, acronyms, lexicalHooks);
+		ArrayList<MRF_citerNgrams> citersNgrams = citers.stream()
+				.map(citer -> citer.getMRF_citerNgrams(ngramsIgnoreStopwords, ngramsStem))
+				.collect(Collectors.toCollection(ArrayList::new));
+		
+		return new MRF_dataset(this, citedContentUnigrams, acronyms, lexicalHooks, citersNgrams);
 	}
 	
-	public WekaDataset getWekaDataset(){
-		Set<String> acronyms = findAcronyms();
-		Set<String> lexicalHooks = findLexicalHooks(5);
+	public WekaDataset getWekaDataset(int authorProxyBoundary, int numLexicalHooks){
+		Set<String> acronyms = findAcronyms(authorProxyBoundary);
+		Set<String> lexicalHooks = findLexicalHooks(authorProxyBoundary, numLexicalHooks);
 		lexicalHooks.remove(citedMainAuthor);
 		return new WekaDataset(this, acronyms, lexicalHooks);
 	}
 	
 	
-	private Set<String> findAcronyms(){
+	private Set<String> findAcronyms(int boundary){
 		Pattern regex = Pattern.compile("[^a-zA-Z][A-Z]+[ ,]");
-		return new HashSet<String>(findMatchesInExplicitReferencesAroundAuthor(regex));
+		return new HashSet<String>(findMatchesInExplicitReferencesAroundAuthor(boundary, regex));
 	}
 	
-	private Set<String> findLexicalHooks(int numLexicalHooks){
+	private Set<String> findLexicalHooks(int boundary, int numLexicalHooks){
 		Pattern regex = Pattern.compile("[^a-zA-Z][A-Z][a-z]+[ ,:;]");
-		List<String> nonDistinctHooks = findMatchesInExplicitReferencesAroundAuthor(regex);
+		List<String> nonDistinctHooks = findMatchesInExplicitReferencesAroundAuthor(boundary, regex);
 		IntegerMap<String> counts = new IntegerMap<String>();
 		nonDistinctHooks.stream()
 			.filter(hook -> !hook.equals(citedMainAuthor))
@@ -126,14 +131,13 @@ public class Dataset {
 				.collect(Collectors.toSet());
 	}
 	
-	private List<String> findMatchesInExplicitReferencesAroundAuthor(Pattern regex){
+	private List<String> findMatchesInExplicitReferencesAroundAuthor(int boundary, Pattern regex){
 		String author = citedMainAuthor;
 		List<String> matches = new ArrayList<String>();
 		
 		explicitReferences().forEach(sentence -> {
 				int index = sentence.text.indexOf(author);
 				if(index >= 0){
-					int boundary = 20;
 					int left = Math.max(0, index-boundary);
 					int right = Math.min(sentence.text.length()- 1, index+boundary);
 					String vicinityOfAuthor = sentence.text.substring(left, right);

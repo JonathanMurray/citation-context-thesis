@@ -79,7 +79,7 @@ public class Main {
 
 	private static void convertDataToArff(File... htmlFiles){
 		for(File htmlFile : htmlFiles){
-			WekaDataset dataset = ContextHTML_Parser.parseHTML(htmlFile).getWekaDataset();
+			WekaDataset dataset = ContextHTML_Parser.parseHTML(htmlFile).getWekaDataset(20, 5);
 			List<SentenceInstance> instances = InstanceHandler.createInstances(dataset, false, true);
 			InstanceHandler.writeToArffFile(instances, Paths.get("arff/" + "balanced-" + htmlFile.getName() + ".arff").toFile());
 		}
