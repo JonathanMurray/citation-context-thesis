@@ -157,7 +157,9 @@ public class Texts {
 				ngramWordsStream = ngramWordsStream.map(Texts::stem);
 			}
 			String ngram = ngramWordsStream.reduce((s1,s2) -> s1 + " " + s2).get();
-			ngramCounts.increment(ngram, 1.0);
+			if(ngram.length() > 0){
+				ngramCounts.increment(ngram, 1.0);
+			}
 		}
 		return ngramCounts;
 	}

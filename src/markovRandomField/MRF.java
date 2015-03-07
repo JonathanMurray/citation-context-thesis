@@ -1,5 +1,7 @@
 package markovRandomField;
 
+import gnu.trove.map.hash.TIntDoubleHashMap;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -21,6 +23,10 @@ import citationContextData.SentenceClass;
 
 public class MRF {
 	
+	private final static double DELTA = 0.05;
+	
+	private List<TIntDoubleHashMap> relatednessMemoization;
+	
 	private static final int NO = 0;
 	private static final int YES = 1;
 	
@@ -35,45 +41,55 @@ public class MRF {
 	
 	public final static int DEFAULT_NEIGHBOURHOOD = 4;
 	private int neighbourhood;
-	
-	public MRF(){
-		this(DEFAULT_NEIGHBOURHOOD);
-	}
-	
-	public MRF(int neighbourhood){
+	public final static double DEFAULT_BELIEF_THRESHOLD = 0.7;
+	private double beliefThreshold;
+	public MRF(int neighbourhood, double beliefThreshold){
 		this.neighbourhood = neighbourhood;
+		this.beliefThreshold = beliefThreshold;
 	}
 	
-	public ClassificationResultImpl classify(MRF_dataset dataset, double beliefThreshold){
+	public ClassificationResultImpl classify(MRF_dataset dataset){
 		ClassificationResultImpl result = new ClassificationResultImpl();
 		printer.print("MRF classifying citers: ");
 		for(int i = 0; i < dataset.citers.size(); i++){
 			printer.progress(i, 1);
-			result.add(classifyOneCiter(i, dataset, beliefThreshold));
+			result.add(classifyOneCiter(i, dataset));
 		}
-		System.out.println();
+		printer.println("");
 		return result;
 	}
 	
-	public ClassificationResultImpl classifyOneCiter(int citerIndex, MRF_dataset dataset, double beliefThreshold){
+	public ClassificationResultImpl classifyOneCiter(int citerIndex, MRF_dataset dataset){
 		Timer t = new Timer();
 		setup(citerIndex, dataset);
 		initMessages();
-		for(int i = 0; i < 5; i++){
-			oneLoop();	
+		for(int i = 0; i < 10; i++){ //TODO
+			boolean anyChange = iterate();
+			if(!anyChange){
+				break;
+			}
 		}
 		return getClassificationResults(beliefThreshold, t.getMillis());
 	}
 	
 	private void setup(int citerIndex, MRF_dataset dataset){
+		
 		this.data = dataset;
 		this.currentCiter = dataset.citers.get(citerIndex);
 		this.currentCiterNgrams = dataset.citersNgrams.get(citerIndex);
+		
+		int numSentences = currentCiter.sentences.size();
+		
+		relatednessMemoization = new ArrayList<TIntDoubleHashMap>();
+		for(int i = 0; i < numSentences; i++){
+			relatednessMemoization.add(new TIntDoubleHashMap());
+		}
+		
 		beliefs = new ArrayList<double[]>();
 		
 		List<Double> unnormalizedBeliefs = new ArrayList<Double>();
 		
-		for(int i = 0; i < currentCiter.sentences.size(); i++){
+		for(int i = 0; i < numSentences; i++){
 			String text = currentCiter.sentences.get(i).text;
 			HashMap<String,Double> unigrams = currentCiterNgrams.sentencesUnigrams.get(i);
 			unnormalizedBeliefs.add(selfBelief(text, unigrams, dataset.citedMainAuthor, dataset.citedContentUnigrams, dataset.acronyms, dataset.lexicalHooks));
@@ -182,8 +198,9 @@ public class MRF {
 		}
 	}
 	
-	private void oneLoop(){
+	private boolean iterate(){
 		int numSentences = currentCiter.sentences.size();
+		boolean anyChange = false;
 		for(int from = 0; from < numSentences; from++){
 			double[] belief = beliefs.get(from);
 			Map<Integer, double[]> receivedMessages = allReceivedMessages.get(from);
@@ -191,13 +208,17 @@ public class MRF {
 			int rightmostNeighbour = Math.min(numSentences - 1, from + neighbourhood);
 			for(int to = leftmostNeighbour; to <= rightmostNeighbour; to++){
 				if(to != from){
-					sendMessage(from, to, receivedMessages, belief);
+					boolean msgChanged = sendMessage(from, to, receivedMessages, belief);
+					if(msgChanged){
+						anyChange = true;
+					}
 				}
 			}
 		}
+		return anyChange;
 	}
 	
-	private void sendMessage(int from, int to, Map<Integer, double[]> receivedMessages, double[] belief){
+	private boolean sendMessage(int from, int to, Map<Integer, double[]> receivedMessages, double[] belief){
 		double[] productReceived = productOfValuesExcept(receivedMessages, to);
 		double[] totalBeliefAboutSelf = new double[]{
 				belief[NO] * productReceived[NO], 
@@ -220,7 +241,17 @@ public class MRF {
 		
 		normalizeProbabilityVector(message);
 		
+		boolean msgChanged = false;
+		if(allReceivedMessages.get(to).containsKey(from)){
+			double[] prevMsg = allReceivedMessages.get(to).get(from);
+			
+			if(Math.abs(prevMsg[0] - message[0]) > DELTA || Math.abs(prevMsg[1] - message[1]) > DELTA){
+				msgChanged = true;
+			}
+		}
+		
 		allReceivedMessages.get(to).put(from, message);
+		return msgChanged;
 	}
 	
 	private void normalizeProbabilityVector(double[] probabilities){
@@ -267,14 +298,20 @@ public class MRF {
 	}
 	
 	private double relatedness(int s1, int s2){
-		double sim = similarity(s1, s2);
+		if(relatednessMemoization.get(s1).get(s2) != 0){
+			return relatednessMemoization.get(s1).get(s2);
+		}
+		if(relatednessMemoization.get(s2).get(s1) != 0){
+			return relatednessMemoization.get(s2).get(s1);
+		}
+		double relatedness = similarity(s1, s2);
 		if(s2 == s1 + 1){
-			return sim + relatednessToPrevious(s2);
+			relatedness += relatednessToPrevious(s2);
+		}else if(s1 == s2 + 1){
+			relatedness += relatednessToPrevious(s1);
 		}
-		if(s1 == s2 + 1){
-			return sim + relatednessToPrevious(s1);
-		}
-		return sim;
+		relatednessMemoization.get(s1).put(s2, relatedness);
+		return relatedness;
 	}
 	
 	protected double similarity(int s1, int s2){

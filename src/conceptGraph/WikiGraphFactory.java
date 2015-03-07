@@ -56,14 +56,14 @@ public class WikiGraphFactory {
 			TIntObjectHashMap<TIntArrayList> links;
 			TObjectIntHashMap<String> indices;
 			try(ObjectInputStream linksIn = new ObjectInputStream(new FileInputStream(linksFile))){
-				printer.print("Loading links from " + linksFile + " ... ");
+				printer.print("Loading wiki links from " + linksFile + " ... ");
 				links = (TIntObjectHashMap<TIntArrayList>) linksIn.readObject();
-				printer.println("DONE.");
+				printer.println("[x]");
 			}
 			try(ObjectInputStream indicesIn = new ObjectInputStream(new FileInputStream(indicesFile))){
-				printer.print("Loading indices from " + indicesFile + " ... ");
+				printer.print("Loading wiki indices from " + indicesFile + " ... ");
 				indices = (TObjectIntHashMap<String>) indicesIn.readObject();
-				printer.println("DONE.");
+				printer.println("[x]");
 			}
 			return new PreBuiltWikiGraph(links, indices, similarityMultiplier, allowStopwordConcepts);
 		}catch(IOException | ClassNotFoundException e){

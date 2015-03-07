@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import markovRandomField.MRF;
-import markovRandomField.MRF_withConcepts;
 import markovRandomField.MRF_dataset;
+import markovRandomField.MRF_withConcepts;
 import util.ClassificationResult;
 import util.Environment;
 import util.Printer;
@@ -17,6 +17,7 @@ import wekaWrapper.WekaClassifier;
 import citationContextData.Dataset;
 import conceptGraph.WikiGraph;
 import conceptGraph.WikiGraphFactory;
+import conceptGraph.WordNet;
 
 public class CompareClassifiers {
 	
@@ -27,49 +28,33 @@ public class CompareClassifiers {
 		System.out.println("Compare classifiers");
 		System.out.println("--------------------------------------------------");
 		System.out.println();
-		
-//		File[] htmlArffFiles = Arrays.asList(new File("arff").listFiles()).stream()
-//			.filter(f -> f.getName().endsWith(".html.arff"))
-//			.collect(Collectors.toList())
-//			.toArray(new File[0]);
-//		Instances wekaSet = WekaClassifier.fromFiles(htmlArffFiles);
-		
+
+		WordNet wordnetGraph = WordNet.fromFile(new File(Environment.resources(), "wordnet-dict").getPath());
 		String resourcesDir = Environment.resources();
-		
 		Instances ngramsSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-ngrams-full-dataset.arff"));
 		Instances fullSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-features-full-dataset.arff"));
 		ArrayList<Dataset> datasets = Dataset.datasetsFromDir(new File(resourcesDir, "teufel-citation-context-corpus"));
-		
-//		DataSet dataset = new DataSet(contextDataset, citedContent, wekaTestSet);
-		
-//		ArrayList<String> testSentences = contextDataset.citers.stream()
-//				.flatMap(citer -> citer.sentences.stream())
-//				.map(sentence -> sentence.unprocessedText)
-//				.collect(Collectors.toCollection(ArrayList::new));
 		
 		WekaClassifier wekaSMO = WekaClassifier.SMO();
 		WekaClassifier wekaNB = WekaClassifier.NaiveBayes();
 		WekaClassifier wekaTree = WekaClassifier.J48();
 		WekaClassifier wekaKnn = WekaClassifier.KNN();
 		
-		MRF mrf = new MRF(4);
 		double simMult = 0.01;
-		WikiGraph conceptGraph = WikiGraphFactory.loadWikiGraph(new File(resourcesDir, "ser/linksSingleWords.ser"), new File(resourcesDir, "ser/toIndexSingleWords.ser"), simMult, false);
-		MRF_withConcepts mrfConcepts = new MRF_withConcepts(4, conceptGraph);
+		WikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph(new File(resourcesDir, "ser/linksSingleWords.ser"), new File(resourcesDir, "ser/toIndexSingleWords.ser"), simMult, false);
 		
-//		testClassifierPrintResults(dataset, new Classifier("MRF", mrf));
-//		testClassifierPrintResults(dataset, new Classifier("MRF - Concepts", mrfConcepts));
-//		wekaSMO.trainOnData(wekaTrain);
 		
 		int numFolds = 4;
-		
 		boolean balanceData = false; //dataset is already balanced
 		List<String> testSentences = null;
+		MRF_dataset stemmedMrfDataset = datasets.get(0).getMRF_dataset(20, 5, true, true);
+		MRF_dataset nonStemmedMrfDataset = datasets.get(0).getMRF_dataset(20, 5, true, false);
 		
-		MRF_dataset mrfDataset = datasets.get(0).getMRF_dataset(20, 5, true, true);
+		printResult("MRF-wiki", new MRF_withConcepts(3, 0.7, wikiGraph).classify(stemmedMrfDataset), testSentences);
 		
-		printResult("MRF", mrf.classify(mrfDataset, 0.7), testSentences);
-		printResult("MRF+", mrfConcepts.classify(mrfDataset, 0.7), testSentences);
+		printResult("MRF-wordnet", new MRF_withConcepts(3, 0.7, wordnetGraph).classify(nonStemmedMrfDataset), testSentences);
+		
+		
 		
 		printResult("SMO+", wekaSMO.crossValidate(fullSet, numFolds, balanceData), testSentences);
 		printResult("NB+", wekaNB.crossValidate(fullSet, numFolds, balanceData), testSentences);
@@ -82,16 +67,7 @@ public class CompareClassifiers {
 		printResult("KNN", wekaKnn.crossValidate(ngramsSet, numFolds, balanceData), testSentences);
 	}
 	
-//	public static void testClassifierPrintResults(DataSet dataset, Evaluator classifier, List<String> testSentences){
-//		System.out.print("Testing " + classifier + "...    ");
-//		ClassificationResult res = classifier.evaluate(dataset);
-//		printResult(classifier.toString(), res, testSentences);
-//	}
-	
-	
-	
 	private static void printResult(String title, ClassificationResult result, List<String> testSentences){
-		
 		NumberFormat f = new DecimalFormat("#.000"); 
 		System.out.println();
 		System.out.println(title);
@@ -109,15 +85,12 @@ public class CompareClassifiers {
 					.limit(2)
 					.map(i -> testSentences.get(i))
 					.forEach(System.out::println);
-			
 			System.out.println("\nFalse positives:");
 			result.falsePositiveIndices().stream()
 					.limit(2)
 					.map(i -> testSentences.get(i))
 					.forEach(System.out::println);
 		}
-		
 		System.out.println();
 	}
-	
 }

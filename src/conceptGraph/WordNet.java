@@ -2,10 +2,12 @@ package conceptGraph;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import util.Printer;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.IIndexWord;
@@ -17,6 +19,8 @@ import edu.mit.jwi.item.POS;
 
 public class WordNet implements ConceptGraph{
 
+	private static Printer printer = new Printer(true);
+	
 	public static void main(String[] args) throws IOException {
 		WordNet jwi = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
 		System.out.println(jwi.getRelated("part_of_speech", POS.NOUN));
@@ -35,14 +39,45 @@ public class WordNet implements ConceptGraph{
 	
 	public static WordNet fromFile(String dictDir){
 		try{
+			printer.print("Creating wordnet graph from dict-dir: " + dictDir + " ... ");
 			URL dictUrl = new URL("file", null, dictDir);
 			IDictionary dict = new Dictionary(dictUrl);
+			printer.println("[x]");
 			return new WordNet(dict);
 		}catch(IOException e){
 			e.printStackTrace();
 			System.exit(0);
 			return null;
 		}
+	}
+	
+	@Override
+	public double similarity(Collection<String> sentence1, Collection<String> sentence2) {
+		double sum = 0;
+		for(String word1 : sentence1){
+			if(anyRelatedIn(word1, sentence2)){
+				sum += 1.0;
+			}
+		}
+		return sum / (double)sentence1.size();
+	}
+	
+	public boolean anyRelatedIn(String wordString, Collection<String> collection){
+		
+		IIndexWord indexWord = dict.getIndexWord(wordString, POS.NOUN);
+		if(indexWord == null){
+			return false;
+		}
+		for(IWordID wordID : indexWord.getWordIDs()){
+			IWord word = dict.getWord(wordID);
+			ISynset synset = word.getSynset();
+			for(IWord w : synset.getWords()){
+				if(collection.contains(w)){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	public Set<String> getRelated(String wordString, POS posTag){
@@ -95,25 +130,14 @@ public class WordNet implements ConceptGraph{
 		}
 	}
 
-	@Override
-	public double similarity(String[] sentence1, String[] sentence2) {
-		double sum = 0;
-		for(String word1 : sentence1){
-			for(String related1 : getRelated(word1, POS.NOUN)){
-				if(contains(related1, sentence2)){
-					sum += 1;
-				}
-			}
-		}
-		return sum / (double)sentence1.length;
-	}
 	
-	private <T> boolean contains(T element, T[] array){
-		for(int i = 0; i < array.length; i++){
-			if(array[i].equals(element)){
-				return true;
-			}
-		}
-		return false;
-	}
+	
+//	private <T> boolean contains(T[] array, T element){
+//		for(int i = 0; i < array.length; i++){
+//			if(array[i].equals(element)){
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
 }

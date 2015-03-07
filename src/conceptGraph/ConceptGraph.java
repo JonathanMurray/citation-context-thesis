@@ -1,5 +1,7 @@
 package conceptGraph;
 
+import java.util.Collection;
+
 public interface ConceptGraph {
-	double similarity(String[] sentence1, String[] sentence2);
+	double similarity(Collection<String> sentence1, Collection<String> sentence2);
 }

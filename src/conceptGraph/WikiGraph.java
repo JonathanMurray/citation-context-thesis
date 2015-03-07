@@ -3,6 +3,7 @@ package conceptGraph;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -32,7 +33,8 @@ public abstract class WikiGraph implements ConceptGraph{
 		allowStopwordsAsConcepts = allow;
 	}
 	
-	final public double similarity(String[] sentence1, String[] sentence2){
+	@Override
+	public double similarity(Collection<String> sentence1, Collection<String> sentence2){
 		List<Concept> vec1 = sentenceToConcepts(sentence1);
 		List<Concept> vec2 = sentenceToConcepts(sentence2);
 		
@@ -54,10 +56,10 @@ public abstract class WikiGraph implements ConceptGraph{
 		return similarityMultiplier * sum / (double)concepts1.size() / (double)concepts2.size();
 	}
 
-	private List<Concept> sentenceToConcepts(String[] sentence){
+	private List<Concept> sentenceToConcepts(Collection<String> sentence){
 		List<Concept> concepts = new ArrayList<Concept>();
-		for(int i = 0; i < sentence.length; i++){
-			String wordLowerCase = sentence[i].toLowerCase();
+		for(String word : sentence){
+			String wordLowerCase = word.toLowerCase();
 			try{
 				if(allowStopwordsAsConcepts || !Texts.instance().isStopword(wordLowerCase)){
 					int phraseIndex = getPhraseIndex(wordLowerCase);

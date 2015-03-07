@@ -43,7 +43,7 @@ public class Main {
 				new File(WIKI_DIR, "links-simple-sorted.txt"));
 		
 		String[] sentences = "We present an implementation of a part-of-speech tagger based on a hidden Markov model. The methodology enables robust and accurate tagging with few resource requirements".split("\\.");
-		System.out.println(g.similarity(sentences[0].split("\\s+"), sentences[1].split("\\s+")));
+//		System.out.println(g.similarity(sentences[0].split("\\s+"), sentences[1].split("\\s+")));
 	}
 	
 	public static void compareConceptGraphs(){
@@ -96,7 +96,7 @@ public class Main {
 			}
 			System.out.println("Enter second: ");
 			String[] s2 = sc.nextLine().split("\\s+");
-			System.out.println(graph.similarity(s1, s2));
+//			System.out.println(graph.similarity(s1, s2));
 		}
 		sc.close();
 	}
