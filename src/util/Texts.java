@@ -123,7 +123,7 @@ public class Texts {
 		return list.contains(str) || list.contains(str.toLowerCase());
 	}
 	
-	public boolean containsExplicitReference(List<String> words, String mainAuthor){
+	public boolean containsExplicitCitation(List<String> words, String mainAuthor){
 		int authorIndex = words.indexOf(mainAuthor);
 		if(authorIndex > -1){
 			int start = Math.min(authorIndex+1, words.size()-1);

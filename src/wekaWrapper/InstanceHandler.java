@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 import util.NonThrowingFileWriter;
 import util.Texts;
-import citationContextData.Citer;
+import citationContextData.CitingPaper;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Dataset;
 import citationContextData.Sentence;
@@ -85,7 +85,7 @@ public class InstanceHandler {
 	@SuppressWarnings("rawtypes")
 	public static List<SentenceInstance> createInstances(WekaDataset dataset, boolean onlyText, boolean balanceData){
 		List<SentenceInstance> instances = new ArrayList<SentenceInstance>();
-		for(Citer citer : dataset.citers){
+		for(CitingPaper citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
 				Sentence previous = i > 0 ? citer.sentences.get(i-1) : null;
 				Sentence sentence = citer.sentences.get(i);
@@ -134,7 +134,7 @@ public class InstanceHandler {
 			features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(words));
 			features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(words));
 			features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(words));
-			features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitReference(Arrays.asList(prevWords), dataset.citedMainAuthor));
+			features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
 			features.put(FeatureName.AFTER_HEADING.toString(), texts.startsWithSectionHeader(previous != null ? previous.text : ""));
 			features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(sentence.text));
 			features.put(FeatureName.BEFORE_HEADING.toString(), texts.startsWithSectionHeader(next != null? next.text : ""));

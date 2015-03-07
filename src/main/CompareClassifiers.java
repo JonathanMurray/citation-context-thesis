@@ -6,8 +6,9 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import markovRandomField.MRF;
+import markovRandomField.MRF_classifier;
 import markovRandomField.MRF_dataset;
+import markovRandomField.MRF_params;
 import markovRandomField.MRF_withConcepts;
 import util.ClassificationResult;
 import util.Environment;
@@ -50,11 +51,9 @@ public class CompareClassifiers {
 		MRF_dataset stemmedMrfDataset = datasets.get(0).getMRF_dataset(20, 5, true, true);
 		MRF_dataset nonStemmedMrfDataset = datasets.get(0).getMRF_dataset(20, 5, true, false);
 		
-		printResult("MRF-wiki", new MRF_withConcepts(3, 0.7, wikiGraph).classify(stemmedMrfDataset), testSentences);
-		
-		printResult("MRF-wordnet", new MRF_withConcepts(3, 0.7, wordnetGraph).classify(nonStemmedMrfDataset), testSentences);
-		
-		
+		MRF_params params = new MRF_params();
+		printResult("MRF-wiki", new MRF_withConcepts(params, wikiGraph).classify(stemmedMrfDataset), testSentences);
+		printResult("MRF-wordnet", new MRF_withConcepts(params, wordnetGraph).classify(nonStemmedMrfDataset), testSentences);
 		
 		printResult("SMO+", wekaSMO.crossValidate(fullSet, numFolds, balanceData), testSentences);
 		printResult("NB+", wekaNB.crossValidate(fullSet, numFolds, balanceData), testSentences);

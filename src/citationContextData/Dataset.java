@@ -30,7 +30,7 @@ public class Dataset {
 	public String citedMainAuthor;
 	public String citedTitle;
 	public String citedContent;
-	public List<Citer> citers;
+	public List<CitingPaper> citers;
 	
 	private static Printer printer = new Printer(true);
 	
@@ -80,11 +80,11 @@ public class Dataset {
 		this(dataset.datasetLabel, dataset.citedMainAuthor, dataset.citedTitle, dataset.citers, dataset.citedContent);
 	}
 	
-	public Dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers){
+	public Dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<CitingPaper> citers){
 		this(datasetLabel, citedMainAuthor, citedTitle, citers, null);
 	}
 
-	public Dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<Citer> citers, String citedContent){
+	public Dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<CitingPaper> citers, String citedContent){
 		this.datasetLabel = datasetLabel;
 		this.citedMainAuthor = citedMainAuthor;
 		this.citedTitle = citedTitle;
@@ -170,7 +170,7 @@ public class Dataset {
 			writer.write("\"citedTitle\": \"" + citedTitle + "\",\n");
 			writer.write("\"citers\": [\n");
 			StringBuilder citersStr = new StringBuilder();
-			for(Citer citer : citers.subList(0, 2)){
+			for(CitingPaper citer : citers.subList(0, 2)){
 				citersStr.append("{\n");
 				citersStr.append("\"title\": \"" + citer.title.replace('\n', ' ') + "\",\n");
 				citersStr.append("\"sentences\": [\n");

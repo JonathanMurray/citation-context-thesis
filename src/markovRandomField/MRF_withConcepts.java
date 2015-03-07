@@ -4,12 +4,12 @@ import java.util.Collection;
 
 import conceptGraph.ConceptGraph;
 
-public class MRF_withConcepts extends MRF{
+public class MRF_withConcepts extends MRF_classifier{
 
 	ConceptGraph conceptGraph;
 	
-	public MRF_withConcepts(int neighbourhood, double beliefThreshold, ConceptGraph conceptGraph) {
-		super(neighbourhood, beliefThreshold);
+	public MRF_withConcepts(MRF_params params, ConceptGraph conceptGraph) {
+		super(params);
 		this.conceptGraph = conceptGraph;
 	}
 	

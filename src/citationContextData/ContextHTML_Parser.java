@@ -32,7 +32,7 @@ public class ContextHTML_Parser {
 			String[] citedAuthors = doc.select(".dstPaperAuthors").get(0).text().split(";");
 			String mainAuthorLastName = citedAuthors[0].split(",")[0];
 			
-			List<Citer> citers = new ArrayList<Citer>();
+			List<CitingPaper> citers = new ArrayList<CitingPaper>();
 			
 			Elements citerElements = doc.select("table.srcPaper > tbody > tr");
 			for(Element citer : citerElements){
@@ -47,7 +47,7 @@ public class ContextHTML_Parser {
 					sentences.add(sentence);
 	//				System.out.println(type + ": " + text);
 				}
-				citers.add(new Citer(citerTitle, sentences));
+				citers.add(new CitingPaper(citerTitle, sentences));
 			}
 			String datasetLabel = file.getName().substring(0, file.getName().length() - 5);
 			return new Dataset(datasetLabel, mainAuthorLastName, citedTitle, citers);

@@ -16,12 +16,12 @@ import util.CosineSimilarity;
 import util.Printer;
 import util.Texts;
 import util.Timer;
-import citationContextData.Citer;
+import citationContextData.CitingPaper;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
 
 
-public class MRF {
+public class MRF_classifier {
 	
 	private final static double DELTA = 0.05;
 	
@@ -32,20 +32,16 @@ public class MRF {
 	
 	protected static Printer printer = new Printer(true);
 	
+	protected MRF_params params;
 	protected MRF_dataset data;
-	protected Citer currentCiter;
+	protected CitingPaper currentCiter;
 	protected MRF_citerNgrams currentCiterNgrams;
 	
-	List<double[]> beliefs;
-	List<Map<Integer,double[]>> allReceivedMessages;
+	protected List<double[]> beliefs;
+	protected List<Map<Integer,double[]>> allReceivedMessages;
 	
-	public final static int DEFAULT_NEIGHBOURHOOD = 4;
-	private int neighbourhood;
-	public final static double DEFAULT_BELIEF_THRESHOLD = 0.7;
-	private double beliefThreshold;
-	public MRF(int neighbourhood, double beliefThreshold){
-		this.neighbourhood = neighbourhood;
-		this.beliefThreshold = beliefThreshold;
+	public MRF_classifier(MRF_params params){
+		this.params = params;
 	}
 	
 	public ClassificationResultImpl classify(MRF_dataset dataset){
@@ -69,7 +65,7 @@ public class MRF {
 				break;
 			}
 		}
-		return getClassificationResults(beliefThreshold, t.getMillis());
+		return getClassificationResults(params.beliefThreshold, t.getMillis());
 	}
 	
 	private void setup(int citerIndex, MRF_dataset dataset){
@@ -113,7 +109,7 @@ public class MRF {
 		}
 	}
 	
-	private static double selfBelief(
+	private double selfBelief(
 			String sentence, 
 			HashMap<String,Double> sentenceUnigrams, 
 			String mainAuthor, 
@@ -121,18 +117,29 @@ public class MRF {
 			Set<String> acronyms,
 			Set<String> lexicalHooks){
 		
-		String[] words = sentence.split("\\s+");
-		double explicit = Texts.instance().containsExplicitReference(Arrays.asList(words), mainAuthor) ? 2:0;
-		double detWork = Texts.instance().startsWithDetWork(words) ? 0:0;
-		double det = Texts.instance().startsWithLimitedDet(words) ? 0:0;
-		double cosSim = 0;
-		if(sentenceUnigrams.size() > 0){
-			cosSim = CosineSimilarity.calculateCosineSimilarity(sentenceUnigrams, citedContentUnigrams);
-		}
-		double acr = Texts.instance().containsAcronyms(sentence, acronyms) ? 1:0;
-		double hooks = Texts.instance().containsLexicalHooks(sentence, lexicalHooks)? 1:0;
+		double score = 0.01; //Ensure not 0
 		
-		return 0.01 + explicit + detWork + det + cosSim + acr + hooks; //TODO mult. cossim
+		String[] words = sentence.split("\\s+");
+		if(Texts.instance().containsExplicitCitation(Arrays.asList(words), mainAuthor)){
+			score +=  params.selfBelief.explicitCitWeight;
+		}
+		if(Texts.instance().startsWithDetWork(words)){
+			score += params.selfBelief.detWorkWeight;
+		}
+		if(Texts.instance().startsWithLimitedDet(words)){
+			score += params.selfBelief.limitedDetWeight;
+		}
+		if(sentenceUnigrams.size() > 0){
+			double cossim = CosineSimilarity.calculateCosineSimilarity(sentenceUnigrams, citedContentUnigrams); 
+			score += params.selfBelief.cosineSimWeight * cossim;
+		}
+		if(Texts.instance().containsAcronyms(sentence, acronyms)){
+			score += params.selfBelief.acronymWeight;
+		}
+		if(Texts.instance().containsLexicalHooks(sentence, lexicalHooks)){
+			score += params.selfBelief.hooksWeight;
+		}
+		return score;
 	}
 	
 	private ClassificationResultImpl getClassificationResults(double beliefThreshold, long passedMillis){
@@ -189,7 +196,7 @@ public class MRF {
 		int numSentences = currentCiter.sentences.size();
 		for(int s = 0; s < numSentences; s++){
 			Map<Integer, double[]> receivedMessages = new HashMap<Integer, double[]>();
-			for(int m = Math.max(0, s-neighbourhood); m <= Math.min(s+neighbourhood, numSentences-1); m++){
+			for(int m = Math.max(0, s-params.neighbourhood); m <= Math.min(s+params.neighbourhood, numSentences-1); m++){
 				if(m != s){
 					receivedMessages.put(m, new double[]{0.5,0.5}); //start value for msg
 				}
@@ -204,8 +211,8 @@ public class MRF {
 		for(int from = 0; from < numSentences; from++){
 			double[] belief = beliefs.get(from);
 			Map<Integer, double[]> receivedMessages = allReceivedMessages.get(from);
-			int leftmostNeighbour = Math.max(0, from - neighbourhood);
-			int rightmostNeighbour = Math.min(numSentences - 1, from + neighbourhood);
+			int leftmostNeighbour = Math.max(0, from - params.neighbourhood);
+			int rightmostNeighbour = Math.min(numSentences - 1, from + params.neighbourhood);
 			for(int to = leftmostNeighbour; to <= rightmostNeighbour; to++){
 				if(to != from){
 					boolean msgChanged = sendMessage(from, to, receivedMessages, belief);

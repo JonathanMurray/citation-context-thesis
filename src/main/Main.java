@@ -10,7 +10,7 @@ import util.NonThrowingFileWriter;
 import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
 import wekaWrapper.WekaDataset;
-import citationContextData.Citer;
+import citationContextData.CitingPaper;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Dataset;
 import citationContextData.Sentence;
@@ -104,7 +104,7 @@ public class Main {
 	public static void readDatasetWriteSentences(){
 		File inFile = Paths.get("/home/jonathan/Documents/exjobb/data/teufel-citation-context-corpus/A92-1018.html").toFile();
 		Dataset dataset = new ContextHTML_Parser().parseHTML(inFile);
-		Citer citer = dataset.citers.get(0);
+		CitingPaper citer = dataset.citers.get(0);
 		NonThrowingFileWriter writer = new NonThrowingFileWriter(Paths.get("SENTENCES-TEST.txt").toFile());
 		for(Sentence s : citer.sentences){
 			writer.write(s.unprocessedText + "\n");
