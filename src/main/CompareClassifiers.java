@@ -8,13 +8,13 @@ import java.util.List;
 
 import markovRandomField.MRF;
 import markovRandomField.MRF_WithConcepts;
+import markovRandomField.MRF_dataset;
 import util.ClassificationResult;
 import util.Environment;
 import util.Printer;
 import weka.core.Instances;
 import wekaWrapper.WekaClassifier;
 import citationContextData.Dataset;
-import citationContextData.EnhancedDataset;
 import conceptGraph.WikiGraph;
 import conceptGraph.WikiGraphFactory;
 
@@ -38,7 +38,7 @@ public class CompareClassifiers {
 		
 		Instances ngramsSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-ngrams-full-dataset.arff"));
 		Instances fullSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-features-full-dataset.arff"));
-		ArrayList<EnhancedDataset> datasets = Dataset.datasetsFromDir(new File(resourcesDir, "teufel-citation-context-corpus"));
+		ArrayList<Dataset> datasets = Dataset.datasetsFromDir(new File(resourcesDir, "teufel-citation-context-corpus"));
 		
 //		DataSet dataset = new DataSet(contextDataset, citedContent, wekaTestSet);
 		
@@ -66,8 +66,10 @@ public class CompareClassifiers {
 		boolean balanceData = false; //dataset is already balanced
 		List<String> testSentences = null;
 		
-		printResult("MRF", mrf.classify(datasets.get(0)), testSentences);
-		printResult("MRF+", mrfConcepts.classify(datasets.get(0)), testSentences);
+		MRF_dataset mrfDataset = datasets.get(0).getMRF_dataset();
+		
+		printResult("MRF", mrf.classify(mrfDataset), testSentences);
+		printResult("MRF+", mrfConcepts.classify(mrfDataset), testSentences);
 		
 		printResult("SMO+", wekaSMO.crossValidate(fullSet, numFolds, balanceData), testSentences);
 		printResult("NB+", wekaNB.crossValidate(fullSet, numFolds, balanceData), testSentences);

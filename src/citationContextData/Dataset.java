@@ -16,10 +16,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import markovRandomField.MRF_dataset;
 import util.DoubleMap;
 import util.IntegerMap;
 import util.Printer;
 import util.Texts;
+import wekaWrapper.WekaDataset;
 
 
 public class Dataset {
@@ -35,8 +37,8 @@ public class Dataset {
 		return ContextHTML_Parser.parseHTML(htmlFile);
 	}
 	
-	public static ArrayList<EnhancedDataset> datasetsFromDir(File dir){
-		ArrayList<EnhancedDataset> datasets = new ArrayList<EnhancedDataset>();
+	public static ArrayList<Dataset> datasetsFromDir(File dir){
+		ArrayList<Dataset> datasets = new ArrayList<Dataset>();
 		File[] files = dir.listFiles();
 		System.out.print("Creating citation data set from dir " + dir.getAbsolutePath() + ": ");
 		for(int i = 0; i < files.length; i++){
@@ -47,7 +49,7 @@ public class Dataset {
 			}
 			String baseName = htmlFile.getName().substring(0, htmlFile.getName().length()-5);
 			File textFile = new File(dir, baseName + ".txt");
-			datasets.add(Dataset.fromFiles(htmlFile, textFile).getEnhanced());
+			datasets.add(Dataset.fromFiles(htmlFile, textFile));
 		}
 		System.out.println(" [x]");
 		return datasets;
@@ -56,7 +58,6 @@ public class Dataset {
 	public static Dataset fromFiles(File htmlFile, File citedContentTextFile){
 		Dataset dataset = ContextHTML_Parser.parseHTML(htmlFile);
 		dataset.citedContent = readTextFile(citedContentTextFile);
-		dataset.getEnhanced();
 		return dataset;
 	}
 	
@@ -90,12 +91,19 @@ public class Dataset {
 		this.citers = citers;
 	}
 	
-	public EnhancedDataset getEnhanced(){
+	public MRF_dataset getMRF_dataset(){
 		DoubleMap<String> citedContentUnigrams = Texts.instance().getNgrams(1, citedContent, true, true);
 		Set<String> acronyms = findAcronyms();
 		Set<String> lexicalHooks = findLexicalHooks(5);
 		lexicalHooks.remove(citedMainAuthor);
-		return new EnhancedDataset(this, citedContentUnigrams, acronyms, lexicalHooks);
+		return new MRF_dataset(this, citedContentUnigrams, acronyms, lexicalHooks);
+	}
+	
+	public WekaDataset getWekaDataset(){
+		Set<String> acronyms = findAcronyms();
+		Set<String> lexicalHooks = findLexicalHooks(5);
+		lexicalHooks.remove(citedMainAuthor);
+		return new WekaDataset(this, acronyms, lexicalHooks);
 	}
 	
 	

@@ -9,10 +9,10 @@ import java.util.Scanner;
 import util.NonThrowingFileWriter;
 import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
+import wekaWrapper.WekaDataset;
 import citationContextData.Citer;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Dataset;
-import citationContextData.EnhancedDataset;
 import citationContextData.Sentence;
 import conceptGraph.QuickWikiGraph;
 import conceptGraph.WikiGraph;
@@ -79,7 +79,7 @@ public class Main {
 
 	private static void convertDataToArff(File... htmlFiles){
 		for(File htmlFile : htmlFiles){
-			EnhancedDataset dataset = ContextHTML_Parser.parseHTML(htmlFile).getEnhanced();
+			WekaDataset dataset = ContextHTML_Parser.parseHTML(htmlFile).getWekaDataset();
 			List<SentenceInstance> instances = InstanceHandler.createInstances(dataset, false, true);
 			InstanceHandler.writeToArffFile(instances, Paths.get("arff/" + "balanced-" + htmlFile.getName() + ".arff").toFile());
 		}

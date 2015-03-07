@@ -16,8 +16,6 @@ import util.Printer;
 import util.Texts;
 import util.Timer;
 import citationContextData.Citer;
-import citationContextData.Dataset;
-import citationContextData.EnhancedDataset;
 import citationContextData.SentenceClass;
 
 
@@ -47,7 +45,7 @@ public class MRF {
 		this.neighbourhood = neighbourhood;
 	}
 	
-	public ClassificationResultImpl classify(EnhancedDataset dataset){
+	public ClassificationResultImpl classify(MRF_dataset dataset){
 		ClassificationResultImpl result = new ClassificationResultImpl();
 		printer.print("MRF classifying citers: ");
 		for(int i = 0; i < dataset.citers.size(); i++){
@@ -58,7 +56,7 @@ public class MRF {
 		return result;
 	}
 	
-	public ClassificationResultImpl classifyOneCiter(int citerIndex, EnhancedDataset dataset){
+	public ClassificationResultImpl classifyOneCiter(int citerIndex, MRF_dataset dataset){
 		Citer citer = dataset.citers.get(citerIndex);
 		List<String> sentences = citer.sentences.stream().sequential()
 				.map(s -> s.text)
@@ -76,7 +74,7 @@ public class MRF {
 			List<SentenceClass> sentenceTypes, 
 			String mainAuthor, 
 			HashMap<String,Double> citedContentNGrams, 
-			EnhancedDataset dataset){
+			MRF_dataset dataset){
 
 		Timer t = new Timer();
 		
@@ -89,7 +87,7 @@ public class MRF {
 		return getClassificationResults(0.7, t.getMillis());
 	}
 	
-	private void setup(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, HashMap<String,Double> citedContentUnigrams, EnhancedDataset dataset){
+	private void setup(List<String> sentenceTexts, List<SentenceClass> sentenceTypes, String mainAuthor, HashMap<String,Double> citedContentUnigrams, MRF_dataset dataset){
 		
 		this.sentenceTexts = sentenceTexts;
 		this.sentenceTypes = sentenceTypes;

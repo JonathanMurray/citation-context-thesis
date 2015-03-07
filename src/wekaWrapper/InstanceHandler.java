@@ -15,7 +15,6 @@ import util.Texts;
 import citationContextData.Citer;
 import citationContextData.ContextHTML_Parser;
 import citationContextData.Dataset;
-import citationContextData.EnhancedDataset;
 import citationContextData.Sentence;
 import citationContextData.SentenceClass;
 
@@ -61,10 +60,10 @@ public class InstanceHandler {
 	 */
 	public static List<SentenceInstance> createInstancesFromHTMLFiles(File[] htmlFiles, boolean onlyText, boolean balanceData){
 		
-		List<EnhancedDataset> datasets = Arrays.asList(htmlFiles).stream()
+		List<WekaDataset> datasets = Arrays.asList(htmlFiles).stream()
 				.filter(f -> f.getName().endsWith(".html")) 
 				.map(f -> ContextHTML_Parser.parseHTML(f))
-				.map(Dataset::getEnhanced)
+				.map(Dataset::getWekaDataset)
 				.collect(Collectors.toList());
 		ArrayList<SentenceInstance> instances = datasets.stream()
 				.flatMap(dataset -> InstanceHandler.createInstances(dataset, onlyText, balanceData).stream())
@@ -84,7 +83,7 @@ public class InstanceHandler {
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	public static List<SentenceInstance> createInstances(EnhancedDataset dataset, boolean onlyText, boolean balanceData){
+	public static List<SentenceInstance> createInstances(WekaDataset dataset, boolean onlyText, boolean balanceData){
 		List<SentenceInstance> instances = new ArrayList<SentenceInstance>();
 		for(Citer citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
@@ -126,7 +125,7 @@ public class InstanceHandler {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private static Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, EnhancedDataset dataset, boolean onlyText, int sentenceNumber){
+	private static Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, WekaDataset dataset, boolean onlyText, int sentenceNumber){
 		Texts texts = Texts.instance();
 		Map<String, Comparable> features = new HashMap<String, Comparable>();
 		String[] words = sentence.text.split("\\s+");
