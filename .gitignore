@@ -1,6 +1,7 @@
 .classpath
 .project
 .settings
+config.sh
 bin/
 notes/
 resources/
