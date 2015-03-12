@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import util.Texts;
-import markovRandomField.MRF_citerNgrams;
+import mrf.MRF_citerNgrams;
 
 public class CitingPaper {
 	public String title;

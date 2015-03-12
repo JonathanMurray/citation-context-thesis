@@ -6,10 +6,10 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import markovRandomField.MRF_classifier;
-import markovRandomField.MRF_dataset;
-import markovRandomField.MRF_params;
-import markovRandomField.MRF_withConcepts;
+import mrf.MRF_classifier;
+import mrf.MRF_dataset;
+import mrf.MRF_params;
+import mrf.MRF_withConcepts;
 import util.ClassificationResult;
 import util.Environment;
 import util.Printer;

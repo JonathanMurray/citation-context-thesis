@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import markovRandomField.MRF_citerNgrams;
-import markovRandomField.MRF_dataset;
+import mrf.MRF_citerNgrams;
+import mrf.MRF_dataset;
 import util.DoubleMap;
 import util.IntegerMap;
 import util.Printer;

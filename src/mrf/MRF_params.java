@@ -1,4 +1,4 @@
-package markovRandomField;
+package mrf;
 
 public class MRF_params {
 	

@@ -1,4 +1,4 @@
-package markovRandomField;
+package mrf;
 
 import java.util.Collection;
 
