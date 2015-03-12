@@ -21,11 +21,6 @@ public class WordNet implements ConceptGraph{
 
 	private static Printer printer = new Printer(true);
 	
-	public static void main(String[] args) throws IOException {
-		WordNet jwi = WordNet.fromFile("/home/jonathan/Documents/exjobb/data/wordnet-dict");
-		System.out.println(jwi.getRelated("part_of_speech", POS.NOUN));
-	}
-	
 	private IDictionary dict;
 	
 	public WordNet(IDictionary dict){
