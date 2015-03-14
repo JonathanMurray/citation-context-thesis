@@ -1,5 +1,6 @@
 package util;
 
+
 public class Environment {
 	public static String exjobbHome(){
 		return System.getenv("EXJOBB_HOME");
@@ -10,6 +11,11 @@ public class Environment {
 	}
 	
 	public static boolean exjobbInTerminal(){
-		return System.getenv("EXJOBB_IN_TERMINAL").equals("1");
+		String var = "EXJOBB_IN_TERMINAL";
+		if(System.getenv().containsKey(var)){
+			return System.getenv(var).equals("1");
+		}
+		System.err.println("envvar '" + var + "' not found!");
+		return false;
 	}
 }

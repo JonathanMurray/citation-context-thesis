@@ -4,6 +4,11 @@ import java.util.List;
 
 public abstract class ClassificationResult {
 	
+	public abstract long getPassedMillis();
+	public abstract List<Integer> falsePositiveIndices();
+	public abstract List<Integer> falseNegativeIndices();
+	public abstract double[][] confusionMatrix();
+	
 	public double posPrecision(){
 		double[][] m = confusionMatrix();
 		double posPrecision = m[0][0] / (m[0][0] + m[1][0]);
@@ -28,11 +33,6 @@ public abstract class ClassificationResult {
 		return negRecall;
 	}
 	
-	public abstract long getPassedMillis();
-	
-	public abstract List<Integer> falsePositiveIndices();
-	public abstract List<Integer> falseNegativeIndices();
-	public abstract double[][] confusionMatrix();
 	public String confusionMatrixToString(){
 		double[][] m = confusionMatrix();
 		return m[0][0] + "\t" + m[0][1] + "\n" +

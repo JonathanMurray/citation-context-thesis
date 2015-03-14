@@ -13,7 +13,7 @@ import util.Printer;
 
 public class QuickWikiGraph extends WikiGraph{
 	
-	Printer printer = new Printer(true);
+	private static Printer printer = new Printer(true);
 	
 	private Scanner titlesSortedFile;
 	private Scanner linksSortedFile;
@@ -59,7 +59,6 @@ public class QuickWikiGraph extends WikiGraph{
 		throw new NoSuchElementException();
 	}
 
-
 	@Override
 	protected TIntArrayList getLinksFrom(int index) {
 		printer.println("getLinksFrom(" + index + ")");
@@ -86,6 +85,4 @@ public class QuickWikiGraph extends WikiGraph{
 		printer.println("not found");
 		throw new NoSuchElementException();
 	}
-
-
 }

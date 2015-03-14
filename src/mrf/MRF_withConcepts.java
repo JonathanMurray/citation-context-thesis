@@ -1,24 +1,22 @@
 package mrf;
 
-import java.util.Collection;
-
+import citationContextData.TextWithNgrams;
 import conceptGraph.ConceptGraph;
 
-public class MRF_withConcepts extends MRF_classifier{
+public class MRF_withConcepts extends MRF_classifier<TextWithNgrams>{
 
-	ConceptGraph conceptGraph;
+	private ConceptGraph conceptGraph;
+	private double multiplier;
 	
-	public MRF_withConcepts(MRF_params params, ConceptGraph conceptGraph) {
+	public MRF_withConcepts(MRF_params params, ConceptGraph conceptGraph, double similarityMultiplier) {
 		super(params);
 		this.conceptGraph = conceptGraph;
+		this.multiplier = similarityMultiplier;
 	}
 	
 	@Override
-	protected double similarity(int s1, int s2){
-		Collection<String> words1 = currentCiterNgrams.sentencesUnigrams.get(s1).keySet();
-		Collection<String> words2 = currentCiterNgrams.sentencesUnigrams.get(s2).keySet();
-//		String[] words1 = currentCiter.sentences.get(s1).text.split("\\s+");
-//		String[] words2 = currentCiter.sentences.get(s2).text.split("\\s+");
-		return conceptGraph.similarity(words1, words2);
+	protected double similarity(TextWithNgrams t1, TextWithNgrams t2){
+		double similarity = conceptGraph.similarity(t1.unigrams.keySet(), t2.unigrams.keySet());
+		return multiplier * similarity;
 	}
 }

@@ -8,7 +8,11 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import util.Lemmatizer;
+
 public class Test {
+	
+	
 	private static void testPerformance(){
 		int num = 1000000;
 		StringBuilder line = new StringBuilder("" + num + ":");

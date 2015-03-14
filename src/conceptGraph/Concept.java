@@ -18,10 +18,8 @@ public class Concept{
 		}
 		return false;
 	}
-	
 
 	public String toString(){
 		return indices.toString();
 	}
-	
 }

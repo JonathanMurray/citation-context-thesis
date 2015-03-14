@@ -8,12 +8,16 @@ import java.io.IOException;
 import java.net.URL;
 
 import citationContextData.Dataset;
+import citationContextData.DatasetFactory;
+import citationContextData.DatasetParams;
+import citationContextData.Text;
+import citationContextData.TextParams;
 
 public class DownloadPDFs {
 	public static void downloadPDFsForHTML_Files(File htmlDir) throws IOException{
 		for(File f : htmlDir.listFiles()){
 			if(f.getName().endsWith(".html")){
-				Dataset dataset = Dataset.fromHTMLFile(f);
+				Dataset<Text> dataset = DatasetFactory.fromHtmlFile(DatasetParams.basic(TextParams.basic(Text.class)), f);
 				String name = dataset.datasetLabel;
 				URL url = new URL("http://www.aclweb.org/anthology/" + name);
 				BufferedInputStream in = new BufferedInputStream(url.openStream());

@@ -2,20 +2,8 @@ package main;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Scanner;
 
-import util.NonThrowingFileWriter;
-import wekaWrapper.InstanceHandler;
-import wekaWrapper.SentenceInstance;
-import wekaWrapper.WekaDataset;
-import citationContextData.CitingPaper;
-import citationContextData.ContextHTML_Parser;
-import citationContextData.Dataset;
-import citationContextData.Sentence;
 import conceptGraph.QuickWikiGraph;
-import conceptGraph.WikiGraph;
 
 public class Main {
 	
@@ -59,57 +47,58 @@ public class Main {
 //		System.out.println(wordnet.similarity(sentences[0].trim().split(" "), sentences[1].trim().split(" ")));
 	}
 	
-	public static void printInfoFromAllHTML_Files(){
-		for(File f : CITATION_DIR.listFiles()){
-			if(f.getName().endsWith(".html")){
-				Dataset dataset = Dataset.fromHTMLFile(f);
-				System.out.println(dataset.datasetLabel);
-				System.out.println(dataset.citedMainAuthor);
-				System.out.println(dataset.citedTitle);
-				System.out.println();
-			}
-		}
-	}
-	
-	public static void convertAllDataToArff(File dir){
-		for(File htmlFile : dir.listFiles()){
-			convertDataToArff(htmlFile);
-		}
-	}
-
-	private static void convertDataToArff(File... htmlFiles){
-		for(File htmlFile : htmlFiles){
-			WekaDataset dataset = ContextHTML_Parser.parseHTML(htmlFile).getWekaDataset(20, 5);
-			List<SentenceInstance> instances = InstanceHandler.createInstances(dataset, false, true);
-			InstanceHandler.writeToArffFile(instances, Paths.get("arff/" + "balanced-" + htmlFile.getName() + ".arff").toFile());
-		}
-	}
-
-	public static void conceptSimilarity(WikiGraph graph){
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Enter 2 sentences to compare: ");
-		while(true){
-			System.out.println("Enter first: ");
-			String[] s1 = sc.nextLine().split("\\s+");
-			if(s1.length > 0 && s1[0].equals("bye")){
-				break;
-			}
-			System.out.println("Enter second: ");
-			String[] s2 = sc.nextLine().split("\\s+");
-//			System.out.println(graph.similarity(s1, s2));
-		}
-		sc.close();
-	}
-	
-	public static void readDatasetWriteSentences(){
-		File inFile = Paths.get("/home/jonathan/Documents/exjobb/data/teufel-citation-context-corpus/A92-1018.html").toFile();
-		Dataset dataset = new ContextHTML_Parser().parseHTML(inFile);
-		CitingPaper citer = dataset.citers.get(0);
-		NonThrowingFileWriter writer = new NonThrowingFileWriter(Paths.get("SENTENCES-TEST.txt").toFile());
-		for(Sentence s : citer.sentences){
-			writer.write(s.unprocessedText + "\n");
-		}
-		writer.close(); 
-	}
+//	public static void printInfoFromAllHTML_Files(){
+//		for(File f : CITATION_DIR.listFiles()){
+//			if(f.getName().endsWith(".html")){
+//				Dataset dataset = Dataset.fromHTMLFile(Text.class, f);
+//				System.out.println(dataset.datasetLabel);
+//				System.out.println(dataset.citedMainAuthor);
+//				System.out.println(dataset.citedTitle);
+//				System.out.println();
+//			}
+//		}
+//	}
+//	
+//	public static void convertAllDataToArff(File dir){
+//		for(File htmlFile : dir.listFiles()){
+//			convertDataToArff(htmlFile);
+//		}
+//	}
+//
+//	private static void convertDataToArff(File... htmlFiles){
+//		for(File htmlFile : htmlFiles){
+//			Dataset dataset = ContextHTML_Parser.parseHTML(Text.class, htmlFile);
+//			WekaDataset<Text> wekaDataset = new WekaDataset<>(dataset, 20, 5)
+//			List<SentenceInstance> instances = InstanceHandler.createInstances(wekaDataset, false, true);
+//			InstanceHandler.writeToArffFile(instances, Paths.get("arff/" + "balanced-" + htmlFile.getName() + ".arff").toFile());
+//		}
+//	}
+//
+//	public static void conceptSimilarity(WikiGraph graph){
+//		Scanner sc = new Scanner(System.in);
+//		System.out.println("Enter 2 sentences to compare: ");
+//		while(true){
+//			System.out.println("Enter first: ");
+//			String[] s1 = sc.nextLine().split("\\s+");
+//			if(s1.length > 0 && s1[0].equals("bye")){
+//				break;
+//			}
+//			System.out.println("Enter second: ");
+//			String[] s2 = sc.nextLine().split("\\s+");
+////			System.out.println(graph.similarity(s1, s2));
+//		}
+//		sc.close();
+//	}
+//	
+//	public static void readDatasetWriteSentences(){
+//		File inFile = Paths.get("/home/jonathan/Documents/exjobb/data/teufel-citation-context-corpus/A92-1018.html").toFile();
+//		Dataset dataset = new ContextHTML_Parser().parseHTML(inFile);
+//		CitingPaper citer = dataset.citers.get(0);
+//		NonThrowingFileWriter writer = new NonThrowingFileWriter(Paths.get("SENTENCES-TEST.txt").toFile());
+//		for(Sentence s : citer.sentences){
+//			writer.write(s.rawText + "\n");
+//		}
+//		writer.close(); 
+//	}
 
 }

@@ -1,12 +1,17 @@
 package conceptGraph;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import util.Environment;
+import util.Lemmatizer;
 import util.Printer;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
@@ -22,6 +27,24 @@ public class WordNet implements ConceptGraph{
 	private static Printer printer = new Printer(true);
 	
 	private IDictionary dict;
+	
+	@SuppressWarnings("resource")
+	public static void main(String[] args) {
+		WordNet w = WordNet.fromFile(new File(Environment.resources(), "wordnet-dict").toString());
+		Scanner s = new Scanner(System.in);
+		while(true){
+			String a = s.nextLine();
+			String b = s.nextLine();
+			
+			if(w.dict.getIndexWord(a, POS.NOUN) != null){
+				System.out.println("a: " + w.dict.getIndexWord(a, POS.NOUN).getLemma());
+			}
+			
+			Collection<String> aWords = Lemmatizer.instance().lemmatize(a);
+			Collection<String> bWords = Lemmatizer.instance().lemmatize(b);
+			System.out.println(w.similarity(aWords, bWords));
+		}
+	}
 	
 	public WordNet(IDictionary dict){
 		try {
@@ -48,6 +71,11 @@ public class WordNet implements ConceptGraph{
 	
 	@Override
 	public double similarity(Collection<String> sentence1, Collection<String> sentence2) {
+//		simpleSimilarity(sentence1, sentence2);
+		return similarity2(sentence1, sentence2);
+	}
+	
+	private double simpleSimilarity(Collection<String> sentence1, Collection<String> sentence2) {
 		double sum = 0;
 		for(String word1 : sentence1){
 			if(anyRelatedIn(word1, sentence2)){
@@ -57,17 +85,49 @@ public class WordNet implements ConceptGraph{
 		return sum / (double)sentence1.size();
 	}
 	
+	private double similarity2(Collection<String> sentence1, Collection<String> sentence2) {
+		ArrayList<IWordID> words1 = sentence1.stream()
+				.map(w -> dict.getIndexWord(w, POS.NOUN))
+				.filter(iw -> iw != null)
+				.flatMap(iw -> iw.getWordIDs().stream())
+				.collect(Collectors.toCollection(ArrayList::new));
+		ArrayList<IWordID> words2 = sentence2.stream()
+				.map(w -> dict.getIndexWord(w, POS.NOUN))
+				.filter(iw -> iw != null)
+				.flatMap(iw -> iw.getWordIDs().stream())
+				.collect(Collectors.toCollection(ArrayList::new));
+		
+		System.out.println(words1 + "\n");
+		System.out.println(words2 + "\n");
+		
+		double sum = 0;
+		for(IWordID word1 : words1){
+			for(IWordID related1 : dict.getWord(word1).getRelatedWords()){
+				if(words2.contains(related1) || words2.contains(word1)){
+					sum += 1.0;
+					System.out.println("MATCH " + related1 + " or " + word1);
+					break; //don't count many matches for the same lemma
+				}
+			}
+		}
+		return sum / (double) words1.size();
+	}
+	
 	public boolean anyRelatedIn(String wordString, Collection<String> collection){
 		
 		IIndexWord indexWord = dict.getIndexWord(wordString, POS.NOUN);
 		if(indexWord == null){
 			return false;
 		}
+		
+	
+		
 		for(IWordID wordID : indexWord.getWordIDs()){
 			IWord word = dict.getWord(wordID);
+			
 			ISynset synset = word.getSynset();
 			for(IWord w : synset.getWords()){
-				if(collection.contains(w)){
+				if(collection.contains(w.getLemma())){
 					return true;
 				}
 			}

@@ -1,5 +1,11 @@
 package util;
 
+import gnu.trove.map.hash.TObjectIntHashMap;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -7,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -63,6 +70,40 @@ public class Texts {
 		return stopwords.contains(word);
 	}
 	
+	public static List<String> split(String text){
+		int pos = text.indexOf(' ') + 1;
+		if(pos == 0){ //no spaces in input
+			return Arrays.asList(new String[]{text});
+		}
+		String word;
+		ArrayList<String> words = new ArrayList<String>();
+		word = text.substring(0, pos - 1);
+		if(word.length() > 0){
+    		words.add(word);
+    	}
+        int end;
+        while ((end = text.indexOf(' ', pos)) >= 0) {
+        	word = text.substring(pos, end);
+        	if(word.length() > 0){
+        		words.add(word);
+        	}
+            pos = end + 1;
+        }
+        return words;
+	}
+	
+	public static String merge(List<String> words){
+		if(words.size() == 0){
+			return "";
+		}
+		StringBuilder s = new StringBuilder();
+		for(int i = 0; i < words.size() - 1; i++){
+			s.append(words.get(i) + " ");
+		}
+		s.append(words.get(words.size()-1));
+		return s.toString();
+	}
+	
 	private HashSet<String> readLinesToSet(String filePath) throws IOException{
 		return Files.lines(Paths.get(filePath)).collect(Collectors.toCollection(HashSet::new));
 	}
@@ -80,6 +121,20 @@ public class Texts {
 			}
 		}
 		return false;
+	}
+	
+	public static String readTextFile(File f){
+		try(Scanner sc = new Scanner(new BufferedReader(new FileReader(f)))) {
+			StringBuilder s = new StringBuilder();
+			while(sc.hasNextLine()){
+				s.append(sc.nextLine() + "\n");
+			}
+			return s.toString();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			System.exit(0);
+			return null;
+		}
 	}
 	
 	public boolean startsWithDetWork(String[] words){
@@ -129,22 +184,28 @@ public class Texts {
 			int start = Math.min(authorIndex+1, words.size()-1);
 			int end = Math.min(authorIndex+5, words.size());
 			List<String> vicinity = words.subList(start, end);
-//			String year = "\\d\\d\\d\\d";
 			String year = NUMBER_TAG;
 			return vicinity.stream().anyMatch(word -> word.matches(year));
 		}
 		return false;
 	}
-
-	public DoubleMap<String> getNgrams(int n, String text, final boolean skipStopwords, final boolean stem){
-		if(text == null){
-			throw new IllegalArgumentException("text == null");
-		}
+	
+	public List<String> toLowercaseWords(String text){
 		List<String> words = Arrays.asList(text.split("\\s+")).stream()
 				.map(s -> s.toLowerCase())
 				.collect(Collectors.toCollection(ArrayList::new));
-		
-		DoubleMap<String> ngramCounts = new DoubleMap<String>();
+		return words;
+	}
+
+	public TObjectIntHashMap<String> getNgrams(int n, String text, final boolean skipStopwords){
+		if(text == null){
+			throw new IllegalArgumentException("text == null");
+		}
+		return getNgrams(n, toLowercaseWords(text), skipStopwords);
+	}
+	
+	public TObjectIntHashMap<String> getNgrams(int n, List<String> words, final boolean skipStopwords){
+		TObjectIntHashMap<String> ngramCounts = new TObjectIntHashMap<String>();
 		for(int i = n - 1; i < words.size(); i++){
 			List<String> ngramWords = words.subList(i - n + 1, i + 1);
 			if(skipStopwords){
@@ -153,18 +214,16 @@ public class Texts {
 				}
 			}
 			Stream<String> ngramWordsStream = ngramWords.stream();
-			if(stem){
-				ngramWordsStream = ngramWordsStream.map(Texts::stem);
-			}
 			String ngram = ngramWordsStream.reduce((s1,s2) -> s1 + " " + s2).get();
 			if(ngram.length() > 0){
-				ngramCounts.increment(ngram, 1.0);
+				ngramCounts.adjustOrPutValue(ngram, 1, 1);
+//				ngramCounts.increment(ngram, 1.0);
 			}
 		}
 		return ngramCounts;
 	}
 	
-	private static String stem(String word){
+	public static String stem(String word){
 		Stemmer s = new Stemmer();
 		s.add(word);
 		s.stem();

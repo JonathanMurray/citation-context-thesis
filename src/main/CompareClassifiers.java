@@ -6,8 +6,6 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import mrf.MRF_classifier;
-import mrf.MRF_dataset;
 import mrf.MRF_params;
 import mrf.MRF_withConcepts;
 import util.ClassificationResult;
@@ -16,6 +14,10 @@ import util.Printer;
 import weka.core.Instances;
 import wekaWrapper.WekaClassifier;
 import citationContextData.Dataset;
+import citationContextData.DatasetFactory;
+import citationContextData.DatasetParams;
+import citationContextData.TextParams;
+import citationContextData.TextWithNgrams;
 import conceptGraph.WikiGraph;
 import conceptGraph.WikiGraphFactory;
 import conceptGraph.WordNet;
@@ -32,28 +34,36 @@ public class CompareClassifiers {
 
 		WordNet wordnetGraph = WordNet.fromFile(new File(Environment.resources(), "wordnet-dict").getPath());
 		String resourcesDir = Environment.resources();
+		
+		//---------------------Datasets
+		//Naive data for Weka
 		Instances ngramsSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-ngrams-full-dataset.arff"));
+		
+		//Sophisticated data for Weka
 		Instances fullSet = WekaClassifier.fromFiles(new File(resourcesDir, "arff/balanced-features-full-dataset.arff"));
-		ArrayList<Dataset> datasets = Dataset.datasetsFromDir(new File(resourcesDir, "teufel-citation-context-corpus"));
+		
+		//Datasets for MRF
+		ArrayList<Dataset<TextWithNgrams>> datasets = DatasetFactory.fromHtmlDir(
+				DatasetParams.enhanced(TextParams.basic(TextWithNgrams.class), 20, 5), 
+				new File(resourcesDir, "teufel-citation-context-corpus"));
 		
 		WekaClassifier wekaSMO = WekaClassifier.SMO();
 		WekaClassifier wekaNB = WekaClassifier.NaiveBayes();
 		WekaClassifier wekaTree = WekaClassifier.J48();
 		WekaClassifier wekaKnn = WekaClassifier.KNN();
 		
+		WikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph(new File(resourcesDir, "ser/linksSingleWords.ser"), new File(resourcesDir, "ser/toIndexSingleWords.ser"), false);
+		
+		
 		double simMult = 0.01;
-		WikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph(new File(resourcesDir, "ser/linksSingleWords.ser"), new File(resourcesDir, "ser/toIndexSingleWords.ser"), simMult, false);
-		
-		
 		int numFolds = 4;
 		boolean balanceData = false; //dataset is already balanced
 		List<String> testSentences = null;
-		MRF_dataset stemmedMrfDataset = datasets.get(0).getMRF_dataset(20, 5, true, true);
-		MRF_dataset nonStemmedMrfDataset = datasets.get(0).getMRF_dataset(20, 5, true, false);
 		
 		MRF_params params = new MRF_params();
-		printResult("MRF-wiki", new MRF_withConcepts(params, wikiGraph).classify(stemmedMrfDataset), testSentences);
-		printResult("MRF-wordnet", new MRF_withConcepts(params, wordnetGraph).classify(nonStemmedMrfDataset), testSentences);
+		
+		printResult("MRF-wordnet", new MRF_withConcepts(params, wordnetGraph, simMult).classify(datasets.get(0)), testSentences);
+		printResult("MRF-wiki", new MRF_withConcepts(params, wikiGraph, simMult).classify(datasets.get(0)), testSentences);
 		
 		printResult("SMO+", wekaSMO.crossValidate(fullSet, numFolds, balanceData), testSentences);
 		printResult("NB+", wekaNB.crossValidate(fullSet, numFolds, balanceData), testSentences);

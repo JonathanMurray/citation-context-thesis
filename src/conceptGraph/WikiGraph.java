@@ -11,22 +11,16 @@ import java.util.NoSuchElementException;
 import util.Texts;
 
 public abstract class WikiGraph implements ConceptGraph{
-	public static final double DEFAULT_SIMILARITY_MULTIPLIER = 0.01;
+	
 	public static final boolean DEFAULT_ALLOW_STOPWORDS_AS_CONCEPTS = false;
-	private double similarityMultiplier;
 	private boolean allowStopwordsAsConcepts;
 	
-	public WikiGraph(double similarityMultiplier, boolean allowStopwordsAsConcepts){
-		this.similarityMultiplier = similarityMultiplier;
+	public WikiGraph(boolean allowStopwordsAsConcepts){
 		this.allowStopwordsAsConcepts = allowStopwordsAsConcepts;
 	}
 	
 	public WikiGraph(){
-		this(DEFAULT_SIMILARITY_MULTIPLIER, DEFAULT_ALLOW_STOPWORDS_AS_CONCEPTS);
-	}
-	
-	final public void setSimilarityMultiplier(double mult){
-		similarityMultiplier = mult;
+		this(DEFAULT_ALLOW_STOPWORDS_AS_CONCEPTS);
 	}
 	
 	final public void setAllowStopwordsAsConcepts(boolean allow){
@@ -53,10 +47,10 @@ public abstract class WikiGraph implements ConceptGraph{
 				}
 			}
 		}
-		return similarityMultiplier * sum / (double)concepts1.size() / (double)concepts2.size();
+		return sum / (double)concepts1.size() / (double)concepts2.size();
 	}
 
-	private List<Concept> sentenceToConcepts(Collection<String> sentence){
+	public List<Concept> sentenceToConcepts(Collection<String> sentence){
 		List<Concept> concepts = new ArrayList<Concept>();
 		for(String word : sentence){
 			String wordLowerCase = word.toLowerCase();
@@ -72,7 +66,7 @@ public abstract class WikiGraph implements ConceptGraph{
 		return concepts;
 	}
 	
-	private Concept phraseToConcept(int index){
+	public Concept phraseToConcept(int index){
 		HashSet<Integer> related = new HashSet<Integer>();
 		related.add(index);
 		try{

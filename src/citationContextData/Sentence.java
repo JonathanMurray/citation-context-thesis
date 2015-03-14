@@ -1,43 +1,31 @@
 package citationContextData;
 
-import util.Texts;
 
-public class Sentence {
+public class Sentence<T extends Text> {
 	public String sentiment;
-	public String text;
-	public String unprocessedText;
-	public SentenceClass type;
+	public SentenceType type;
+	public T text;
 	
-	public Sentence(String sentiment, String text){
+	public Sentence(String sentiment, T text){
+		this.text = text;
 		this.sentiment = sentiment;
-		this.text = clean(text);
-		this.unprocessedText = text;
 		this.type = typeFromSentiment(sentiment);
 	}
 	
-	public Sentence(SentenceClass type, String text){
+	public Sentence(SentenceType type, T text){
+		this.text = text;
 		this.type = type;
-		this.text = clean(text);
 	}
 	
-	private String clean(String before){
-		String after = before.replaceAll("[',:;%\\.\\(\\)\\~\\\\\\[\\]\\{\\}\\/]", " ")
-			.replaceAll("\n", " ")
-			.replaceAll(" +", " ")
-			.trim()
-			.replaceAll("\\d+", Texts.NUMBER_TAG);
-		return after;
-	}
-	
-	private SentenceClass typeFromSentiment(String sentiment){
+	private SentenceType typeFromSentiment(String sentiment){
 		if(sentiment.equals("x") || sentiment.equals("xc")){ //there are some xc, I'm not sure why
-			return SentenceClass.NOT_REFERENCE;
+			return SentenceType.NOT_REFERENCE;
 		}
 		if(sentiment.equals("oc") || sentiment.equals("pc") || sentiment.equals("nc")){
-			return SentenceClass.EXPLICIT_REFERENCE;
+			return SentenceType.EXPLICIT_REFERENCE;
 		}
 		if(sentiment.equals("o") || sentiment.equals("p") || sentiment.equals("n")){
-			return SentenceClass.IMPLICIT_REFERENCE;
+			return SentenceType.IMPLICIT_REFERENCE;
 		}
 		throw new RuntimeException("unknown AZ: " + sentiment);
 	}
