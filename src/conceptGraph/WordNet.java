@@ -6,6 +6,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,6 +19,7 @@ import util.Printer;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.IIndexWord;
+import edu.mit.jwi.item.IPointer;
 import edu.mit.jwi.item.ISynset;
 import edu.mit.jwi.item.ISynsetID;
 import edu.mit.jwi.item.IWord;
@@ -26,12 +30,47 @@ public class WordNet implements ConceptGraph{
 
 	private static Printer printer = new Printer(true);
 	
-	private IDictionary dict;
+	public IDictionary dict;
 	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		WordNet w = WordNet.fromFile(new File(Environment.resources(), "wordnet-dict").toString());
 		Scanner s = new Scanner(System.in);
+		
+		boolean c = true;
+		while(c){
+			String input = s.nextLine();
+			IIndexWord iw = w.dict.getIndexWord(input, POS.NOUN);
+			
+			
+			
+			System.out.println(iw);
+			if(iw != null){
+				for(IWordID id  : iw.getWordIDs()){
+					System.out.println();
+					System.out.println("lemma: " + id.getLemma());
+					IWord word = w.dict.getWord(id);
+					System.out.println("word: " + word);
+					System.out.println("synset: " + word.getSynset());
+					Map<IPointer, List<ISynsetID>> relatedMap = word.getSynset().getRelatedMap();
+					if(!relatedMap.isEmpty()){
+						System.out.println("RELATED:");
+						Entry<IPointer, List<ISynsetID>> e = relatedMap.entrySet().iterator().next();
+						System.out.println(e.getKey());
+						for(ISynsetID rel : e.getValue()){
+							System.out.println(w.dict.getSynset(rel));
+						}
+						System.out.println();
+					}
+					System.out.println("gloss: " + word.getSynset().getGloss());
+				}
+			}
+			
+		}
+		
+		
+		
+		
 		while(true){
 			String a = s.nextLine();
 			String b = s.nextLine();
@@ -69,7 +108,18 @@ public class WordNet implements ConceptGraph{
 		}
 	}
 	
-	@Override
+	public List<IIndexWord> sentenceToIndexWords(Collection<String> words){
+		ArrayList<IIndexWord> indexWords = new ArrayList<IIndexWord>();
+		for(String word : words){
+			IIndexWord indexWord = dict.getIndexWord(word, POS.NOUN);
+			if(indexWord != null){
+				indexWords.add(indexWord);
+			}
+		}
+		return indexWords;
+	}
+	
+//	@Override
 	public double similarity(Collection<String> sentence1, Collection<String> sentence2) {
 //		simpleSimilarity(sentence1, sentence2);
 		return similarity2(sentence1, sentence2);

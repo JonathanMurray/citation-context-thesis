@@ -5,8 +5,8 @@ import java.util.List;
 public abstract class ClassificationResult {
 	
 	public abstract long getPassedMillis();
-	public abstract List<Integer> falsePositiveIndices();
-	public abstract List<Integer> falseNegativeIndices();
+//	public abstract List<Integer> falsePositiveIndices();
+//	public abstract List<Integer> falseNegativeIndices();
 	public abstract double[][] confusionMatrix();
 	
 	public double posPrecision(){

@@ -24,7 +24,7 @@ public class Json {
 				for(Sentence<T> sentence : citer.sentences.subList(0, 2)){
 					sentencesStr.append("{\n");
 					sentencesStr.append("\"type\": \"" + sentence.sentiment + "\",\n");
-					sentencesStr.append("\"text\": \"" + sentence.text.lemmatized + "\"},\n");
+					sentencesStr.append("\"text\": \"" + sentence.text.raw + "\"},\n");
 				}
 				citersStr.append(sentencesStr.substring(0, sentencesStr.length() - 2)); //get rid of last comma
 				citersStr.append("\n");

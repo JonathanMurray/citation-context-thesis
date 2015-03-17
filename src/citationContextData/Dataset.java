@@ -13,17 +13,35 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import util.Texts;
+
 //TODO hard coded regexps, maybe gather them up in separate file
 public class Dataset<T extends Text> {
 	public final String datasetLabel;
 	public final String citedMainAuthor;
-	public final String citedTitle;
+	public T citedTitle;
 	public T citedContent;
 	public final List<CitingPaper<T>> citers;
 	
-	private boolean hasExtra;
+	public boolean hasExtra;
 	private Set<String> acronyms;
 	private Set<String> lexicalHooks;
+	
+	private Dataset(String datasetLabel, String citedMainAuthor, T citedTitle, List<CitingPaper<T>> citers, T citedContent){
+		this.datasetLabel = datasetLabel;
+		this.citedMainAuthor = citedMainAuthor;
+		this.citedTitle = citedTitle;
+		this.citedContent = citedContent;
+		this.citers = citers;
+	}
+	
+	public static <T extends Text> Dataset<T> full(String datasetLabel, String citedMainAuthor, T citedTitle, List<CitingPaper<T>> citers, T citedContent){
+		return new Dataset<T>(datasetLabel, citedMainAuthor, citedTitle, citers, citedContent);
+	}
+	
+	public static <T extends Text> Dataset<T> withoutCitedData(String datasetLabel, String citedMainAuthor, T citedTitle, List<CitingPaper<T>> citers){
+		return new Dataset<T>(datasetLabel, citedMainAuthor, citedTitle, citers, null);
+	}
 	
 	public Set<String> getAcronyms(){
 		assertHasExtra();
@@ -41,12 +59,10 @@ public class Dataset<T extends Text> {
 		}
 	}
 	
-	public static <T extends Text> Dataset<T> dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<CitingPaper<T>> citers, T citedContent){
-		return new Dataset<T>(datasetLabel, citedMainAuthor, citedTitle, citers, citedContent);
-	}
-	
-	public static <T extends Text> Dataset<T> withoutCitedData(String datasetLabel, String citedMainAuthor, String citedTitle, List<CitingPaper<T>> citers){
-		return new Dataset<T>(datasetLabel, citedMainAuthor, citedTitle, citers, null);
+	public List<Sentence<T>> getSentences(){
+		return citers.stream()
+				.flatMap(citer -> citer.sentences.stream())
+				.collect(Collectors.toCollection(ArrayList::new));
 	}
 	
 	/**
@@ -56,20 +72,20 @@ public class Dataset<T extends Text> {
 	 * @param numLexicalHooks
 	 * @return
 	 */
-	public Dataset<T> withExtra(int boundary, int numLexicalHooks){
+	public Dataset<T> findExtra(int boundary, int numLexicalHooks){
 		acronyms = findAllAcronyms(boundary);
 		lexicalHooks = findLexicalHooks(boundary, numLexicalHooks);
 		hasExtra = true;
 		return this;
 	}
 	
-	private Dataset(String datasetLabel, String citedMainAuthor, String citedTitle, List<CitingPaper<T>> citers, T citedContent){
-		this.datasetLabel = datasetLabel;
-		this.citedMainAuthor = citedMainAuthor;
-		this.citedTitle = citedTitle;
-		this.citedContent = citedContent;
-		this.citers = citers;
+	public void addExtra(Set<String> acronyms, Set<String> lexicalHooks){
+		this.acronyms = acronyms;
+		this.lexicalHooks = lexicalHooks;
+		hasExtra = true;
 	}
+	
+	
 	
 	private Set<String> findAllAcronyms(int boundary){
 		Pattern regex = Pattern.compile("[^a-zA-Z][A-Z]+[ ,]");
@@ -106,11 +122,11 @@ public class Dataset<T extends Text> {
 		List<String> matches = new ArrayList<String>();
 		
 		explicitReferences().forEach(sentence -> {
-				int index = sentence.text.lemmatized.indexOf(author);
+				int index = sentence.text.raw.indexOf(author);
 				if(index >= 0){
 					int left = Math.max(0, index-boundary);
-					int right = Math.min(sentence.text.lemmatized.length()- 1, index+boundary);
-					String vicinityOfAuthor = sentence.text.lemmatized.substring(left, right);
+					int right = Math.min(sentence.text.raw.length() - 1, index+boundary);
+					String vicinityOfAuthor = sentence.text.raw.substring(left, right);
 					Matcher m = regex.matcher(vicinityOfAuthor);
 					while(m.find()){
 						String match = m.group();
@@ -132,6 +148,10 @@ public class Dataset<T extends Text> {
 	public String toString(){
 		StringBuilder s = new StringBuilder();
 		s.append(datasetLabel + "\n");
+		if(hasExtra){
+			s.append("acronyms: " + acronyms + "\n");
+			s.append("lexical hooks: " + lexicalHooks + "\n");
+		}
 		s.append("cited: " + citedMainAuthor + ", " + citedTitle + "\n");
 		s.append("# citers: " + citers.size() + "\n");
 		s.append("cited content length: " + citedContent.raw.length());

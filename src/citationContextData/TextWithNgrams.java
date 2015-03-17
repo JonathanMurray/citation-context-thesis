@@ -1,38 +1,40 @@
 package citationContextData;
 
-import gnu.trove.iterator.TObjectIntIterator;
-import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 import java.util.List;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 
-import util.Texts;
+import util.CosineSimilarity;
 
 public class TextWithNgrams extends Text{
 	
-	public TObjectIntHashMap<String> unigrams;
-	public TObjectIntHashMap<String> bigrams;
+	protected static final String XML_TEXT_CLASS = "text-with-ngrams";
+	
+	public TObjectDoubleHashMap<String> unigramsTfIdf;
+	public TObjectDoubleHashMap<String> bigramsTfIdf;
 
-	public TextWithNgrams(String raw, String lemmatized, List<String> lemmatizedWords, TObjectIntHashMap<String> unigrams, TObjectIntHashMap<String> bigrams) {
-		super(raw, lemmatized, lemmatizedWords);
-		this.unigrams = unigrams;
-		this.bigrams = bigrams;
+	public TextWithNgrams(String raw, List<String> rawWords, List<String> lemmatizedWords, TObjectDoubleHashMap<String> unigramsTfIdf, TObjectDoubleHashMap<String> bigramsTfIdf) {
+		super(raw, rawWords, lemmatizedWords);
+		this.unigramsTfIdf = unigramsTfIdf;
+		this.bigramsTfIdf = bigramsTfIdf;
 	}
 	
 	@Override
 	protected Element toXml(){
 		Element text = super.toXml();
-		text.attr("class", "text-with-ngrams");
-		text.appendChild(map(unigrams, "unigrams", "unigram"));
-		text.appendChild(map(bigrams, "bigrams", "bigram"));
+		text.attr("class", XML_TEXT_CLASS);
+		text.appendChild(map(unigramsTfIdf, "unigrams", "unigram"));
+		text.appendChild(map(bigramsTfIdf, "bigrams", "bigram"));
 		return text;
 	}
 	
-	protected Element map(TObjectIntHashMap<String> map, String mapName, String entryName){
+	protected Element map(TObjectDoubleHashMap<String> map, String mapName, String entryName){
 		Element mapTag = new Element(Tag.valueOf(mapName), "");
-		TObjectIntIterator<String> it = map.iterator();
+		TObjectDoubleIterator<String> it = map.iterator();
 		while(it.hasNext()){
 			it.advance();
 			Element entryTag = mapTag.appendElement(entryName);
@@ -43,22 +45,33 @@ public class TextWithNgrams extends Text{
 	}
 	
 	protected static TextWithNgrams fromXml(Element textTag){
-		String raw = textTag.select("raw").text();
-		String lemmatized = textTag.select("lemmatized").text();
-		List<String> lemmatizedWords = Texts.split(lemmatized);
-		
-		return new TextWithNgrams(raw, lemmatized, lemmatizedWords, 
+		Text text = Text.fromXml(textTag);
+		return new TextWithNgrams(text.raw, text.rawWords, text.lemmas, 
 				map(textTag.select("unigrams").first(), "unigram"),
 				map(textTag.select("bigrams").first(), "bigram"));
 	}
 	
-	protected static TObjectIntHashMap<String> map(Element mapTag, String entryName){
-		TObjectIntHashMap<String> mapObj = new TObjectIntHashMap<String>();
+	protected static TObjectDoubleHashMap<String> map(Element mapTag, String entryName){
+		TObjectDoubleHashMap<String> mapObj = new TObjectDoubleHashMap<String>();
 		for(Element entryTag : mapTag.select(entryName)){
-			int count = Integer.parseInt(entryTag.attr("count"));
+			double count = Double.parseDouble(entryTag.attr("count"));
 			String text = entryTag.text();
 			mapObj.put(text, count);
 		}
 		return mapObj;
+	}
+	
+	@Override
+	public double similarity(Object o){
+		TextWithNgrams other = (TextWithNgrams)o;
+		double cosSim = 0;
+		if(unigramsTfIdf.size() > 0 && other.unigramsTfIdf.size() > 0){
+			cosSim = CosineSimilarity.calculateCosineSimilarity(unigramsTfIdf, other.unigramsTfIdf);
+		}
+		double bigramSim = 0;
+		if(bigramsTfIdf.size() > 0 && other.bigramsTfIdf.size() > 0){
+			bigramSim = CosineSimilarity.calculateCosineSimilarity(bigramsTfIdf, other.bigramsTfIdf);
+		}
+		return (cosSim + bigramSim)/2; //Originally only cosSim
 	}
 }

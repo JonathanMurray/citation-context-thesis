@@ -1,10 +1,8 @@
 package util;
 
-import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * This class calculates the cosine similarity between two clusters, or entities 
@@ -76,7 +74,7 @@ public class CosineSimilarity {
 //		return Math.sqrt(norm);
 //	}
 	
-	public static double calculateCosineSimilarity(TObjectIntHashMap<String> a, TObjectIntHashMap<String> b){
+	public static double calculateCosineSimilarity(TObjectDoubleHashMap<String> a, TObjectDoubleHashMap<String> b){
 		if(a.size() < 1 || b.size() < 1){
 			throw new IllegalArgumentException();
 		}
@@ -91,7 +89,7 @@ public class CosineSimilarity {
 		return sum / (calculateNorm(a) * calculateNorm(b));
 	}
 	
-	public static double calculateNorm(TObjectIntHashMap<String> feature){
+	public static double calculateNorm(TObjectDoubleHashMap<String> feature){
 		double norm = 0;
 		Iterator<String> it = feature.keySet().iterator();
 		while(it.hasNext()){

@@ -1,35 +1,28 @@
 package citationContextData;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 
-import util.Lemmatizer;
 import util.Texts;
 
 public class Text {
+	
+	protected static final String XML_TEXT_CLASS = "text";
+	
 	public String raw;
-	public String lemmatized;
-	public List<String> lemmatizedWords;
+	public List<String> rawWords;
+	public List<String> lemmas;
 	
-	public Text(String raw, String lemmatized, List<String> lemmatizedWords) {
+	public Text(String raw, List<String> rawWords, List<String> lemmatizedWords) {
 		this.raw = raw;
-		this.lemmatized = lemmatized;
-		this.lemmatizedWords = lemmatizedWords;
+		this.rawWords = rawWords;
+		this.lemmas = lemmatizedWords;
 	}
-	
-	public Text(String raw){
-		this.raw = raw;
-		lemmatizedWords = Lemmatizer.instance().lemmatize(raw);
-		lemmatized = Texts.merge(lemmatizedWords);
-	}
-	
-	public Text(String raw, String lemmatized){
-		this.raw = raw;
-		this.lemmatized = lemmatized;
-		lemmatizedWords = Texts.split(lemmatized);
-	}
+
 	
 	/**
 	 * Create a Jsoup element representing this object.
@@ -38,16 +31,26 @@ public class Text {
 	 */
 	protected Element toXml(){
 		Element text = new Element(Tag.valueOf("text"), "");
-		text.attr("class", "text");
+		text.attr("class", XML_TEXT_CLASS);
 		text.appendElement("raw").text(raw == null ? "" : raw);
-		text.appendElement("lemmatized").text(lemmatized == null ? "" : lemmatized);
+		Element lemmasTag = text.appendElement("lemmas");
+		StringBuilder lemmasString = new StringBuilder();
+		for(String lemma : lemmas){
+			lemmasString.append(lemma + " ");
+		}
+		lemmasTag.text(lemmasString.substring(0, lemmasString.length()-1));
 		return text;
 	}
 	
 	protected static Text fromXml(Element textTag){
 		String raw = textTag.select("raw").text();
-		String lemmatized = textTag.select("lemmatized").text();
-		return new Text(raw, lemmatized);
+		ArrayList<String> rawWords = Texts.split(raw).collect(Collectors.toCollection(ArrayList::new));
+		String lemmasString = textTag.select("lemmas").text();
+		List<String> lemmas = Texts.split(lemmasString).collect(Collectors.toCollection(ArrayList::new));
+		return new Text(raw, rawWords, lemmas);
 	}
 	
+	public double similarity(Object other) {
+		throw new UnsupportedOperationException();
+	}
 }

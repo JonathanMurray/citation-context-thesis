@@ -17,7 +17,7 @@ public class DownloadPDFs {
 	public static void downloadPDFsForHTML_Files(File htmlDir) throws IOException{
 		for(File f : htmlDir.listFiles()){
 			if(f.getName().endsWith(".html")){
-				Dataset<Text> dataset = DatasetFactory.fromHtmlFile(DatasetParams.basic(TextParams.basic(Text.class)), f);
+				Dataset<Text> dataset = DatasetFactory.fromHtmlFile(DatasetParams.basic(TextParams.basic()), f);
 				String name = dataset.datasetLabel;
 				URL url = new URL("http://www.aclweb.org/anthology/" + name);
 				BufferedInputStream in = new BufferedInputStream(url.openStream());

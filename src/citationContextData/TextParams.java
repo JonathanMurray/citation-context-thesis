@@ -1,22 +1,40 @@
 package citationContextData;
 
-import conceptGraph.TextWithConcepts;
+import util.NgramIdf;
 import conceptGraph.WikiGraph;
+import conceptGraph.WordNet;
 
 public class TextParams<T extends Text>{
 	public Class<T> textClass;
+	public NgramIdf ngramIdf;
 	public WikiGraph wikiGraph;
+	public WordNet wordnet;
 	
-	public static <T extends Text> TextParams<T> basic(Class<T> textClass){
-		return new TextParams(textClass, null);
+	public static TextParams<Text> basic(){
+		TextParams<Text> p = new TextParams<Text>(Text.class);
+		return p;
 	}
 	
-	public static <T extends Text> TextParams<T> withConcepts(WikiGraph wikiGraph){
-		return new TextParams(TextWithConcepts.class, wikiGraph);
+	public static TextParams<TextWithNgrams> withNgrams(NgramIdf wordIdf){
+		TextParams<TextWithNgrams> p = new TextParams<TextWithNgrams>(TextWithNgrams.class);
+		p.ngramIdf = wordIdf;
+		return p;
 	}
 	
-	private TextParams(Class<T> textClass, WikiGraph wikiGraph){
+	public static TextParams<TextWithConcepts> withWikiConcepts(NgramIdf wordIdf, WikiGraph wikiGraph){
+		TextParams<TextWithConcepts> p = new TextParams<TextWithConcepts>(TextWithConcepts.class);
+		p.ngramIdf = wordIdf;
+		p.wikiGraph = wikiGraph;
+		return p;
+	}
+	
+	public static TextParams<TextWithWordnet> withWordnet(WordNet wordnet){
+		TextParams<TextWithWordnet> p = new TextParams<TextWithWordnet>(TextWithWordnet.class);
+		p.wordnet = wordnet;
+		return p;
+	}
+	
+	private TextParams(Class<T> textClass){
 		this.textClass = textClass;
-		this.wikiGraph = wikiGraph;
 	}
 }

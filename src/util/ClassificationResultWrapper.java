@@ -23,15 +23,15 @@ public class ClassificationResultWrapper extends ClassificationResult{
 		return wekaEvaluation.confusionMatrix();
 	}
 
-	@Override
-	public List<Integer> falsePositiveIndices() {
-		return falsePositives;
-	}
-
-	@Override
-	public List<Integer> falseNegativeIndices() {
-		return falseNegatives;
-	}
+//	@Override
+//	public List<Integer> falsePositiveIndices() {
+//		return falsePositives;
+//	}
+//
+//	@Override
+//	public List<Integer> falseNegativeIndices() {
+//		return falseNegatives;
+//	}
 
 	@Override
 	public long getPassedMillis() {

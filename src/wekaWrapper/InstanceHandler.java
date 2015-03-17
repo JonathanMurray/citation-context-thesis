@@ -55,15 +55,14 @@ public class InstanceHandler {
 	 * @param dataset
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
 	public static <T extends Text> List<SentenceInstance> createInstances(Dataset<T> dataset, boolean onlyText, boolean balanceData){
 		List<SentenceInstance> instances = new ArrayList<SentenceInstance>();
 		for(CitingPaper<T> citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
-				Sentence previous = i > 0 ? citer.sentences.get(i-1) : null;
-				Sentence sentence = citer.sentences.get(i);
-				Sentence next = i < citer.sentences.size() - 1? citer.sentences.get(i+1) : null;
-				Map<String, Comparable> features = extractFeatures(previous, sentence, next, dataset, onlyText, i);
+				Sentence<T> previous = i > 0 ? citer.sentences.get(i-1) : null;
+				Sentence<T> sentence = citer.sentences.get(i);
+				Sentence<T> next = i < citer.sentences.size() - 1? citer.sentences.get(i+1) : null;
+				Map<String, Comparable<?>> features = extractFeatures(previous, sentence, next, dataset, onlyText, i);
 				if(sentence.type == SentenceType.EXPLICIT_REFERENCE){ //TODO
 					continue; //Excluded
 				}
@@ -97,26 +96,25 @@ public class InstanceHandler {
 		}
 	}
 	
-	@SuppressWarnings("rawtypes")
-	private static Map<String, Comparable> extractFeatures(Sentence previous, Sentence sentence, Sentence next, Dataset dataset, boolean onlyText, int sentenceNumber){
+	private static <T extends Text> Map<String, Comparable<?>> extractFeatures(Sentence<T> previous, Sentence<T> sentence, Sentence<T> next, Dataset<T> dataset, boolean onlyText, int sentenceNumber){
 		Texts texts = Texts.instance();
-		Map<String, Comparable> features = new HashMap<String, Comparable>();
-		String[] words = sentence.text.lemmatizedWords.toArray(new String[0]);
-		String[] prevWords = previous != null? previous.text.lemmatizedWords.toArray(new String[0]) : new String[0];
+		Map<String, Comparable<?>> features = new HashMap<String, Comparable<?>>();
+		List<String> words = sentence.text.rawWords;
+		String[] prevWords = previous != null? previous.text.rawWords.toArray(new String[0]) : new String[0];
 		if(!onlyText){
 			features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(words));
 			features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(words));
 			features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(words));
 			features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
-			features.put(FeatureName.AFTER_HEADING.toString(), texts.startsWithSectionHeader(previous != null ? previous.text.lemmatized : ""));
-			features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(sentence.text.lemmatized));
-			features.put(FeatureName.BEFORE_HEADING.toString(), texts.startsWithSectionHeader(next != null? next.text.lemmatized : ""));
-			features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(sentence.text.lemmatized, dataset.citedMainAuthor));
-			features.put(FeatureName.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(sentence.text.lemmatized, dataset.getAcronyms()));
-			features.put(FeatureName.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(sentence.text.lemmatized, dataset.getLexicalHooks()));
+			features.put(FeatureName.AFTER_HEADING.toString(), previous != null ? texts.startsWithSectionHeader( previous.text.rawWords) : false);
+			features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(words));
+			features.put(FeatureName.BEFORE_HEADING.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
+			features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(words, dataset.citedMainAuthor));
+			features.put(FeatureName.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(words, dataset.getAcronyms()));
+			features.put(FeatureName.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(words, dataset.getLexicalHooks()));
 		}
 		features.put(FeatureName.SENTENCE_NUMBER.toString(), sentenceNumber);
-		features.put(FeatureName.TEXT.toString(), "'" + sentence.text.lemmatized + "'");
+		features.put(FeatureName.TEXT.toString(), "'" + sentence.text.raw + "'");
 		return features;
 	}
 

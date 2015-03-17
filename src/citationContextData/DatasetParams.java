@@ -1,6 +1,5 @@
 package citationContextData;
 
-
 public class DatasetParams<T extends Text>{
 	public TextParams<T> textParams;
 	public boolean isEnhanced;

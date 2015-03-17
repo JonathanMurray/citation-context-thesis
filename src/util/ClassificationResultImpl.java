@@ -46,15 +46,15 @@ public class ClassificationResultImpl extends ClassificationResult{
 		};
 	}
 
-	@Override
-	public List<Integer> falsePositiveIndices() {
-		return fpIndices;
-	}
-
-	@Override
-	public List<Integer> falseNegativeIndices() {
-		return fnIndices;
-	}
+//	@Override
+//	public List<Integer> falsePositiveIndices() {
+//		return fpIndices;
+//	}
+//
+//	@Override
+//	public List<Integer> falseNegativeIndices() {
+//		return fnIndices;
+//	}
 
 	@Override
 	public long getPassedMillis() {

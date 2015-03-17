@@ -1,22 +1,36 @@
 package conceptGraph;
 
-import java.util.HashSet;
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.set.hash.TIntHashSet;
 
 public class Concept{
 	
-	HashSet<Integer> indices;
+	public TIntHashSet indices;
+	public double sqrtSize;
 	
-	Concept(HashSet<Integer> indices){
+	public Concept(TIntHashSet indices){
 		this.indices = indices;
+		if(indices.size() < 1){
+			sqrtSize = 1;
+		}else{
+			sqrtSize = Math.sqrt(indices.size());
+		}
+		
 	}
 	
-	public boolean related(Concept other){
-		for(Integer index : indices){
+	public double cosineSimilarity(Concept other){
+		TIntIterator it = indices.iterator();
+		double sum = 0;
+		while(it.hasNext()){
+			int index = it.next();
 			if(((Concept)other).indices.contains(index)){
-				return true;
+				sum += 1;
 			}
 		}
-		return false;
+		if(sum > 0){
+			return sum / sqrtSize / other.sqrtSize;
+		}
+		return 0;
 	}
 
 	public String toString(){
