@@ -81,6 +81,10 @@ public class DatasetFactory {
 				String sentiment = getTypeFromClassAttr(line.attr("class"));
 				String rawText = line.attr("title").split("\t")[1].trim().replaceAll(" +", " ");
 				Sentence<T> sentence = new Sentence<T>(sentiment, TextFactory.getText(params.textParams, rawText));
+				boolean startOfReferencesSection = sentence.text.raw.startsWith("\\d?\\d?\\.? R(EFERENCES|eferences)");
+				if(startOfReferencesSection){
+					break;
+				}
 				sentences.add(sentence);
 				if(sentence.type == SentenceType.EXPLICIT_REFERENCE){
 					mergedExplicitCitations.append(rawText + "\n");
