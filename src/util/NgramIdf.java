@@ -105,12 +105,17 @@ public class NgramIdf {
 	}
 	
 	public <T extends Text> NgramIdf parseDataset(Dataset<T> dataset){
+		printer.print("NgramIdf parse dataset: " + dataset.datasetLabel + " ... ");
 		parseOneDocument(dataset.citedContent.lemmas); //TODO citedContent might be several sentences, which is a bit strange
+		int i  = 0;
 		for(CitingPaper<T> c : dataset.citers){
+			i++;
+			printer.progress(i, 1);
 			for(Sentence<T> s : c.sentences){
 				parseOneDocument(s.text.lemmas);
 			}
 		}
+		printer.println(" [x]");
 		return this;
 	}
 	

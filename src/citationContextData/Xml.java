@@ -30,6 +30,7 @@ public class Xml {
 	private static final String TAG_ACRONYMS = "acronyms";
 	private static final String TAG_LEXICAL_HOOKS = "lexicalHooks";
 	private static final String TAG_DATASET_LABEL = "label";
+	private static final String TAG_MERGED_EXPLICIT = "merged-explicit-citatations";
 	private static final String TAG_CITED = "cited";
 	private static final String TAG_CITERS = "citers";
 	private static final String TAG_CITER = "citer";
@@ -60,7 +61,7 @@ public class Xml {
 				DatasetParams.basic(TextParams.withWikiConcepts(wordIdf, wiki)), 
 				new File(dir, datasetLabel + ".html"), 
 				new File(dir, datasetLabel + ".txt"));
-		dataset.findExtra(40, 10);
+		dataset.findExtra(20, 1);
 		System.out.println("DATASET: " + dataset);
 		writeToXml(dataset, new File(resources, "xml-datasets/" + datasetLabel + "-with-concepts.xml"));
 		
@@ -70,7 +71,7 @@ public class Xml {
 	
 	public static <T extends Text> void writeToXml(Dataset<T> dataset, File file){
 		try(FileWriter writer = new FileWriter(file)){
-			printer.print("Constructing XML ... ");
+			printer.print("Constructing XML for " + dataset.datasetLabel + " ... ");
 			Document doc = toXml(dataset);
 			printer.println("[x]");
 			printer.print("Writing XML to " + file.getPath() + " ... ");
@@ -90,6 +91,7 @@ public class Xml {
 			datasetTag.appendElement(TAG_ACRONYMS).text(Texts.merge(dataset.getAcronyms()));
 			datasetTag.appendElement(TAG_LEXICAL_HOOKS).text(Texts.merge(dataset.getLexicalHooks()));
 		}
+		datasetTag.appendElement(TAG_MERGED_EXPLICIT).appendChild(dataset.mergedExplicitCitations.toXml());
 		Element cited = datasetTag.appendElement(TAG_CITED);
 		cited.attr(ATTR_AUTHOR, dataset.citedMainAuthor);
 		cited.appendElement(TAG_TITLE).appendChild(dataset.citedTitle.toXml());
@@ -139,6 +141,7 @@ public class Xml {
 		Element datasetTag = doc.child(0);
 		
 		String label = datasetTag.select(TAG_DATASET_LABEL).first().text();
+		Element mergedExplicitTag = datasetTag.select(TAG_MERGED_EXPLICIT).first().select(TAG_TEXT).first();
 		Element citedTag = datasetTag.select(TAG_CITED).first();
 		Element citersTag = datasetTag.select(TAG_CITERS).first();
 		
@@ -157,7 +160,7 @@ public class Xml {
 			citers.add(citer(citerTag));
 			
 		}
-		Dataset<T> dataset = Dataset.full(label, mainAuthor, text(citedTitleTag), citers, text(citedContentTag));
+		Dataset<T> dataset = Dataset.full(label, mainAuthor, text(citedTitleTag), citers, text(citedContentTag), text(mergedExplicitTag));
 		if(datasetTag.select(TAG_ACRONYMS).size() == 1 && datasetTag.select(TAG_LEXICAL_HOOKS).size() == 1){
 			Set<String> acronyms = Texts.split(datasetTag.select(TAG_ACRONYMS).text())
 					.collect(Collectors.toCollection(HashSet::new));

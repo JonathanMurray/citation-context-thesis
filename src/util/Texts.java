@@ -10,14 +10,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.apache.commons.lang3.StringUtils;
+
 
 public class Texts {
 	
@@ -195,9 +200,11 @@ public class Texts {
 	}
 	
 	public boolean containsMainAuthor(List<String> words, String mainAuthor){
+		String cleanAuthor = Normalizer.normalize(mainAuthor, Normalizer.Form.NFD).replaceAll("[^\\x00-\\x7F]", "");
 		for(int i = 0; i < words.size(); i++){
 			String word = words.get(i);
-			if(word.matches("\\(?" + mainAuthor + ",?\\)?")){
+//			if(word.matches("\\(?\\[?(" + mainAuthor  + "|" + cleanAuthor + ")'?s?,?\\)?]?")){
+			if(word.contains(mainAuthor) || word.contains(cleanAuthor)){
 				return true;
 			}
 		}
@@ -205,11 +212,25 @@ public class Texts {
 	}
 	
 	public boolean containsAcronyms(List<String> sentence, Set<String> acronyms){
-		return acronyms.stream().anyMatch(acronym -> sentence.contains(acronym));
+//		return acronyms.stream().anyMatch(acronym -> sentence.contains(acronym));
+		for(String word : sentence){
+			for(String acronym : acronyms){
+				if(word.matches(".*" + acronym + ".*")){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
-	public boolean containsLexicalHooks(List<String> sentence, Set<String> lexicalHooks){
-		return lexicalHooks.stream().anyMatch(hook -> sentence.contains(hook) || sentence.contains(hook.toLowerCase()));
+	public boolean containsLexicalHooks(String sentence, Set<String> lexicalHooks){
+//		return lexicalHooks.stream().anyMatch(hook -> sentence.contains(hook) || sentence.contains(hook.toLowerCase()));
+		for(String hook : lexicalHooks){
+			if(StringUtils.containsIgnoreCase(sentence, hook)){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private boolean looseContains(List<String> list, String str){
@@ -241,7 +262,10 @@ public class Texts {
 		return false;
 	}
 	
+	private static final Pattern NUM_OR_CHAR = Pattern.compile("\\d+|.");
+	
 	public TObjectDoubleHashMap<String> getNgramsTfIdf(int n, List<String> words, NgramIdf wordIdf){
+		
 		TObjectDoubleHashMap<String> unigrams = getNgrams(n, words, true);
 		TObjectDoubleHashMap<String> tfIdf = new TObjectDoubleHashMap<String>();
 		TObjectDoubleIterator<String> it = unigrams.iterator();
@@ -265,6 +289,11 @@ public class Texts {
 			List<String> ngramWords = words.subList(i - n + 1, i + 1);
 			if(skipStopwords){
 				if(ngramWords.stream().anyMatch(w -> stopwords.contains(w) || w.equals(NUMBER_TAG))){
+					continue;
+				}
+			}
+			if(NUM_OR_CHAR != null){
+				if(ngramWords.stream().anyMatch(w -> NUM_OR_CHAR.matcher(w).matches())){
 					continue;
 				}
 			}

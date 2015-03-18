@@ -64,14 +64,14 @@ public class TextWithNgrams extends Text{
 	@Override
 	public double similarity(Object o){
 		TextWithNgrams other = (TextWithNgrams)o;
-		double cosSim = 0;
+		double unigramSim = 0;
 		if(unigramsTfIdf.size() > 0 && other.unigramsTfIdf.size() > 0){
-			cosSim = CosineSimilarity.calculateCosineSimilarity(unigramsTfIdf, other.unigramsTfIdf);
+			unigramSim = CosineSimilarity.calculateCosineSimilarity(unigramsTfIdf, other.unigramsTfIdf);
 		}
 		double bigramSim = 0;
 		if(bigramsTfIdf.size() > 0 && other.bigramsTfIdf.size() > 0){
 			bigramSim = CosineSimilarity.calculateCosineSimilarity(bigramsTfIdf, other.bigramsTfIdf);
 		}
-		return (cosSim + bigramSim)/2; //Originally only cosSim
+		return (unigramSim + bigramSim)/2; //Originally only cosSim
 	}
 }

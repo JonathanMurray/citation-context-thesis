@@ -2,7 +2,7 @@ package util;
 
 public class Printer {
 	
-	private boolean enabled;
+	public boolean enabled;
 	private boolean backspaceProgress;
 	private int lastProgressStrLen;
 	
@@ -35,24 +35,28 @@ public class Printer {
 	public void println(String s){
 		if(enabled){
 			System.out.println(s);
+			lastProgressStrLen = 0;
 		}
 	}
 	
 	public void print(String s){
 		if(enabled){
 			System.out.print(s);
+			lastProgressStrLen = 0;
 		}
 	}
 	
 	public void println(Object o){
 		if(enabled){
 			System.out.println(o);
+			lastProgressStrLen = 0;
 		}
 	}
 	
 	public void print(Object o){
 		if(enabled){
 			System.out.print(o);
+			lastProgressStrLen = 0;
 		}
 	}
 }

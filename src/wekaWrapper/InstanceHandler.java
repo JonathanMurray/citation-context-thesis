@@ -99,19 +99,19 @@ public class InstanceHandler {
 	private static <T extends Text> Map<String, Comparable<?>> extractFeatures(Sentence<T> previous, Sentence<T> sentence, Sentence<T> next, Dataset<T> dataset, boolean onlyText, int sentenceNumber){
 		Texts texts = Texts.instance();
 		Map<String, Comparable<?>> features = new HashMap<String, Comparable<?>>();
-		List<String> words = sentence.text.rawWords;
+		List<String> rawWords = sentence.text.rawWords;
 		String[] prevWords = previous != null? previous.text.rawWords.toArray(new String[0]) : new String[0];
 		if(!onlyText){
-			features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(words));
-			features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(words));
-			features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(words));
+			features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(rawWords));
+			features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
+			features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(rawWords));
 			features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
 			features.put(FeatureName.AFTER_HEADING.toString(), previous != null ? texts.startsWithSectionHeader( previous.text.rawWords) : false);
-			features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(words));
+			features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(rawWords));
 			features.put(FeatureName.BEFORE_HEADING.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
-			features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(words, dataset.citedMainAuthor));
-			features.put(FeatureName.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(words, dataset.getAcronyms()));
-			features.put(FeatureName.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(words, dataset.getLexicalHooks()));
+			features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
+			features.put(FeatureName.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(rawWords, dataset.getAcronyms()));
+			features.put(FeatureName.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(sentence.text.raw, dataset.getLexicalHooks()));
 		}
 		features.put(FeatureName.SENTENCE_NUMBER.toString(), sentenceNumber);
 		features.put(FeatureName.TEXT.toString(), "'" + sentence.text.raw + "'");

@@ -3,7 +3,7 @@ package mrf;
 public class MRF_params {
 	
 	private static int DEFAULT_NEIGHBOURHOOD = 2;
-	private static double DEFAULT_BELIEF_THRESHOLD = 0.7;
+	private static double DEFAULT_BELIEF_THRESHOLD = 0.4;
 	
 	final int neighbourhood;
 	final double beliefThreshold;
@@ -24,13 +24,14 @@ public class MRF_params {
 	
 	public static class SelfBelief{
 //		private static double DEFAULT_EXPLICITCIT_WEIGHT = 3;
-		private static double DEFAULT_AUTHOR_WEIGHT = 3;
-		private static double DEFAULT_DETWORK_WEIGHT = 1;
-		private static double DEFAULT_LIMITEDDET_WEIGHT = 1;
+		private static double DEFAULT_AUTHOR_WEIGHT = 1.5;
 		private static double DEFAULT_ACRONYM_WEIGHT = 1;
 		private static double DEFAULT_HOOKS_WEIGHT = 1;
-		private static double DEFAULT_IT_WEIGHT = 1;
-		private static double DEFAULT_HEADER_WEIGHT = -2;
+		private static double DEFAULT_DETWORK_WEIGHT = 0;
+		private static double DEFAULT_LIMITEDDET_WEIGHT = 0;
+		
+		private static double DEFAULT_IT_WEIGHT = 0;
+		private static double DEFAULT_HEADER_WEIGHT = 0;
 		
 //		final double explicitCitWeight;
 		final double authorWeight;

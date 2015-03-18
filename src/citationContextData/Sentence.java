@@ -17,7 +17,7 @@ public class Sentence<T extends Text> {
 		this.type = type;
 	}
 	
-	private SentenceType typeFromSentiment(String sentiment){
+	public static SentenceType typeFromSentiment(String sentiment){
 		if(sentiment.equals("x") || sentiment.equals("xc")){ //there are some xc, I'm not sure why
 			return SentenceType.NOT_REFERENCE;
 		}

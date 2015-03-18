@@ -38,7 +38,11 @@ public class Text {
 		for(String lemma : lemmas){
 			lemmasString.append(lemma + " ");
 		}
-		lemmasTag.text(lemmasString.substring(0, lemmasString.length()-1));
+		if(lemmasString.length() > 0){
+			lemmasTag.text(lemmasString.substring(0, lemmasString.length()-1));
+		}else{
+			lemmasTag.text("");
+		}
 		return text;
 	}
 	
