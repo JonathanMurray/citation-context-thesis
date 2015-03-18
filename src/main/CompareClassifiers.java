@@ -2,7 +2,6 @@ package main;
 
 import java.io.File;
 import java.text.DecimalFormat;
-import java.text.Normalizer;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,8 +9,6 @@ import java.util.List;
 
 import mrf.MRF_classifier;
 import mrf.MRF_params;
-import mrf.MRF_params.Relatedness;
-import mrf.MRF_params.SelfBelief;
 import util.ClassificationResult;
 import util.Environment;
 import util.Printer;
@@ -93,7 +90,7 @@ public class CompareClassifiers {
 		boolean balanceData = false; //dataset is already balanced
 		List<Sentence<TextWithConcepts>> testSentences = null;
 		
-		MRF_params params = new MRF_params(3, 0.4, new SelfBelief(), new Relatedness());
+		MRF_params params = new MRF_params(3, 0.4);
 		List<ClassificationResult> results = new MRF_classifier<TextWithNgrams>(params).classify(datasets);
 		System.out.println("FULL RESULTS:");
 		printMultipleResults("MRF-wiki", results, datasets, true);

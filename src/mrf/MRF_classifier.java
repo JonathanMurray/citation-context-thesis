@@ -254,8 +254,8 @@ public class MRF_classifier<T extends Text> {
 		p.println("Similarity: " + similarity);
 		
 		if(Texts.instance().containsMainAuthor(rawWords, authorLastName)){
-			score += params.selfBelief.authorWeight;
-			p.println("author: " + params.selfBelief.authorWeight); //TODO
+			score += 1.5;
+			p.println("contains main author"); //TODO
 		}
 		
 		
