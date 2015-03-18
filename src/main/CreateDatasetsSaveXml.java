@@ -21,7 +21,7 @@ public class CreateDatasetsSaveXml {
 	private static void basic(){
 		File resourcesDir = new File(Environment.resources());
 		ArrayList<Dataset<Text>> datasets = DatasetFactory.fromHtmlDir(
-				DatasetParams.enhanced(TextParams.basic(), 20, 1), 
+				DatasetParams.enhanced(TextParams.basic(), 80, 2, 2), 
 				new File(resourcesDir, "teufel-citation-context-corpus"));
 		for(Dataset<Text> dataset : datasets){
 			Xml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + ".xml"));
@@ -32,7 +32,7 @@ public class CreateDatasetsSaveXml {
 		File resourcesDir = new File(Environment.resources());
 		NgramIdf wordIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"));
 		ArrayList<Dataset<TextWithNgrams>> datasets = DatasetFactory.fromHtmlDir(
-				DatasetParams.enhanced(TextParams.withNgrams(wordIdf), 20, 1), 
+				DatasetParams.enhanced(TextParams.withNgrams(wordIdf), 80, 2, 2), 
 				new File(resourcesDir, "teufel-citation-context-corpus"));
 		for(Dataset<TextWithNgrams> dataset : datasets){
 			Xml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-ngrams.xml"));

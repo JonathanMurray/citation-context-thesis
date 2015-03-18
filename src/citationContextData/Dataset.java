@@ -29,8 +29,8 @@ public class Dataset<T extends Text> {
 	public final List<CitingPaper<T>> citers;
 	
 	public boolean hasExtra;
-	private Set<String> acronyms;
-	private Set<String> lexicalHooks;
+	private List<String> acronyms;
+	private List<LexicalHook> lexicalHooks;
 	
 	private Dataset(String datasetLabel, String citedMainAuthor, T citedTitle, List<CitingPaper<T>> citers, T citedContent, T mergedExplicitCitations){
 		this.datasetLabel = datasetLabel;
@@ -60,12 +60,12 @@ public class Dataset<T extends Text> {
 		return new Dataset<T>(datasetLabel, citedMainAuthor, citedTitle, citers, null, mergedExplicitCitations);
 	}
 	
-	public Set<String> getAcronyms(){
+	public List<String> getAcronyms(){
 		assertHasExtra();
 		return acronyms;
 	}
 	
-	public Set<String> getLexicalHooks(){
+	public List<LexicalHook> getLexicalHooks(){
 		assertHasExtra();
 		return lexicalHooks;
 	}
@@ -89,14 +89,14 @@ public class Dataset<T extends Text> {
 	 * @param numLexicalHooks
 	 * @return
 	 */
-	public Dataset<T> findExtra(int boundary, int numLexicalHooks){
-		acronyms = findAllAcronyms(boundary);
+	public Dataset<T> findExtra(int boundary, int numLexicalHooks, int numAcronyms){
+		acronyms = findAcronyms(boundary, numAcronyms);
 		lexicalHooks = findLexicalHooks(boundary, numLexicalHooks);
 		hasExtra = true;
 		return this;
 	}
 	
-	public void addExtra(Set<String> acronyms, Set<String> lexicalHooks){
+	public void addExtra(List<String> acronyms, List<LexicalHook> lexicalHooks){
 		this.acronyms = acronyms;
 		this.lexicalHooks = lexicalHooks;
 		hasExtra = true;
@@ -104,84 +104,76 @@ public class Dataset<T extends Text> {
 	
 	
 	
-	public Set<String> findAllAcronyms(int boundary){
+	public List<String> findAcronyms(int boundary, int numAcronyms){
 		Pattern regex = Pattern.compile("[^a-zA-Z\\d][A-Z]+[a-z]*[A-Z]+s?[ :;,\\.]");
-		Set<String> acronyms = findNotableInExplicit(boundary, 1, regex, true);
+		List<String> acronyms = findNotableInExplicit(boundary, numAcronyms, regex, true, true);
 		return acronyms;
 	}
 	
-	public Set<String> findLexicalHooks(int boundary, int numLexicalHooks){
+	public List<LexicalHook> findLexicalHooks(int boundary, int numLexicalHooks){
 		Pattern regex = Pattern.compile("[^a-zA-Z(\\d][A-Z][a-z]+(( [A-Z][a-z]+(( [A-Z][a-z]+[ :;,\\.])|[ :;,\\.]))|[ :;,\\.])");
-		return findNotableInExplicit(boundary, numLexicalHooks, regex, false);
+		List<String> hooks = findNotableInExplicit(boundary, numLexicalHooks, regex, false, false);
+		return hooks.stream().map(hook -> new LexicalHook(hook)).collect(Collectors.toCollection(ArrayList::new));
 	}
 	
-	private Set<String> findNotableInExplicit(int boundary, int limitNumber, Pattern regex, boolean trailingS){
-		TObjectIntHashMap<String> counts = findMatchesInExplicitReferencesAroundAuthor(boundary, regex, trailingS);
+	private List<String> findNotableInExplicit(int boundary, int limitNumber, Pattern regex, boolean trailingS, boolean makeUppercase){
+		TObjectIntHashMap<String> counts = findMatchesInExplicitReferencesAroundAuthor(boundary, regex, trailingS, makeUppercase);
 		HashMap<Integer, String> sortedEntries = new HashMap<Integer, String>();
 		TObjectIntIterator<String> it = counts.iterator();
 		while(it.hasNext()){
 			it.advance();
-			String found = it.key();// clean(it.key(), trailingS);
+			String found = it.key();
 			sortedEntries.put(it.value(), found);
 		}
-		
-		String explicitReferencesRaw = explicitReferencesRaw();
-	
+		String notExplicitRaw = notExplicitReferencesRaw();
 		return sortedEntries.entrySet().stream()
-				.filter(e -> e.getKey() > 1)
+				.filter(e -> e.getKey() > 2) //TODO to strict?
 				.sorted((e1, e2) -> {
-					int e2Common = (int)Math.ceil(Math.sqrt(StringUtils.countMatches(explicitReferencesRaw, e2.getValue())));
-					int e1Common = (int)Math.ceil(Math.sqrt(StringUtils.countMatches(explicitReferencesRaw, e1.getValue())));
-					int e1InCited = StringUtils.countMatches(citedContent.raw, e1.getValue());
-					int e2InCited = StringUtils.countMatches(citedContent.raw, e2.getValue());
-					return e2.getKey()*e2InCited/e2Common - e1.getKey()*e1InCited/e1Common;
+					int e2OutsideExpl = (int)Math.ceil(Math.sqrt(countMatches(notExplicitRaw, e2.getValue(), makeUppercase)));
+					int e1OutsideExpl = (int)Math.ceil(Math.sqrt(countMatches(notExplicitRaw, e1.getValue(), makeUppercase)));
+					int e1InCited = countMatches(citedContent.raw, e1.getValue(), makeUppercase);
+					int e2InCited = countMatches(citedContent.raw, e2.getValue(), makeUppercase);
+					return e2.getKey()*e2InCited/e2OutsideExpl - e1.getKey()*e1InCited/e1OutsideExpl;
 				})
 				.limit(limitNumber)
 				.map(e -> e.getValue())
-				.collect(Collectors.toSet());
+				.collect(Collectors.toCollection(ArrayList::new));
 	}
 	
-	private TObjectIntHashMap<String> findMatchesInExplicitReferencesAroundAuthor(int boundary, Pattern regex, boolean trailingS){
+	private TObjectIntHashMap<String> findMatchesInExplicitReferencesAroundAuthor(int boundary, Pattern regex, boolean trailingS, boolean makeUppercase){
 		TObjectIntHashMap<String> matches = new TObjectIntHashMap<String>();
 		explicitReferences().forEach(sentence -> {
-				int index = sentence.text.raw.indexOf(citedMainAuthor);
-				if(index < 0){
-					index = sentence.text.raw.indexOf(cleanCitedMainAuthor);
-				}
-				if(index >= 0){
-					int left = Math.max(0, index-boundary);
-					int right = Math.min(sentence.text.raw.length() - 1, index+boundary);
-					String vicinityOfAuthor = sentence.text.raw.substring(left, right);
-					Matcher m = regex.matcher(vicinityOfAuthor);
-					while(m.find()){
-						String match = m.group();
-						String cleanMatch = clean(match, false);
-						if(cleanCitedMainAuthor.contains(cleanMatch) || citedMainAuthor.contains(cleanMatch)
-								|| Texts.instance().isStopword(cleanMatch.toLowerCase())){
-							continue;
-						}
-						if(!matchIsProbablyOtherAuthor(match, sentence.text.raw)){
-							System.out.println(match); //TODO
-							System.out.println(vicinityOfAuthor + "\n"); //TODO
-							matches.adjustOrPutValue(match,1,1);
-						}
+			int index = sentence.text.raw.indexOf(citedMainAuthor);
+			if(index < 0){
+				index = sentence.text.raw.indexOf(cleanCitedMainAuthor);
+			}
+			if(index >= 0){
+				int left = Math.max(0, index-boundary);
+				int right = Math.min(sentence.text.raw.length() - 1, index+boundary);
+				String vicinityOfAuthor = sentence.text.raw.substring(left, right);
+				Matcher m = regex.matcher(vicinityOfAuthor);
+				while(m.find()){
+					String match = m.group();
+					String tmpCleanMatch = clean(match, trailingS, makeUppercase);
+					if(cleanCitedMainAuthor.contains(tmpCleanMatch) || citedMainAuthor.contains(tmpCleanMatch)
+							|| Texts.instance().isStopword(tmpCleanMatch.toLowerCase())){
+						continue;
 					}
-				}else{
-					System.err.println("AUTHOR NOT FOUND (" + citedMainAuthor + ") in " + sentence.text.raw);//TODO
+					if(!matchIsProbablyOtherAuthor(match, sentence.text.raw)){
+//							System.out.println(match); //TODO
+//							System.out.println(vicinityOfAuthor + "\n"); //TODO
+						matches.adjustOrPutValue(clean(match, trailingS, makeUppercase),1,1);
+					}
 				}
+			}else{
+				System.err.println("AUTHOR NOT FOUND (" + citedMainAuthor + ") in " + sentence.text.raw);//TODO
+			}
 		});
-		
-		TObjectIntHashMap<String> cleanMatches = new TObjectIntHashMap<String>();
-		TObjectIntIterator<String> matchesIt = matches.iterator();
-		while(matchesIt.hasNext()){
-			matchesIt.advance();
-			cleanMatches.adjustOrPutValue(clean(matchesIt.key(), trailingS), matchesIt.value(), matchesIt.value());
-		}
 		
 		//Try to determine which of the found matches were actually author names (false matches)
 		TObjectIntHashMap<String> falseMatches = new TObjectIntHashMap<String>();
-		allReferences().forEach(sentence -> {
-			for(String match : cleanMatches.keySet()){
+		allSentences().forEach(sentence -> {
+			for(String match : matches.keySet()){
 				if(sentence.text.raw.contains(match)){
 					if(matchIsProbablyOtherAuthor(match, sentence.text.raw)){
 						falseMatches.adjustOrPutValue(match, 1, 1);
@@ -190,31 +182,51 @@ public class Dataset<T extends Text> {
 			}
 		});
 		
-		
-		
-		TObjectIntIterator<String> cleanMatchesIt = cleanMatches.iterator();
-		while(cleanMatchesIt.hasNext()){
-			cleanMatchesIt.advance();
-//			System.out.println(cleanMatchesIt.key() + ": " + cleanMatchesIt.value() + " vs " + falseMatches.get(cleanMatchesIt.key())); //TODO
-			boolean probablyFalse = falseMatches.get(cleanMatchesIt.key()) > cleanMatchesIt.value();
+		TObjectIntIterator<String> matchesIt = matches.iterator();
+		while(matchesIt.hasNext()){
+			matchesIt.advance();
+//			System.out.println(matchesIt.key() + ": " + matchesIt.value() + " vs " + falseMatches.get(matchesIt.key())); //TODO
+			boolean probablyFalse = falseMatches.get(matchesIt.key()) > matchesIt.value();
 			if(probablyFalse){
-				cleanMatchesIt.remove();
+				matchesIt.remove();
 			}
 		}
 
-		return cleanMatches;
+		return matches;
 	}
 	
-	private String clean(String dirty, boolean trailingS){
+	private int countMatches(String string, String substring, boolean wasMadeUppercase){
+		int exactMatches = StringUtils.countMatches(string, substring);
+		if(wasMadeUppercase){
+			int generousMatches = StringUtils.countMatches(string.toLowerCase(), substring.toLowerCase());
+			return (int)((exactMatches + generousMatches)/2.0);
+		}
+		return exactMatches; 
+	}
+	
+	private String clean(String dirty, boolean trailingS, boolean makeUppercase){
 		String s = dirty.replaceAll("[,\\[\\]\\(\\)\\.\\{\\}\\?\\!\\:\\;]", "").trim();
 		if(trailingS && s.endsWith("s")){
 			s = s.substring(0, s.length()-1);
+		}
+		if(makeUppercase){
+			s = s.toUpperCase();
 		}
 		return s;
 	}
 	
 	private boolean matchIsProbablyOtherAuthor(String match, String text){
 		match = match.trim(); //spaces might have been included in match
+		
+		{
+			//at least a few characters, no lowercase 
+			// ==> likely NOT an author name
+			String tmpClean = clean(match, true, false);
+			if(tmpClean.length() > 1 && ! tmpClean.matches(".*[a-z].*")){
+				return false;
+			}
+		}
+		
 		int index = text.indexOf(match);
 		if(index == -1){
 			throw new IllegalArgumentException();
@@ -240,7 +252,7 @@ public class Dataset<T extends Text> {
 				.filter(s -> s.type == SentenceType.EXPLICIT_REFERENCE);
 	}
 	
-	private Stream<Sentence<T>> allReferences(){
+	private Stream<Sentence<T>> allSentences(){
 		return citers.stream()
 				.flatMap(c -> c.sentences.stream());
 	}
@@ -248,6 +260,18 @@ public class Dataset<T extends Text> {
 	private String explicitReferencesRaw(){
 		String s = explicitReferences().map(sentence -> sentence.text.raw).reduce("", (s1,s2) -> s1 + " " + s2);
 		return s;
+	}
+	
+	private String allReferencesRaw(){
+		return allSentences().map(sentence -> sentence.text.raw).reduce("", (s1,s2) -> s1 + " " + s2);
+	}
+	
+	private String notExplicitReferencesRaw(){
+		return citers.stream()
+				.flatMap(c -> c.sentences.stream())
+				.filter(s -> s.type != SentenceType.EXPLICIT_REFERENCE)
+				.map(s -> s.text.raw)
+				.reduce("", (s1,s2) -> s1 + " " + s2);
 	}
 	
 	public String toString(){

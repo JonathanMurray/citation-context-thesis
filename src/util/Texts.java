@@ -16,12 +16,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+
+import citationContextData.LexicalHook;
 
 
 public class Texts {
@@ -109,7 +110,10 @@ public class Texts {
             pos = end + 1;
         }
         if(pos < text.length()){
-        	words.add(text.substring(pos, text.length()));
+        	word = text.substring(pos, text.length());
+        	if(word.length() > 0){
+        		words.add(word);
+        	}
         }
         return words.build();
 	}
@@ -177,7 +181,7 @@ public class Texts {
 		return false;
 	}
 	
-	public boolean startsWithDetWork(List<String> words){
+	public boolean startoksWithDetWork(List<String> words){
 		return words.size() >= 2 && looseContains(determiners, words.get(0)) && looseContains(workNouns, words.get(1));
 	}
 	
@@ -211,26 +215,32 @@ public class Texts {
 		return false;
 	}
 	
-	public boolean containsAcronyms(List<String> sentence, Set<String> acronyms){
-//		return acronyms.stream().anyMatch(acronym -> sentence.contains(acronym));
+	public int containsAcronymWithIndex(List<String> sentence, List<String> acronyms){
 		for(String word : sentence){
-			for(String acronym : acronyms){
+			for(int i = 0; i < acronyms.size(); i++){
+				String acronym = acronyms.get(i);
 				if(word.matches(".*" + acronym + ".*")){
-					return true;
+					return i;
 				}
 			}
 		}
-		return false;
+		return -1;
 	}
 	
-	public boolean containsLexicalHooks(String sentence, Set<String> lexicalHooks){
-//		return lexicalHooks.stream().anyMatch(hook -> sentence.contains(hook) || sentence.contains(hook.toLowerCase()));
-		for(String hook : lexicalHooks){
-			if(StringUtils.containsIgnoreCase(sentence, hook)){
-				return true;
+	public int containsHookWithIndex(String sentence, List<LexicalHook> lexicalHooks){
+		for(int i = 0; i < lexicalHooks.size(); i++){
+			LexicalHook hook =lexicalHooks.get(i);
+			if(StringUtils.containsIgnoreCase(sentence, hook.hook)){
+				return i;
 			}
+			if(hook.hasAcronym){
+				if(StringUtils.contains(sentence, hook.acronym)){
+					return i;
+				}
+			}
+			
 		}
-		return false;
+		return -1;
 	}
 	
 	private boolean looseContains(List<String> list, String str){

@@ -110,8 +110,8 @@ public class InstanceHandler {
 			features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(rawWords));
 			features.put(FeatureName.BEFORE_HEADING.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
 			features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
-			features.put(FeatureName.CONTAINS_ACRONYM.toString(), texts.containsAcronyms(rawWords, dataset.getAcronyms()));
-			features.put(FeatureName.CONTAINS_LEXICAL_HOOK.toString(), texts.containsLexicalHooks(sentence.text.raw, dataset.getLexicalHooks()));
+			features.put(FeatureName.CONTAINS_ACRONYM.toString(), texts.containsAcronymWithIndex(rawWords, dataset.getAcronyms()));
+			features.put(FeatureName.CONTAINS_LEXICAL_HOOK.toString(), texts.containsHookWithIndex(sentence.text.raw, dataset.getLexicalHooks()));
 		}
 		features.put(FeatureName.SENTENCE_NUMBER.toString(), sentenceNumber);
 		features.put(FeatureName.TEXT.toString(), "'" + sentence.text.raw + "'");

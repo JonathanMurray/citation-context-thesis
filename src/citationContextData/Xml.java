@@ -1,13 +1,12 @@
 package citationContextData;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
@@ -16,9 +15,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 
+import util.NgramIdf;
 import util.Printer;
 import util.Texts;
-import util.NgramIdf;
 import conceptGraph.WikiGraph;
 import conceptGraph.WikiGraphFactory;
 
@@ -61,7 +60,7 @@ public class Xml {
 				DatasetParams.basic(TextParams.withWikiConcepts(wordIdf, wiki)), 
 				new File(dir, datasetLabel + ".html"), 
 				new File(dir, datasetLabel + ".txt"));
-		dataset.findExtra(20, 1);
+		dataset.findExtra(80, 2, 2);
 		System.out.println("DATASET: " + dataset);
 		writeToXml(dataset, new File(resources, "xml-datasets/" + datasetLabel + "-with-concepts.xml"));
 		
@@ -89,7 +88,9 @@ public class Xml {
 		datasetTag.appendElement(TAG_DATASET_LABEL).text(dataset.datasetLabel);
 		if(dataset.hasExtra){
 			datasetTag.appendElement(TAG_ACRONYMS).text(Texts.merge(dataset.getAcronyms()));
-			datasetTag.appendElement(TAG_LEXICAL_HOOKS).text(Texts.merge(dataset.getLexicalHooks()));
+			List<String> hooks = dataset.getLexicalHooks().stream()
+					.map(h -> h.hook).collect(Collectors.toCollection(ArrayList::new));
+			datasetTag.appendElement(TAG_LEXICAL_HOOKS).text(Texts.merge(hooks));
 		}
 		datasetTag.appendElement(TAG_MERGED_EXPLICIT).appendChild(dataset.mergedExplicitCitations.toXml());
 		Element cited = datasetTag.appendElement(TAG_CITED);
@@ -124,7 +125,8 @@ public class Xml {
 	public static <T extends Text> Dataset<T> parseXmlFile(File xmlFile, int maxNumCiters){
 		try {
 			printer.print("Parsing XML from " + xmlFile.getPath() + " ... ");
-			Document doc = Jsoup.parse(new FileInputStream(xmlFile), null, "", Parser.xmlParser());
+			
+			Document doc = Jsoup.parse(new BufferedInputStream(new FileInputStream(xmlFile)), null, "", Parser.xmlParser());
 			printer.println("[x]");
 			printer.print("Creating dataset from XML ... ");
 			Dataset<T> dataset = parseXml(doc, maxNumCiters);
@@ -162,10 +164,12 @@ public class Xml {
 		}
 		Dataset<T> dataset = Dataset.full(label, mainAuthor, text(citedTitleTag), citers, text(citedContentTag), text(mergedExplicitTag));
 		if(datasetTag.select(TAG_ACRONYMS).size() == 1 && datasetTag.select(TAG_LEXICAL_HOOKS).size() == 1){
-			Set<String> acronyms = Texts.split(datasetTag.select(TAG_ACRONYMS).text())
-					.collect(Collectors.toCollection(HashSet::new));
-			Set<String> lexicalHooks = Texts.split(datasetTag.select(TAG_LEXICAL_HOOKS).text())
-					.collect(Collectors.toCollection(HashSet::new));
+			List<String> acronyms = Texts.split(datasetTag.select(TAG_ACRONYMS).text())
+					.collect(Collectors.toCollection(ArrayList::new));
+			List<String> hooks = Texts.split(datasetTag.select(TAG_LEXICAL_HOOKS).text())
+					.collect(Collectors.toCollection(ArrayList::new));
+			List<LexicalHook> lexicalHooks = hooks.stream().map(hook -> new LexicalHook(hook))
+					.collect(Collectors.toCollection(ArrayList::new));
 			dataset.addExtra(acronyms, lexicalHooks);
 		}
 		

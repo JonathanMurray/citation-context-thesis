@@ -95,7 +95,7 @@ public class DatasetFactory {
 		Dataset<T> dataset = Dataset.withoutCitedData(label, mainAuthorLastName, citedTitleText, citers, mergedExplicitCitationsText);
 		dataset.citedContent = TextFactory.getText(params.textParams, citedContent);
 		if(params.isEnhanced){
-			dataset = dataset.findExtra(params.authorProxyBoundary, params.numLexicalHooks);
+			dataset = dataset.findExtra(params.authorProxyBoundary, params.numLexicalHooks, params.numAcronyms);
 		}
 		return dataset;
 	}

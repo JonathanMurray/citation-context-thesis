@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import util.ClassificationResult;
 import util.ClassificationResultImpl;
@@ -18,6 +17,7 @@ import util.Printer;
 import util.Texts;
 import util.Timer;
 import citationContextData.Dataset;
+import citationContextData.LexicalHook;
 import citationContextData.Sentence;
 import citationContextData.SentenceType;
 import citationContextData.Text;
@@ -211,17 +211,17 @@ public class MRF_classifier<T extends Text> {
 			Sentence<T> sentence, 
 			String authorLastName, 
 			double similarToCited, 
-			Set<String> acronyms,
-			Set<String> lexicalHooks){
+			List<String> acronyms,
+			List<LexicalHook> lexicalHooks){
 		
 		List<String> rawWords = sentence.text.rawWords;
 		
 		double score = 0; 
 		Printer p = new Printer(false);
 		
-		if(sentence.type == SentenceType.NOT_REFERENCE && Texts.instance().containsLexicalHooks(sentence.text.raw, lexicalHooks)){
+//		if(sentence.type == SentenceType.NOT_REFERENCE && Texts.instance().containsHookWithIndex(sentence.text.raw, lexicalHooks)){
 //			p.enabled = true;
-		}
+//		}
 		p.println("\n\n" + sentence.text.raw); //TODO
 		
 //		if(Texts.instance().containsExplicitCitation(words, authorLastName)){
@@ -242,13 +242,22 @@ public class MRF_classifier<T extends Text> {
 //		}
 		score += similarToCited;
 		
-		boolean hooks = Texts.instance().containsLexicalHooks(sentence.text.raw, lexicalHooks);
-		boolean acronym = Texts.instance().containsAcronyms(rawWords, acronyms); 
+//		boolean hooks = Texts.instance().containsHookWithIndex(sentence.text.raw, lexicalHooks);
+//		boolean acronym = Texts.instance().containsAcronymWithIndex(rawWords, acronyms); 
 		
-		if(hooks && acronym){
-			score += 1.5;
-		}else if(hooks || acronym){
-			score += 1;
+		int hookIndex = Texts.instance().containsHookWithIndex(sentence.text.raw, lexicalHooks);
+		int acronymIndex = Texts.instance().containsAcronymWithIndex(rawWords, acronyms);
+		int bestIndex = -1;
+		if(hookIndex > -1 && acronymIndex > -1){
+			bestIndex = Math.min(hookIndex, acronymIndex);
+		}else if(hookIndex != -1){
+			bestIndex = hookIndex;
+		}else if(acronymIndex != -1){
+			bestIndex = acronymIndex;
+		}
+		
+		if(bestIndex != -1){
+			score += 1.5/((double)bestIndex+1);
 		}
 		
 //		if(words.get(0).equals("It")){
