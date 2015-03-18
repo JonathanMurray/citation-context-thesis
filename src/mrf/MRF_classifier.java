@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import util.ClassificationResult;
 import util.ClassificationResultImpl;
@@ -136,7 +137,8 @@ public class MRF_classifier<T extends Text> {
 		for(int i = 0; i < numSentences; i++){
 			double unnormalizedBelief = unnormalizedBeliefs.get(i);
 			double normalized;
-			if(sentences.get(i).type == SentenceType.EXPLICIT_REFERENCE){
+			Sentence<T> sentence = sentences.get(i);
+			if(sentence.type == SentenceType.EXPLICIT_REFERENCE){
 				normalized = 1.0; //TODO set explicit sentences to 100% probability
 			}else{
 				if(maxBelief > minBelief){
@@ -145,7 +147,39 @@ public class MRF_classifier<T extends Text> {
 					System.out.println(maxBelief + " !> " + minBelief);
 					normalized = 0.5;
 				}
-				final double MIN_ALLOWED = 0.25; //TODO
+
+				
+				
+				
+				List<String> rawWords = Texts.split(sentence.text.raw)
+						.collect(Collectors.toCollection(ArrayList::new));
+				
+				boolean containsOtherRefs = Texts.instance().containsOtherReferencesButNotThis(sentence.text.raw, 
+						rawWords, data.citedMainAuthor); 
+				boolean sectionHeader = Texts.instance().startsWithSectionHeader(rawWords);
+				
+				
+				if(containsOtherRefs){
+					normalized -= 0.2;
+//					if(sentence.type == SentenceType.IMPLICIT_REFERENCE){
+//						System.out.println(sentence.type + ":");
+//						System.out.println(sentence.text.raw);
+//						System.out.println();
+//					}
+				}
+				if(sectionHeader){
+					normalized -= 0.3;
+//					if(sentence.type == SentenceType.IMPLICIT_REFERENCE){
+//						System.out.println(sentence.type + ":");
+//						System.out.println(sentence.text.raw);
+//						System.out.println();
+//					}
+				}
+				
+				
+				
+				
+				final double MIN_ALLOWED = 0.2; //TODO
 				if(normalized < MIN_ALLOWED){
 					normalized = MIN_ALLOWED; 
 				}
@@ -189,18 +223,7 @@ public class MRF_classifier<T extends Text> {
 			similarities.set(i, normalized);
 		}
 		
-//		for(int i = 0; i < similarities.size(); i++){
-//			double sim = similarities.get(i);
-//			if(sim > 0.8 && sentences.get(i).type != SentenceType.EXPLICIT_REFERENCE){
-//				Sentence<T> s = sentences.get(i);
-//				System.out.println();
-//				System.out.println("(" + data.citedMainAuthor + "), " + data.citedTitle.raw);
-//				System.out.println(sentences.get(i).type + ": " + s.text.raw);
-//				System.out.println("cited content: " + s.text.similarity(citedContent));
-//				System.out.println("cited title  : " + s.text.similarity(citedTitle));
-//				System.out.println("citations    : " + s.text.similarity(mergedExplicitCitations));
-//			}
-//		}
+		
 		
 		
 		
@@ -210,7 +233,7 @@ public class MRF_classifier<T extends Text> {
 	private double selfBelief(
 			Sentence<T> sentence, 
 			String authorLastName, 
-			double similarToCited, 
+			double similarity, 
 			List<String> acronyms,
 			List<LexicalHook> lexicalHooks){
 		
@@ -228,19 +251,22 @@ public class MRF_classifier<T extends Text> {
 //			score +=  params.selfBelief.explicitCitWeight;
 //		}
 		
-		p.println("Similarity: " + similarToCited);
+		p.println("Similarity: " + similarity);
 		
 		if(Texts.instance().containsMainAuthor(rawWords, authorLastName)){
 			score += params.selfBelief.authorWeight;
 			p.println("author: " + params.selfBelief.authorWeight); //TODO
 		}
+		
+		
+		
 //		if(Texts.instance().startsWithDetWork(words)){
 //			score += params.selfBelief.detWorkWeight;
 //		}
 //		if(Texts.instance().startsWithLimitedDet(words)){
 //			score += params.selfBelief.limitedDetWeight;
 //		}
-		score += similarToCited;
+		score += similarity;
 		
 //		boolean hooks = Texts.instance().containsHookWithIndex(sentence.text.raw, lexicalHooks);
 //		boolean acronym = Texts.instance().containsAcronymWithIndex(rawWords, acronyms); 
@@ -263,10 +289,7 @@ public class MRF_classifier<T extends Text> {
 //		if(words.get(0).equals("It")){
 //			score += params.selfBelief.itWeight;
 //		}
-//		if(Texts.instance().startsWithSectionHeader(rawWords)){
-//			score += params.selfBelief.headerWeight;
-//			p.println("header: " + params.selfBelief.headerWeight); //TODO
-//		}
+//		
 		
 		if(Double.isNaN(score)){
 			throw new RuntimeException();
@@ -325,10 +348,10 @@ public class MRF_classifier<T extends Text> {
 			if(predictInContext){
 				if(sentence.type == SentenceType.NOT_REFERENCE){
 					
-					Sentence prev=  null;
-					if(i > 0){
-						prev = sentences.get(i-1);
-					}
+//					Sentence prev=  null;
+//					if(i > 0){
+//						prev = sentences.get(i-1);
+//					}
 					
 //					System.out.println();
 //					System.out.println("close to explicit: " + closeToExplicit);
@@ -353,13 +376,35 @@ public class MRF_classifier<T extends Text> {
 					trueNeg ++;
 				}else{
 					
-//					Sentence prev = sentences.get(i-1);
-//					System.out.println();
-//					System.out.println("close to explicit: " + closeToExplicit);
-//					System.out.println(prev.type + "(" + f.format(selfBeliefs.get(i-1)[1]) + " -> " + f.format(finalBelief(i-1)[1]) +  "):   " + prev.text.raw);
-//					System.out.println("FN (" + f.format(selfBeliefs.get(i)[1]) + " -> " + f.format(belief[1]) +  "):   " + sentence.text.raw); //TODO
-//					System.out.println(sentence.text.lemmas);
-//					System.out.println();
+					
+					
+//					if(sentences.get(i).type == SentenceType.IMPLICIT_REFERENCE){
+//						Sentence prev=  null;
+//						if(i > 0){
+//							prev = sentences.get(i-1);
+//						}
+//						Sentence<T> s = sentences.get(i);
+//						System.out.println("\n");
+//						System.out.println("PREV (" + prev.type + "  " + f.format(selfBeliefs.get(i-1)[1]) 
+//								+ " -> " + f.format(finalBelief(i-1)[1]) + "): " + prev.text.raw);
+//						System.out.println("(" + data.citedMainAuthor + "), " + data.citedTitle.raw);
+//						System.out.println("(" + f.format(selfBeliefs.get(i)[1]) + " -> " 
+//								+ f.format(belief[1]) +  "):   " + sentence.text.raw); 
+//						System.out.println(s.text.lemmas);
+//						System.out.println("cited content: " + s.text.similarity(data.citedContent));
+//						System.out.println("cited title  : " + s.text.similarity(data.citedTitle));
+//						System.out.println("citations    : " + s.text.similarity(data.mergedExplicitCitations));
+//						System.out.println("Related to prev: " + relatednessToPrevious(s.text));
+//						System.out.println();
+//						List<String> rawWords = Texts.split(sentence.text.raw).collect(Collectors.toCollection(ArrayList::new));
+//						if(Texts.instance().containsOtherReferencesButNotThis(sentence.text.raw, rawWords, data.citedMainAuthor)){
+//							System.out.println("contains other ref!");
+//						}
+//						if(Texts.instance().startsWithSectionHeader(rawWords)){
+//							System.out.println("section header!");
+//						}
+//					}
+
 					fnIndices.add(i);
 					falseNeg ++;
 				}
@@ -489,7 +534,7 @@ public class MRF_classifier<T extends Text> {
 		double probSame;
 		
 		if(context1 == NO){
-			probSame = 0.5 + (Math.pow(relatedness,2) / 3);
+			probSame = 0.5 + (Math.pow(relatedness,2) / 4);
 			return new double[]{probSame,1-probSame};
 		}
 		
@@ -523,6 +568,7 @@ public class MRF_classifier<T extends Text> {
 		}else if(s1 == s2 + 1){
 			relatedness = relatednessToPrevious(t1);
 		}
+		
 		relatedness = Math.max(relatedness, t1.similarity(t2));
 		relatednessMemoization.get(s1).put(s2, relatedness);
 		return relatedness;
@@ -534,7 +580,7 @@ public class MRF_classifier<T extends Text> {
 			return 0.9;
 		}
 		
-		if(Texts.instance().containsDetWork(text.lemmas)){
+		if(Texts.instance().containsDetWork(text.rawWords)){
 			return 0.8;
 		}
 		
@@ -542,12 +588,12 @@ public class MRF_classifier<T extends Text> {
 			return 0.8;
 		}
 		
-		if(text.rawWords.get(0).equals("It")){
+		if(Texts.instance().startsWithDet(text.rawWords)){
 			return 0.7;
 		}
 		
-		if(Texts.instance().containsDet(text.lemmas)){
-			return 0.5;
+		if(Texts.instance().containsDet(text.rawWords) || text.rawWords.get(0).equals("It")){
+			return 0.6;
 		}
 		
 		return 0.4; //the fact they are next to each other

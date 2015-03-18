@@ -28,6 +28,7 @@ public class Xml {
 	private static final String TAG_DATASET = "dataset";
 	private static final String TAG_ACRONYMS = "acronyms";
 	private static final String TAG_LEXICAL_HOOKS = "lexicalHooks";
+	private static final String TAG_LEXICAL_HOOK = "hook";
 	private static final String TAG_DATASET_LABEL = "label";
 	private static final String TAG_MERGED_EXPLICIT = "merged-explicit-citatations";
 	private static final String TAG_CITED = "cited";
@@ -90,7 +91,10 @@ public class Xml {
 			datasetTag.appendElement(TAG_ACRONYMS).text(Texts.merge(dataset.getAcronyms()));
 			List<String> hooks = dataset.getLexicalHooks().stream()
 					.map(h -> h.hook).collect(Collectors.toCollection(ArrayList::new));
-			datasetTag.appendElement(TAG_LEXICAL_HOOKS).text(Texts.merge(hooks));
+			Element hooksTag = datasetTag.appendElement(TAG_LEXICAL_HOOKS);
+			for(String hook : hooks){
+				hooksTag.appendElement(TAG_LEXICAL_HOOK).text(hook);
+			}
 		}
 		datasetTag.appendElement(TAG_MERGED_EXPLICIT).appendChild(dataset.mergedExplicitCitations.toXml());
 		Element cited = datasetTag.appendElement(TAG_CITED);
@@ -166,10 +170,11 @@ public class Xml {
 		if(datasetTag.select(TAG_ACRONYMS).size() == 1 && datasetTag.select(TAG_LEXICAL_HOOKS).size() == 1){
 			List<String> acronyms = Texts.split(datasetTag.select(TAG_ACRONYMS).text())
 					.collect(Collectors.toCollection(ArrayList::new));
-			List<String> hooks = Texts.split(datasetTag.select(TAG_LEXICAL_HOOKS).text())
-					.collect(Collectors.toCollection(ArrayList::new));
-			List<LexicalHook> lexicalHooks = hooks.stream().map(hook -> new LexicalHook(hook))
-					.collect(Collectors.toCollection(ArrayList::new));
+			Element hooksTag = datasetTag.select(TAG_LEXICAL_HOOKS).first();
+			List<LexicalHook> lexicalHooks = new ArrayList<LexicalHook>();
+			for(Element hookTag : hooksTag.select(TAG_LEXICAL_HOOK)){
+				lexicalHooks.add(new LexicalHook(hookTag.text()));
+			}
 			dataset.addExtra(acronyms, lexicalHooks);
 		}
 		

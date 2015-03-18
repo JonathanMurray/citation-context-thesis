@@ -129,11 +129,15 @@ public class Dataset<T extends Text> {
 		return sortedEntries.entrySet().stream()
 				.filter(e -> e.getKey() > 2) //TODO to strict?
 				.sorted((e1, e2) -> {
-					int e2OutsideExpl = (int)Math.ceil(Math.sqrt(countMatches(notExplicitRaw, e2.getValue(), makeUppercase)));
-					int e1OutsideExpl = (int)Math.ceil(Math.sqrt(countMatches(notExplicitRaw, e1.getValue(), makeUppercase)));
-					int e1InCited = countMatches(citedContent.raw, e1.getValue(), makeUppercase);
-					int e2InCited = countMatches(citedContent.raw, e2.getValue(), makeUppercase);
-					return e2.getKey()*e2InCited/e2OutsideExpl - e1.getKey()*e1InCited/e1OutsideExpl;
+					Pattern re1 = Pattern.compile("[^a-zA-Z\\d]" + Pattern.quote(e1.getValue()) + "s?[ :;,\\.]");
+					Pattern re2 = Pattern.compile("[^a-zA-Z\\d]" + Pattern.quote(e2.getValue()) + "s?[ :;,\\.]");
+					int e1OutsideExplSmooth = countMatches(notExplicitRaw, re1) + 1;
+					int e2OutsideExplSmooth = countMatches(notExplicitRaw, re2) + 1;
+					int e1InCitedSmooth = countMatches(citedContent.raw, re1) + 1;
+					int e2InCitedSmooth = countMatches(citedContent.raw, re2) + 1;
+					double score1 = (double)e1.getKey() * (double)e1InCitedSmooth / (double)e1OutsideExplSmooth;
+					double score2 = (double)e2.getKey() * (double)e2InCitedSmooth / (double)e2OutsideExplSmooth;
+					return (int)Math.signum(score2 - score1);
 				})
 				.limit(limitNumber)
 				.map(e -> e.getValue())
@@ -185,7 +189,7 @@ public class Dataset<T extends Text> {
 		TObjectIntIterator<String> matchesIt = matches.iterator();
 		while(matchesIt.hasNext()){
 			matchesIt.advance();
-//			System.out.println(matchesIt.key() + ": " + matchesIt.value() + " vs " + falseMatches.get(matchesIt.key())); //TODO
+			System.out.println(matchesIt.key() + ": " + matchesIt.value() + " vs " + falseMatches.get(matchesIt.key())); //TODO
 			boolean probablyFalse = falseMatches.get(matchesIt.key()) > matchesIt.value();
 			if(probablyFalse){
 				matchesIt.remove();
@@ -195,13 +199,13 @@ public class Dataset<T extends Text> {
 		return matches;
 	}
 	
-	private int countMatches(String string, String substring, boolean wasMadeUppercase){
-		int exactMatches = StringUtils.countMatches(string, substring);
-		if(wasMadeUppercase){
-			int generousMatches = StringUtils.countMatches(string.toLowerCase(), substring.toLowerCase());
-			return (int)((exactMatches + generousMatches)/2.0);
+	private int countMatches(String string, Pattern sub){
+		Matcher m = sub.matcher(string);
+		int count = 0;
+		while(m.find()){
+			count ++;
 		}
-		return exactMatches; 
+		return count;
 	}
 	
 	private String clean(String dirty, boolean trailingS, boolean makeUppercase){

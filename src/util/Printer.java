@@ -32,6 +32,10 @@ public class Printer {
 		}
 	}
 	
+	public void resetProgressBackspace(){
+		lastProgressStrLen = 0;
+	}
+	
 	public void println(String s){
 		if(enabled){
 			System.out.println(s);

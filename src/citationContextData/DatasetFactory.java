@@ -27,6 +27,7 @@ public class DatasetFactory {
 		ArrayList<Dataset<T>> datasets = new ArrayList<Dataset<T>>();
 		File[] files = dir.listFiles();
 		printer.print("Creating citation data set from dir " + dir.getAbsolutePath() + ": ");
+		printer.resetProgressBackspace();
 		for(int i = 0; i < files.length; i++){
 			printer.progress(i, 1);
 			File htmlFile = files[i];
@@ -83,6 +84,7 @@ public class DatasetFactory {
 				Sentence<T> sentence = new Sentence<T>(sentiment, TextFactory.getText(params.textParams, rawText));
 				boolean startOfReferencesSection = sentence.text.raw.startsWith("\\d?\\d?\\.? R(EFERENCES|eferences)");
 				if(startOfReferencesSection){
+					printer.println("'" + citerTitle + "' reached start of references at " + i + " / " + citer.childNodeSize());
 					break;
 				}
 				sentences.add(sentence);
@@ -93,7 +95,7 @@ public class DatasetFactory {
 			citers.add(new CitingPaper<T>(citerTitle, sentences));
 		}
 		
-		System.out.println("Creating dataset from HTML took " + t.getSecString()  + "   ");
+		printer.println("Creating dataset from HTML (" + label + ") took " + t.getSecString());
 		T citedTitleText = TextFactory.getText(params.textParams, citedTitle);
 		T mergedExplicitCitationsText = TextFactory.getText(params.textParams, mergedExplicitCitations.toString());
 		Dataset<T> dataset = Dataset.withoutCitedData(label, mainAuthorLastName, citedTitleText, citers, mergedExplicitCitationsText);
@@ -102,5 +104,9 @@ public class DatasetFactory {
 			dataset = dataset.findExtra(params.authorProxyBoundary, params.numLexicalHooks, params.numAcronyms);
 		}
 		return dataset;
+	}
+	
+	public static boolean isStartOfReferencesSection(String sentence){
+		 return sentence.startsWith("\\d?\\d?\\.?\\w*(R|r)(EFERENCES|eferences)");
 	}
 }

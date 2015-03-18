@@ -57,7 +57,7 @@ public class CompareClassifiers {
 				"A92-1018", "J90-1003", "N03-1003", "P04-1035", "P07-1033", "W04-1013", "C98-2122", 
 				"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"};
 		
-		labels = new String[]{"A92-1018"};
+//		labels = new String[]{"A92-1018"};
 		
 		List<Dataset<TextWithNgrams>> datasets = new ArrayList<Dataset<TextWithNgrams>>();
 		for(String label : labels){
@@ -66,7 +66,7 @@ public class CompareClassifiers {
 					new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml"), MAX_CITERS);
 			System.out.println(dataset.datasetLabel);
 			System.out.println("(" + dataset.citedMainAuthor + ")");
-			dataset.findExtra(80, 2, 2);
+//			dataset.findExtra(80, 2, 2);
 			System.out.println(dataset.getAcronyms());
 			System.out.println(dataset.getLexicalHooks()); //TODO
 			System.out.println();

@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -170,6 +171,10 @@ public class Texts {
 		return false;
 	}
 	
+	public boolean startsWithDet(List<String> words){
+		return words.size() > 0 && looseContains(determiners, words.get(0));
+	}
+	
 	public boolean containsDetWork(List<String> words){
 		for(int i = 1; i < words.size(); i++){
 			if(looseContains(workNouns, words.get(i))){
@@ -215,6 +220,27 @@ public class Texts {
 		return false;
 	}
 	
+	public boolean containsOtherReferencesButNotThis(String raw, List<String> words, String author){
+		if(containsMainAuthor(words, author)){
+			return false;
+		}
+		
+		return raw.matches(".*\\(\\D+(19|20)?\\d\\d\\).*");
+		
+//		Matcher m = Pattern.compile("[\\(\\[]").matcher(raw);
+//		if(!m.find()){
+//			return false;
+//		}
+//		int afterLeftParenthesis = m.end();
+//		m = Pattern.compile("[^a-zA-Z\\d](19|20)?\\d\\d[^a-zA-Z\\d%]").matcher(raw.substring(afterLeftParenthesis));
+//		if(!m.find()){
+//			return false;
+//		}
+//		int afterYear = m.end();
+//		m = Pattern.compile("[\\)\\]]").matcher(raw.substring(afterYear));
+//		return m.find();
+	}
+	
 	public int containsAcronymWithIndex(List<String> sentence, List<String> acronyms){
 		for(String word : sentence){
 			for(int i = 0; i < acronyms.size(); i++){
@@ -226,7 +252,7 @@ public class Texts {
 		}
 		return -1;
 	}
-	
+
 	public int containsHookWithIndex(String sentence, List<LexicalHook> lexicalHooks){
 		for(int i = 0; i < lexicalHooks.size(); i++){
 			LexicalHook hook =lexicalHooks.get(i);
@@ -244,11 +270,28 @@ public class Texts {
 	}
 	
 	private boolean looseContains(List<String> list, String str){
-		
+		if(list.contains(str) || list.contains(str.toLowerCase())){
+			return true;
+		}
+		if(str.endsWith(".")){
+			str = str.substring(0, str.length() - 1);
+			if(list.contains(str) || list.contains(str.toLowerCase())){
+				return true;
+			}
+		}
+		if(str.endsWith("es")){
+			str = str.substring(0, str.length() - 2);
+			if(list.contains(str) || list.contains(str.toLowerCase())){
+				return true;
+			}
+		}
 		if(str.endsWith("s")){
 			str = str.substring(0, str.length() - 1);
+			if(list.contains(str) || list.contains(str.toLowerCase())){
+				return true;
+			}
 		}
-		return list.contains(str) || list.contains(str.toLowerCase());
+		return false;
 	}
 	
 	public boolean containsExplicitCitation(List<String> words, String mainAuthor){
