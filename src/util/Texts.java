@@ -225,21 +225,7 @@ public class Texts {
 		if(containsMainAuthor(words, author)){
 			return false;
 		}
-		
 		return raw.matches(".*\\(\\D+(19|20)?\\d\\d\\).*");
-		
-//		Matcher m = Pattern.compile("[\\(\\[]").matcher(raw);
-//		if(!m.find()){
-//			return false;
-//		}
-//		int afterLeftParenthesis = m.end();
-//		m = Pattern.compile("[^a-zA-Z\\d](19|20)?\\d\\d[^a-zA-Z\\d%]").matcher(raw.substring(afterLeftParenthesis));
-//		if(!m.find()){
-//			return false;
-//		}
-//		int afterYear = m.end();
-//		m = Pattern.compile("[\\)\\]]").matcher(raw.substring(afterYear));
-//		return m.find();
 	}
 	
 	public double containsAcronymScore(List<String> sentence, List<String> acronyms){

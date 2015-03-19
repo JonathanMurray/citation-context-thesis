@@ -39,9 +39,6 @@ public class MRF_classifier<T extends Text> {
 	private double minSimilarity;
 	private double maxSimilarity;
 	
-//	private double minNeighbourSimilarity;
-//	private double maxNeighbourSimilarity;
-	
 	private List<TIntDoubleHashMap> relatednessMemoization;
 	protected List<double[]> selfBeliefs;
 	protected List<Map<Integer,double[]>> allReceivedMessages;
@@ -100,8 +97,6 @@ public class MRF_classifier<T extends Text> {
 		for(int i = 0; i < numSentences; i++){
 			relatednessMemoization.add(new TIntDoubleHashMap());
 		}
-		
-//		setupRelatednessNormalization();
 		
 		TDoubleArrayList similarities = getSimilarities(dataset.citedContent, dataset.citedTitle, dataset.mergedExplicitCitations);
 		
@@ -187,25 +182,6 @@ public class MRF_classifier<T extends Text> {
 			selfBeliefs.add(new double[]{1 - normalized, normalized});
 		}
 	}
-	
-//	private void setupRelatednessNormalization(){
-//		minNeighbourSimilarity = Double.MAX_VALUE;
-//		maxNeighbourSimilarity = Double.MIN_VALUE;
-//		int numSentences = sentences.size();
-//		for(int from = 0; from < numSentences; from++){
-//			int leftmostNeighbour = Math.max(0, from - params.neighbourhood);
-//			int rightmostNeighbour = Math.min(numSentences - 1, from + params.neighbourhood);
-//			for(int to = leftmostNeighbour; to <= rightmostNeighbour; to++){
-//				if(to != from){
-//					T fromText = sentences.get(from).text;
-//					T toText = sentences.get(to).text;
-//					double rel = fromText.similarity(toText);
-//					minNeighbourSimilarity = Math.min(minNeighbourSimilarity, rel);
-//					maxNeighbourSimilarity = Math.max(maxNeighbourSimilarity, rel);
-//				}
-//			}
-//		}
-//	}
 	
 	private TDoubleArrayList getSimilarities(T citedContent, T citedTitle, T mergedExplicitCitations){
 		TDoubleArrayList similarities = new TDoubleArrayList();
@@ -396,8 +372,6 @@ public class MRF_classifier<T extends Text> {
 		return formatter.format(belief[1]);
 	}
 
-	
-	
 	private boolean iterate(){
 		int numSentences = sentences.size();
 		boolean anyChange = false;

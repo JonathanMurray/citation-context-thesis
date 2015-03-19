@@ -24,9 +24,6 @@ public class TextFactory {
 				lowercaseLemmas.add(lemma.toLowerCase());
 			}
 			Ngrams ngramsTfIdf = Texts.instance().getAllNgramsTfIdf(MAX_NGRAM_N, lowercaseLemmas, params.ngramIdf);
-//			TObjectDoubleHashMap<String> unigramsTfIdf = Texts.instance().getNgramsTfIdf(1, lowercaseLemmas, params.ngramIdf, true);
-//			TObjectDoubleHashMap<String> bigramsTfIdf = Texts.instance().getNgramsTfIdf(2, lowercaseLemmas, params.ngramIdf, true);
-//			TObjectDoubleHashMap<String> trigramsTfIdf = Texts.instance().getNgramsTfIdf(3, lowercaseLemmas, params.ngramIdf,false);
 			return (T) new TextWithNgrams(raw, rawWords, lemmatizedWords, ngramsTfIdf);
 		}
 		
@@ -36,9 +33,6 @@ public class TextFactory {
 			for(String lemma : lemmatizedWords){
 				lowercaseLemmas.add(lemma.toLowerCase());
 			}
-//			TObjectDoubleHashMap<String> unigramsTfIdf = Texts.instance().getNgramsTfIdf(1, lowercaseLemmas, params.ngramIdf, true);
-//			TObjectDoubleHashMap<String> bigrams = Texts.instance().getNgramsTfIdf(2, lowercaseLemmas, params.ngramIdf, true);
-//			TObjectDoubleHashMap<String> trigrams = Texts.instance().getNgramsTfIdf(3, lowercaseLemmas, params.ngramIdf, false);
 			Ngrams ngramsTfIdf = Texts.instance().getAllNgramsTfIdf(MAX_NGRAM_N, lowercaseLemmas, params.ngramIdf);
 			return (T) new TextWithConcepts(raw, rawWords, lemmatizedWords, 
 					ngramsTfIdf, concepts);
