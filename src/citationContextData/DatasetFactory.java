@@ -82,8 +82,7 @@ public class DatasetFactory {
 				String sentiment = getTypeFromClassAttr(line.attr("class"));
 				String rawText = line.attr("title").split("\t")[1].trim().replaceAll(" +", " ");
 				Sentence<T> sentence = new Sentence<T>(sentiment, TextFactory.getText(params.textParams, rawText));
-				boolean startOfReferencesSection = sentence.text.raw.startsWith("\\d?\\d?\\.? R(EFERENCES|eferences)");
-				if(startOfReferencesSection){
+				if(isStartOfReferencesSection(sentence.text.raw)){
 					printer.println("'" + citerTitle + "' reached start of references at " + i + " / " + citer.childNodeSize());
 					break;
 				}

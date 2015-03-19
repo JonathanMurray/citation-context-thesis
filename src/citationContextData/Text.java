@@ -17,10 +17,10 @@ public class Text {
 	public List<String> rawWords;
 	public List<String> lemmas;
 	
-	public Text(String raw, List<String> rawWords, List<String> lemmatizedWords) {
+	public Text(String raw, List<String> rawWords, List<String> lemmas) {
 		this.raw = raw;
 		this.rawWords = rawWords;
-		this.lemmas = lemmatizedWords;
+		this.lemmas = lemmas;
 	}
 
 	
