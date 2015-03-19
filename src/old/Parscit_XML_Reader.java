@@ -1,4 +1,4 @@
-package parscit_test;
+package old;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,11 +16,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 
-public class XML_Reader {
+public class Parscit_XML_Reader {
 	
 	public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
 		File f = new File("/home/jonathan/Documents/exjobb/ParsCit/demodata/sample2.txt.out");
-		new XML_Reader().parseFile(f);
+		new Parscit_XML_Reader().parseFile(f);
 	}
 	
 	public void parseFile(File f) throws ParserConfigurationException, SAXException, IOException{
