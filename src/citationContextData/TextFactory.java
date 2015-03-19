@@ -1,7 +1,5 @@
 package citationContextData;
 
-import gnu.trove.map.hash.TObjectDoubleHashMap;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,6 +9,8 @@ import util.Texts;
 import conceptGraph.Concept;
 
 public class TextFactory {
+	
+	private final static int MAX_NGRAM_N = 3;
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends Text> T getText(TextParams<T> params, String raw){
@@ -23,10 +23,11 @@ public class TextFactory {
 			for(String lemma : lemmatizedWords){
 				lowercaseLemmas.add(lemma.toLowerCase());
 			}
-			
-			TObjectDoubleHashMap<String> unigramsTfIdf = Texts.instance().getNgramsTfIdf(1, lowercaseLemmas, params.ngramIdf);
-			TObjectDoubleHashMap<String> bigramsTfIdf = Texts.instance().getNgramsTfIdf(2, lowercaseLemmas, params.ngramIdf);
-			return (T) new TextWithNgrams(raw, rawWords, lemmatizedWords, unigramsTfIdf, bigramsTfIdf);
+			Ngrams ngramsTfIdf = Texts.instance().getAllNgramsTfIdf(MAX_NGRAM_N, lowercaseLemmas, params.ngramIdf);
+//			TObjectDoubleHashMap<String> unigramsTfIdf = Texts.instance().getNgramsTfIdf(1, lowercaseLemmas, params.ngramIdf, true);
+//			TObjectDoubleHashMap<String> bigramsTfIdf = Texts.instance().getNgramsTfIdf(2, lowercaseLemmas, params.ngramIdf, true);
+//			TObjectDoubleHashMap<String> trigramsTfIdf = Texts.instance().getNgramsTfIdf(3, lowercaseLemmas, params.ngramIdf,false);
+			return (T) new TextWithNgrams(raw, rawWords, lemmatizedWords, ngramsTfIdf);
 		}
 		
 		else if(params.textClass.equals(TextWithConcepts.class)){
@@ -35,10 +36,12 @@ public class TextFactory {
 			for(String lemma : lemmatizedWords){
 				lowercaseLemmas.add(lemma.toLowerCase());
 			}
-			TObjectDoubleHashMap<String> unigramsTfIdf = Texts.instance().getNgramsTfIdf(1, lowercaseLemmas, params.ngramIdf);
-			TObjectDoubleHashMap<String> bigrams = Texts.instance().getNgramsTfIdf(2, lowercaseLemmas, params.ngramIdf);
+//			TObjectDoubleHashMap<String> unigramsTfIdf = Texts.instance().getNgramsTfIdf(1, lowercaseLemmas, params.ngramIdf, true);
+//			TObjectDoubleHashMap<String> bigrams = Texts.instance().getNgramsTfIdf(2, lowercaseLemmas, params.ngramIdf, true);
+//			TObjectDoubleHashMap<String> trigrams = Texts.instance().getNgramsTfIdf(3, lowercaseLemmas, params.ngramIdf, false);
+			Ngrams ngramsTfIdf = Texts.instance().getAllNgramsTfIdf(MAX_NGRAM_N, lowercaseLemmas, params.ngramIdf);
 			return (T) new TextWithConcepts(raw, rawWords, lemmatizedWords, 
-					unigramsTfIdf, bigrams, concepts);
+					ngramsTfIdf, concepts);
 		}
 		
 		else if(params.textClass.equals(TextWithWordnet.class)){

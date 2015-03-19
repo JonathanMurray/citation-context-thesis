@@ -16,14 +16,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
 import citationContextData.LexicalHook;
+import citationContextData.Ngrams;
 
 
 public class Texts {
@@ -241,32 +242,32 @@ public class Texts {
 //		return m.find();
 	}
 	
-	public int containsAcronymWithIndex(List<String> sentence, List<String> acronyms){
+	public double containsAcronymScore(List<String> sentence, List<String> acronyms){
 		for(String word : sentence){
 			for(int i = 0; i < acronyms.size(); i++){
 				String acronym = acronyms.get(i);
 				if(word.matches(".*" + acronym + ".*")){
-					return i;
+					return (acronyms.size() - i)/(double)acronyms.size();
 				}
 			}
 		}
-		return -1;
+		return 0;
 	}
 
-	public int containsHookWithIndex(String sentence, List<LexicalHook> lexicalHooks){
+	public double containsHookScore(String sentence, List<LexicalHook> lexicalHooks){
 		for(int i = 0; i < lexicalHooks.size(); i++){
 			LexicalHook hook =lexicalHooks.get(i);
 			if(StringUtils.containsIgnoreCase(sentence, hook.hook)){
-				return i;
+				return (lexicalHooks.size() - i)/(double)lexicalHooks.size();
 			}
 			if(hook.hasAcronym){
 				if(StringUtils.contains(sentence, hook.acronym)){
-					return i;
+					return (lexicalHooks.size() - i)/(double)lexicalHooks.size();
 				}
 			}
 			
 		}
-		return -1;
+		return 0;
 	}
 	
 	private boolean looseContains(List<String> list, String str){
@@ -317,29 +318,45 @@ public class Texts {
 	
 	private static final Pattern NUM_OR_CHAR = Pattern.compile("\\d+|.");
 	
-	public TObjectDoubleHashMap<String> getNgramsTfIdf(int n, List<String> words, NgramIdf wordIdf){
+	
+	public Ngrams getAllNgramsTfIdf(int maxN , List<String> words, NgramIdf ngramIdf){
+		List<TObjectDoubleHashMap<String>> ngrams = IntStream.range(1, maxN + 1)
+				.mapToObj(n -> getNgramsTfIdf(n, words, ngramIdf))
+				.collect(Collectors.toCollection(ArrayList::new));
+		return new Ngrams(ngrams);
+	}
+	
+	private TObjectDoubleHashMap<String> getNgramsTfIdf(int n, List<String> words, NgramIdf ngramIdf){
 		
-		TObjectDoubleHashMap<String> unigrams = getNgrams(n, words, true);
+		TObjectDoubleHashMap<String> ngrams = getNgrams(n, words);
 		TObjectDoubleHashMap<String> tfIdf = new TObjectDoubleHashMap<String>();
-		TObjectDoubleIterator<String> it = unigrams.iterator();
+		TObjectDoubleIterator<String> it = ngrams.iterator();
 		while(it.hasNext()){
 			it.advance();
 			double tf = 1 + Math.log(it.value());
-			String word = it.key();
-			double idfCount = wordIdf.getIdf(n, word);
-			if(idfCount > 0){ //Skip super rare words
-				double idf = Math.log(1 + wordIdf.numDocuments/idfCount);
-				tfIdf.adjustOrPutValue(word, tf*idf, tf*idf);
+			String ngram = it.key();
+			double idfCount = ngramIdf.ngramsIdf.getNgram(n, ngram);
+			if(idfCount > 0){ //Skip super rare ngrams
+				double idf = Math.log(1 + ngramIdf.numDocuments/idfCount);
+				tfIdf.adjustOrPutValue(ngram, tf*idf, tf*idf);
 			}
 		}
 		return tfIdf;
 	}
 	
-	public TObjectDoubleHashMap<String> getNgrams(int n, List<String> words, boolean skipStopwords){
+	public Ngrams getAllNgrams(int maxN, List<String> words){
+		ArrayList<TObjectDoubleHashMap<String>> ngrams = IntStream.range(1, maxN + 1)
+			.mapToObj(n -> getNgrams(n, words))
+			.collect(Collectors.toCollection(ArrayList::new));
+		return new Ngrams(ngrams);
+	}
+	
+	private TObjectDoubleHashMap<String> getNgrams(int n, List<String> words){
 		TObjectDoubleHashMap<String> ngramCounts = new TObjectDoubleHashMap<String>();
 		
 		for(int i = n - 1; i < words.size(); i++){
 			List<String> ngramWords = words.subList(i - n + 1, i + 1);
+			final boolean skipStopwords = false; //TODO
 			if(skipStopwords){
 				if(ngramWords.stream().anyMatch(w -> stopwords.contains(w) || w.equals(NUMBER_TAG))){
 					continue;

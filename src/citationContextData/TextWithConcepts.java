@@ -20,9 +20,8 @@ public class TextWithConcepts extends TextWithNgrams{
 	public final double logNumConcepts;
 
 	public TextWithConcepts(String raw, List<String> rawWords, List<String> lemmatizedWords, 
-			TObjectDoubleHashMap<String> unigrams, TObjectDoubleHashMap<String> bigrams,
-			List<Concept> concepts) {
-		super(raw, rawWords, lemmatizedWords, unigrams, bigrams);
+			Ngrams ngrams, List<Concept> concepts) {
+		super(raw, rawWords, lemmatizedWords, ngrams);
 		this.concepts = concepts;
 		if(concepts.size() < 2){
 			logNumConcepts = Math.log(2);
@@ -63,7 +62,7 @@ public class TextWithConcepts extends TextWithNgrams{
 			concepts.add(new Concept(indices));
 		}
 		return new TextWithConcepts(textWithNgrams.raw, textWithNgrams.rawWords, textWithNgrams.lemmas, 
-				textWithNgrams.unigramsTfIdf, textWithNgrams.bigramsTfIdf, concepts);
+				textWithNgrams.ngramsTfIdf, concepts);
 	}
 
 	@Override

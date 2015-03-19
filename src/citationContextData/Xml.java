@@ -57,13 +57,13 @@ public class Xml {
 		
 		NgramIdf wordIdf = NgramIdf.fromXmlFile(new File(resources, "xml-datasets/ngram-frequencies.xml"));
 		
-		Dataset<TextWithConcepts> dataset = DatasetFactory.fromFiles(
-				DatasetParams.basic(TextParams.withWikiConcepts(wordIdf, wiki)), 
-				new File(dir, datasetLabel + ".html"), 
-				new File(dir, datasetLabel + ".txt"));
-		dataset.findExtra(80, 2, 2);
-		System.out.println("DATASET: " + dataset);
-		writeToXml(dataset, new File(resources, "xml-datasets/" + datasetLabel + "-with-concepts.xml"));
+//		Dataset<TextWithConcepts> dataset = DatasetFactory.fromFiles(
+//				DatasetParams.basic(TextParams.withWikiConcepts(wordIdf, wiki)), 
+//				new File(dir, datasetLabel + ".html"), 
+//				new File(dir, datasetLabel + ".txt"));
+//		dataset.findExtra(80, 2, 2);
+//		System.out.println("DATASET: " + dataset);
+//		writeToXml(dataset, new File(resources, "xml-datasets/" + datasetLabel + "-with-concepts.xml"));
 		
 //		Dataset<TextWithConcepts> dataset = parseFromXml(new File(dir, "TEST-ngrams.xml"));
 //		System.out.println("dataset: " + dataset);
@@ -126,14 +126,13 @@ public class Xml {
 		return sentenceTag;
 	}
 	
-	public static <T extends Text> Dataset<T> parseXmlFile(File xmlFile, int maxNumCiters){
+	public static <T extends Text> Dataset<T> parseXmlFile(Class<T> textClass, File xmlFile, int maxNumCiters){
 		try {
 			printer.print("Parsing XML from " + xmlFile.getPath() + " ... ");
-			
 			Document doc = Jsoup.parse(new BufferedInputStream(new FileInputStream(xmlFile)), null, "", Parser.xmlParser());
 			printer.println("[x]");
 			printer.print("Creating dataset from XML ... ");
-			Dataset<T> dataset = parseXml(doc, maxNumCiters);
+			Dataset<T> dataset = parseXml(textClass, doc, maxNumCiters);
 			printer.println("[x]");
 			return dataset;
 		} catch (IOException e) {
@@ -143,7 +142,7 @@ public class Xml {
 		}
 	}
 	
-	public static <T extends Text> Dataset<T> parseXml(Document doc, int maxNumCiters){
+	public static <T extends Text> Dataset<T> parseXml(Class<T> textClass, Document doc, int maxNumCiters){
 		Element datasetTag = doc.child(0);
 		
 		String label = datasetTag.select(TAG_DATASET_LABEL).first().text();
@@ -163,10 +162,11 @@ public class Xml {
 				break;
 			}
 			printer.progress(i, 1);
-			citers.add(citer(citerTag));
+			citers.add(citer(textClass, citerTag));
 			
 		}
-		Dataset<T> dataset = Dataset.full(label, mainAuthor, text(citedTitleTag), citers, text(citedContentTag), text(mergedExplicitTag));
+		Dataset<T> dataset = Dataset.full(label, mainAuthor, text(textClass, citedTitleTag), citers, 
+				text(textClass, citedContentTag), text(textClass, mergedExplicitTag));
 		if(datasetTag.select(TAG_ACRONYMS).size() == 1 && datasetTag.select(TAG_LEXICAL_HOOKS).size() == 1){
 			List<String> acronyms = Texts.split(datasetTag.select(TAG_ACRONYMS).text())
 					.collect(Collectors.toCollection(ArrayList::new));
@@ -181,30 +181,29 @@ public class Xml {
 		return dataset;
 	}
 	
-	public static <T extends Text> CitingPaper<T> citer(Element citerTag){
+	public static <T extends Text> CitingPaper<T> citer(Class<T> textClass, Element citerTag){
 		List<Sentence<T>> sentences = new ArrayList<Sentence<T>>();
 		String title = citerTag.attr(ATTR_TITLE);
 		for(Element sentenceTag : citerTag.select(TAG_SENTENCES).first().children()){
-			Sentence<T> sentence = sentence(sentenceTag);
+			Sentence<T> sentence = sentence(textClass, sentenceTag);
 			sentences.add(sentence);
 		}
 		return new CitingPaper<T>(title, sentences);
 	}
 	
-	public static <T extends Text> Sentence<T> sentence(Element sentenceTag){
+	public static <T extends Text> Sentence<T> sentence(Class<T> textClass, Element sentenceTag){
 		String type = sentenceTag.attr(ATTR_SENTENCE_TYPE);
 		Element textTag = sentenceTag.select(TAG_TEXT).first();
-		return new Sentence<T>(SentenceType.valueOf(type), text(textTag));
+		return new Sentence<T>(SentenceType.valueOf(type), text(textClass, textTag));
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends Text> T text(Element textTag){
-		String textClass = textTag.attr("class");
-		if(textClass.equals(Text.XML_TEXT_CLASS)){
+	public static <T extends Text> T text(Class<T> textClass, Element textTag){
+		if(textClass.equals(Text.class)){
 			return (T) Text.fromXml(textTag);
-		}else if(textClass.equals(TextWithNgrams.XML_TEXT_CLASS)){
+		}else if(textClass.equals(TextWithNgrams.class)){
 			return (T) TextWithNgrams.fromXml(textTag);
-		}else if(textClass.equals(TextWithConcepts.XML_TEXT_CLASS)){
+		}else if(textClass.equals(TextWithConcepts.class)){
 			return (T) TextWithConcepts.fromXml(textTag);
 		}else{
 			throw new IllegalArgumentException("Unknown text-class: " + textClass);

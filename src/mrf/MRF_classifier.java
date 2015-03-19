@@ -60,7 +60,7 @@ public class MRF_classifier<T extends Text> {
 	}
 	
 	public ClassificationResultImpl classify(Dataset<T> dataset){
-		ClassificationResultImpl result = new ClassificationResultImpl();
+		ClassificationResultImpl result = new ClassificationResultImpl(dataset.datasetLabel);
 		System.out.println("\nMRF classifying " + dataset.datasetLabel + ":");
 		System.out.println("ACRONYMS: " + dataset.getAcronyms());
 		System.out.println("HOOKS: " + dataset.getLexicalHooks()); 
@@ -87,7 +87,7 @@ public class MRF_classifier<T extends Text> {
 				break;
 			}
 		}
-		return getResults(params.beliefThreshold, t.getMillis());
+		return getResults(dataset.datasetLabel, params.beliefThreshold, t.getMillis());
 	}
 	
 	private void setup(int citerIndex, Dataset<T> dataset){
@@ -108,8 +108,8 @@ public class MRF_classifier<T extends Text> {
 		selfBeliefs = new ArrayList<double[]>();
 		List<Double> unnormalizedBeliefs = new ArrayList<Double>();
 		for(int i = 0; i < numSentences; i++){
-			double similarToCited = similarities.get(i);
-			double unnormalizedBelief = selfBelief(sentences.get(i), dataset.citedMainAuthor, similarToCited, dataset.getAcronyms(), dataset.getLexicalHooks());
+			double similarity = similarities.get(i);
+			double unnormalizedBelief = selfBelief(sentences.get(i), dataset.citedMainAuthor, similarity, dataset.getAcronyms(), dataset.getLexicalHooks());
 			unnormalizedBeliefs.add(unnormalizedBelief);
 		}
 		
@@ -222,11 +222,6 @@ public class MRF_classifier<T extends Text> {
 			double normalized = (similarities.get(i) - minSimilarity) / (maxSimilarity-minSimilarity);
 			similarities.set(i, normalized);
 		}
-		
-		
-		
-		
-		
 		return similarities;
 	}
 	
@@ -239,57 +234,20 @@ public class MRF_classifier<T extends Text> {
 		
 		List<String> rawWords = sentence.text.rawWords;
 		
-		double score = 0; 
+		
 		Printer p = new Printer(false);
-		
-//		if(sentence.type == SentenceType.NOT_REFERENCE && Texts.instance().containsHookWithIndex(sentence.text.raw, lexicalHooks)){
-//			p.enabled = true;
-//		}
 		p.println("\n\n" + sentence.text.raw); //TODO
-		
-//		if(Texts.instance().containsExplicitCitation(words, authorLastName)){
-//			score +=  params.selfBelief.explicitCitWeight;
-//		}
-		
 		p.println("Similarity: " + similarity);
 		
+		double score = similarity;
 		if(Texts.instance().containsMainAuthor(rawWords, authorLastName)){
 			score += 1.5;
 			p.println("contains main author"); //TODO
 		}
 		
-		
-		
-//		if(Texts.instance().startsWithDetWork(words)){
-//			score += params.selfBelief.detWorkWeight;
-//		}
-//		if(Texts.instance().startsWithLimitedDet(words)){
-//			score += params.selfBelief.limitedDetWeight;
-//		}
-		score += similarity;
-		
-//		boolean hooks = Texts.instance().containsHookWithIndex(sentence.text.raw, lexicalHooks);
-//		boolean acronym = Texts.instance().containsAcronymWithIndex(rawWords, acronyms); 
-		
-		int hookIndex = Texts.instance().containsHookWithIndex(sentence.text.raw, lexicalHooks);
-		int acronymIndex = Texts.instance().containsAcronymWithIndex(rawWords, acronyms);
-		int bestIndex = -1;
-		if(hookIndex > -1 && acronymIndex > -1){
-			bestIndex = Math.min(hookIndex, acronymIndex);
-		}else if(hookIndex != -1){
-			bestIndex = hookIndex;
-		}else if(acronymIndex != -1){
-			bestIndex = acronymIndex;
-		}
-		
-		if(bestIndex != -1){
-			score += 1.5/((double)bestIndex+1);
-		}
-		
-//		if(words.get(0).equals("It")){
-//			score += params.selfBelief.itWeight;
-//		}
-//		
+		double hookScore = Texts.instance().containsHookScore(sentence.text.raw, lexicalHooks);
+		double acronymScore = Texts.instance().containsAcronymScore(rawWords, acronyms);
+		score += 1.5 * Math.max(hookScore, acronymScore);
 		
 		if(Double.isNaN(score)){
 			throw new RuntimeException();
@@ -312,7 +270,7 @@ public class MRF_classifier<T extends Text> {
 		}
 	}
 	
-	private ClassificationResultImpl getResults(double beliefThreshold, long passedMillis){
+	private ClassificationResultImpl getResults(String label, double beliefThreshold, long passedMillis){
 		int truePos = 0;
 		int falsePos = 0;
 		int trueNeg = 0;
@@ -411,7 +369,8 @@ public class MRF_classifier<T extends Text> {
 			}
 		}
 		
-		return new ClassificationResultImpl(truePos, falsePos, trueNeg, falseNeg, fpIndices, fnIndices, passedMillis);	}
+		return new ClassificationResultImpl(label, truePos, falsePos, trueNeg, falseNeg, fpIndices, fnIndices, passedMillis);	
+	}
 	
 	private double[] finalBelief(int sentence){
 		double[] productReceived = productOfValues(allReceivedMessages.get(sentence));

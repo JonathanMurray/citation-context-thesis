@@ -34,9 +34,9 @@ public class CreateDatasetsSaveXml {
 	
 	private static void withNgrams(){
 		File resourcesDir = new File(Environment.resources());
-		NgramIdf wordIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"));
+		NgramIdf ngramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"));
 		ArrayList<Dataset<TextWithNgrams>> datasets = DatasetFactory.fromHtmlDir(
-				DatasetParams.enhanced(TextParams.withNgrams(wordIdf), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
+				DatasetParams.enhanced(TextParams.withNgrams(ngramIdf), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
 				new File(resourcesDir, "teufel-citation-context-corpus"));
 		for(Dataset<TextWithNgrams> dataset : datasets){
 			Xml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-ngrams.xml"));

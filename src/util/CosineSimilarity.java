@@ -76,7 +76,7 @@ public class CosineSimilarity {
 	
 	public static double calculateCosineSimilarity(TObjectDoubleHashMap<String> a, TObjectDoubleHashMap<String> b){
 		if(a.size() < 1 || b.size() < 1){
-			throw new IllegalArgumentException();
+			return 0;
 		}
 		double sum = 0;
 		Iterator<String> aIt = a.keySet().iterator();

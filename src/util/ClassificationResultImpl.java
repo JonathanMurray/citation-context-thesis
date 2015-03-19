@@ -6,6 +6,7 @@ import java.util.List;
 
 
 public class ClassificationResultImpl extends ClassificationResult{
+	private String label;
 	private int truePositives;
 	private int falsePositives;
 	private int trueNegatives;
@@ -14,11 +15,12 @@ public class ClassificationResultImpl extends ClassificationResult{
 	private List<Integer> fnIndices;
 	private long passedMillis;
 	
-	public ClassificationResultImpl(){
-		this(0,0,0,0,new ArrayList<Integer>(),new ArrayList<Integer>(), 0);
+	public ClassificationResultImpl(String label){
+		this(label, 0,0,0,0,new ArrayList<Integer>(),new ArrayList<Integer>(), 0);
 	}
 	
-	public ClassificationResultImpl(int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Integer> fpIndices, List<Integer> fnIndices, long passedMillis){
+	public ClassificationResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Integer> fpIndices, List<Integer> fnIndices, long passedMillis){
+		this.label = label;
 		this.truePositives = truePositives;
 		this.falsePositives = falsePositives;
 		this.trueNegatives = trueNegatives;
@@ -28,7 +30,14 @@ public class ClassificationResultImpl extends ClassificationResult{
 		this.passedMillis = passedMillis;
 	}
 	
+	public String label(){
+		return label;
+	}
+	
 	public void add(ClassificationResultImpl other){
+		if(!label.equals(other.label)){
+			label = label + "+" + other.label;
+		}
 		truePositives += other.truePositives;
 		falsePositives += other.falsePositives;
 		trueNegatives += other.trueNegatives;

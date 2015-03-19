@@ -1,21 +1,21 @@
 package util;
 
-import java.util.List;
-
 import weka.classifiers.Evaluation;
 
 public class ClassificationResultWrapper extends ClassificationResult{
 	
+	private String label;
 	private Evaluation wekaEvaluation;
-	private List<Integer> falsePositives;
-	private List<Integer> falseNegatives;
 	private long passedMillis;
 	
-	public ClassificationResultWrapper(Evaluation wekaEvaluation, List<Integer> falsePositives, List<Integer> falseNegatives, long passedMillis){
+	public ClassificationResultWrapper(String label, Evaluation wekaEvaluation, long passedMillis){
+		this.label = label;
 		this.wekaEvaluation = wekaEvaluation;
-		this.falsePositives = falsePositives;
-		this.falseNegatives = falseNegatives;
 		this.passedMillis = passedMillis;
+	}
+	
+	public String label(){
+		return label;
 	}
 
 	@Override

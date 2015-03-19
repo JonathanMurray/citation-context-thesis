@@ -1,36 +1,46 @@
 package util;
 
-import java.util.List;
 
 public abstract class ClassificationResult {
+	
 	
 	public abstract long getPassedMillis();
 //	public abstract List<Integer> falsePositiveIndices();
 //	public abstract List<Integer> falseNegativeIndices();
 	public abstract double[][] confusionMatrix();
 	
+	public abstract String label();
+	
 	public double posPrecision(){
 		double[][] m = confusionMatrix();
-		double posPrecision = m[0][0] / (m[0][0] + m[1][0]);
-		return posPrecision;
+		if(m[0][0] + m[1][0] > 0){
+			return m[0][0] / (m[0][0] + m[1][0]);
+		}
+		return 0;
 	}
 	
 	public double posRecall(){
 		double[][] m = confusionMatrix();
-		double posRecall = m[0][0] / (m[0][0] + m[0][1]);
-		return posRecall;
+		if(m[0][0] + m[0][1] > 0){
+			return m[0][0] / (m[0][0] + m[0][1]);
+		}
+		return 0;
 	}
 	
 	public double negPrecision(){
 		double[][] m = confusionMatrix();
-		double negPrecision = m[1][1] / (m[1][1] + m[0][1]);
-		return negPrecision;
+		if(m[1][1] + m[0][1] > 0){
+			return m[1][1] / (m[1][1] + m[0][1]);
+		}
+		return 0;
 	}
 	
 	public double negRecall(){
 		double[][] m = confusionMatrix();
-		double negRecall = m[1][1] / (m[1][1] + m[1][0]);
-		return negRecall;
+		if(m[1][1] + m[1][0] > 0){
+			return m[1][1] / (m[1][1] + m[1][0]);
+		}
+		return 0;
 	}
 	
 	public String confusionMatrixToString(){
