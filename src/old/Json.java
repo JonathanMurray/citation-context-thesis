@@ -1,8 +1,13 @@
-package citationContextData;
+package old;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import citationContextData.CitingPaper;
+import citationContextData.Dataset;
+import citationContextData.Sentence;
+import citationContextData.Text;
 
 public class Json {
 	/**
