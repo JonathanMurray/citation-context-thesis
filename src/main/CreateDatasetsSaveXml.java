@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 
 import util.Environment;
-import util.NgramIdf;
 import citationContextData.Dataset;
 import citationContextData.DatasetFactory;
 import citationContextData.DatasetParams;
+import citationContextData.NgramIdf;
 import citationContextData.Text;
 import citationContextData.TextParams;
 import citationContextData.TextWithNgrams;

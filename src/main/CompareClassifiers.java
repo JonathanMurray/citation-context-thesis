@@ -10,11 +10,11 @@ import java.util.List;
 
 import mrf.MRF_classifier;
 import mrf.MRF_params;
-import util.ClassificationResult;
 import util.Environment;
 import util.Printer;
 import weka.core.Instances;
 import wekaWrapper.WekaClassifier;
+import citationContextData.ClassificationResult;
 import citationContextData.Dataset;
 import citationContextData.Sentence;
 import citationContextData.Text;

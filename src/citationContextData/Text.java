@@ -7,8 +7,6 @@ import java.util.stream.Collectors;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 
-import util.Texts;
-
 public class Text {
 	
 	protected static final String XML_TEXT_CLASS = "text";

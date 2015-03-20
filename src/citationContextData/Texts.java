@@ -1,4 +1,4 @@
-package util;
+package citationContextData;
 
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
@@ -23,8 +23,8 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
-import citationContextData.LexicalHook;
-import citationContextData.Ngrams;
+import util.Environment;
+import util.Stemmer;
 
 
 public class Texts {

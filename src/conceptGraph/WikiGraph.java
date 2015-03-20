@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import util.Texts;
+import citationContextData.Texts;
 
 public abstract class WikiGraph implements ConceptGraph{
 	

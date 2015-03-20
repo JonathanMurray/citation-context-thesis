@@ -2,8 +2,6 @@ package citationContextData;
 
 import java.util.stream.Stream;
 
-import util.Texts;
-
 public class LexicalHook {
 	public String hook;
 	public boolean hasAcronym;

@@ -12,16 +12,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import util.ClassificationResult;
-import util.ClassificationResultImpl;
 import util.Printer;
-import util.Texts;
 import util.Timer;
+import citationContextData.ClassificationResult;
+import citationContextData.ClassificationResultImpl;
 import citationContextData.Dataset;
 import citationContextData.LexicalHook;
 import citationContextData.Sentence;
 import citationContextData.SentenceType;
 import citationContextData.Text;
+import citationContextData.Texts;
 
 
 public class MRF_classifier<T extends Text> {

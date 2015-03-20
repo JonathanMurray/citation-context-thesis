@@ -3,8 +3,8 @@ package main;
 import java.io.File;
 
 import util.Environment;
-import util.NgramIdf;
 import citationContextData.Dataset;
+import citationContextData.NgramIdf;
 import citationContextData.Text;
 import citationContextData.Xml;
 

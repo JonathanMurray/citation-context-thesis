@@ -1,4 +1,4 @@
-package util;
+package citationContextData;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,11 +7,8 @@ import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import citationContextData.CitingPaper;
-import citationContextData.Dataset;
-import citationContextData.Ngrams;
-import citationContextData.Sentence;
-import citationContextData.Text;
+import util.NonThrowingFileWriter;
+import util.Printer;
 
 public class NgramIdf {
 	

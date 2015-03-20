@@ -15,9 +15,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 
-import util.NgramIdf;
 import util.Printer;
-import util.Texts;
 import conceptGraph.WikiGraph;
 import conceptGraph.WikiGraphFactory;
 

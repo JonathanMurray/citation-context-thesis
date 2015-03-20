@@ -1,6 +1,5 @@
 package citationContextData;
 
-import util.NgramIdf;
 import conceptGraph.WikiGraph;
 import conceptGraph.WordNet;
 
