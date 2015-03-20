@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.jsoup.nodes.Element;
 
-import conceptGraph.Concept;
+import concepts.Concept;
 
 public class TextWithConcepts extends TextWithNgrams{
 	

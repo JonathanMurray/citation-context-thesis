@@ -3,7 +3,7 @@ package old;
 import java.io.File;
 import java.io.IOException;
 
-import conceptGraph.QuickWikiGraph;
+import concepts.QuickWikiGraph;
 
 public class Main {
 	

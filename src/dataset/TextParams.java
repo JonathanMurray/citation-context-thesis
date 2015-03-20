@@ -1,7 +1,7 @@
 package dataset;
 
-import conceptGraph.WikiGraph;
-import conceptGraph.WordNet;
+import concepts.WikiGraph;
+import concepts.WordNet;
 
 public class TextParams<T extends Text>{
 	public Class<T> textClass;

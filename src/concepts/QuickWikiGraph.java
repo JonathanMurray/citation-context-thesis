@@ -1,4 +1,4 @@
-package conceptGraph;
+package concepts;
 
 import gnu.trove.list.array.TIntArrayList;
 

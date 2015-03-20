@@ -1,4 +1,4 @@
-package conceptGraph;
+package concepts;
 
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;

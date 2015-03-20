@@ -1,4 +1,4 @@
-package conceptGraph;
+package concepts;
 
 import java.util.Collection;
 

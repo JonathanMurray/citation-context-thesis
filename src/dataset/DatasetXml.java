@@ -16,8 +16,8 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 
 import util.Printer;
-import conceptGraph.WikiGraph;
-import conceptGraph.WikiGraphFactory;
+import concepts.WikiGraph;
+import concepts.WikiGraphFactory;
 
 public class DatasetXml {
 	

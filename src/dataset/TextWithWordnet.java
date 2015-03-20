@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.jsoup.nodes.Element;
 
-import conceptGraph.WordNet;
+import concepts.WordNet;
 import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;

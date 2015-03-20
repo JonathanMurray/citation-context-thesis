@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import util.Lemmatizer;
-import conceptGraph.Concept;
+import concepts.Concept;
 
 public class TextFactory {
 	
