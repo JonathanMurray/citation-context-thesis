@@ -19,7 +19,7 @@ import util.Printer;
 import conceptGraph.WikiGraph;
 import conceptGraph.WikiGraphFactory;
 
-public class Xml {
+public class DatasetXml {
 	
 	private static final Printer printer = new Printer(true);
 	

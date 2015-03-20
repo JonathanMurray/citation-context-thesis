@@ -11,7 +11,7 @@ import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
 import citationContextData.Dataset;
 import citationContextData.TextWithNgrams;
-import citationContextData.Xml;
+import citationContextData.DatasetXml;
 
 
 public class CreateArff {
@@ -30,7 +30,7 @@ public class CreateArff {
 		List<Dataset<TextWithNgrams>> datasets = new ArrayList<Dataset<TextWithNgrams>>();
 		for(String label : labels){
 			final int MAX_CITERS = 0;
-			Dataset<TextWithNgrams> dataset = Xml.parseXmlFile(
+			Dataset<TextWithNgrams> dataset = DatasetXml.parseXmlFile(
 				TextWithNgrams.class,
 				new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml"), 
 				MAX_CITERS);

@@ -11,7 +11,7 @@ import citationContextData.NgramIdf;
 import citationContextData.Text;
 import citationContextData.TextParams;
 import citationContextData.TextWithNgrams;
-import citationContextData.Xml;
+import citationContextData.DatasetXml;
 
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) {
@@ -28,7 +28,7 @@ public class CreateDatasetsSaveXml {
 				DatasetParams.enhanced(TextParams.basic(), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
 				new File(resourcesDir, "teufel-citation-context-corpus"));
 		for(Dataset<Text> dataset : datasets){
-			Xml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + ".xml"));
+			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + ".xml"));
 		}
 	}
 	
@@ -39,7 +39,7 @@ public class CreateDatasetsSaveXml {
 				DatasetParams.enhanced(TextParams.withNgrams(ngramIdf), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
 				new File(resourcesDir, "teufel-citation-context-corpus"));
 		for(Dataset<TextWithNgrams> dataset : datasets){
-			Xml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-ngrams.xml"));
+			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-ngrams.xml"));
 		}
 	}
 }

@@ -6,7 +6,7 @@ import util.Environment;
 import citationContextData.Dataset;
 import citationContextData.NgramIdf;
 import citationContextData.Text;
-import citationContextData.Xml;
+import citationContextData.DatasetXml;
 
 public class CreateNgramIdf {
 	public static void main(String[] args) {
@@ -18,7 +18,7 @@ public class CreateNgramIdf {
 		"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"};
 		for(String label : labels){
 			File datasetXmlFile = new File(Environment.resources(), "xml-datasets/" + label + "-with-ngrams.xml");
-			Dataset<Text> dataset = Xml.parseXmlFile(Text.class, datasetXmlFile, 0);
+			Dataset<Text> dataset = DatasetXml.parseXmlFile(Text.class, datasetXmlFile, 0);
 			ngramIdf.parseDataset(dataset);
 		}
 
