@@ -1,4 +1,4 @@
-package wiki_neo4j;
+package old.wiki_neo4j;
 
 import org.neo4j.graphdb.RelationshipType;
 
