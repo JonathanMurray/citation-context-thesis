@@ -4,10 +4,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import citationContextData.CitingPaper;
-import citationContextData.Dataset;
-import citationContextData.Sentence;
-import citationContextData.Text;
+import dataset.CitingPaper;
+import dataset.Dataset;
+import dataset.Sentence;
+import dataset.Text;
 
 public class Json {
 	/**

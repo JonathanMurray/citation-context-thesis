@@ -1,4 +1,4 @@
-package citationContextData;
+package dataset;
 
 import java.io.File;
 import java.io.IOException;

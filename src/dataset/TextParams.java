@@ -1,4 +1,4 @@
-package citationContextData;
+package dataset;
 
 import conceptGraph.WikiGraph;
 import conceptGraph.WordNet;

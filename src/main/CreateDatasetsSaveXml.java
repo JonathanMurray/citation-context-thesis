@@ -4,14 +4,14 @@ import java.io.File;
 import java.util.ArrayList;
 
 import util.Environment;
-import citationContextData.Dataset;
-import citationContextData.DatasetFactory;
-import citationContextData.DatasetParams;
-import citationContextData.NgramIdf;
-import citationContextData.Text;
-import citationContextData.TextParams;
-import citationContextData.TextWithNgrams;
-import citationContextData.DatasetXml;
+import dataset.Dataset;
+import dataset.DatasetFactory;
+import dataset.DatasetParams;
+import dataset.DatasetXml;
+import dataset.NgramIdf;
+import dataset.Text;
+import dataset.TextParams;
+import dataset.TextWithNgrams;
 
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) {

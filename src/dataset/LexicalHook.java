@@ -1,4 +1,4 @@
-package citationContextData;
+package dataset;
 
 import java.util.stream.Stream;
 

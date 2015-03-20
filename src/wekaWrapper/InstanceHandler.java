@@ -10,12 +10,12 @@ import java.util.Map;
 
 import util.NonThrowingFileWriter;
 import util.Printer;
-import citationContextData.CitingPaper;
-import citationContextData.Dataset;
-import citationContextData.Sentence;
-import citationContextData.SentenceType;
-import citationContextData.Text;
-import citationContextData.Texts;
+import dataset.CitingPaper;
+import dataset.Dataset;
+import dataset.Sentence;
+import dataset.SentenceType;
+import dataset.Text;
+import dataset.Texts;
 
 
 public class InstanceHandler {

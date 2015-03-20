@@ -1,4 +1,4 @@
-package citationContextData;
+package dataset;
 
 
 public class Sentence<T extends Text> {

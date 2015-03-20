@@ -1,4 +1,4 @@
-package citationContextData;
+package dataset;
 
 public enum SentenceType {
 	EXPLICIT_REFERENCE,

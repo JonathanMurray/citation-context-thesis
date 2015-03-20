@@ -14,14 +14,14 @@ import java.util.stream.Collectors;
 
 import util.Printer;
 import util.Timer;
-import citationContextData.Result;
-import citationContextData.ResultImpl;
-import citationContextData.Dataset;
-import citationContextData.LexicalHook;
-import citationContextData.Sentence;
-import citationContextData.SentenceType;
-import citationContextData.Text;
-import citationContextData.Texts;
+import dataset.Dataset;
+import dataset.LexicalHook;
+import dataset.Result;
+import dataset.ResultImpl;
+import dataset.Sentence;
+import dataset.SentenceType;
+import dataset.Text;
+import dataset.Texts;
 
 
 public class MRF_classifier<T extends Text> {

@@ -9,9 +9,9 @@ import java.util.Map.Entry;
 import util.Environment;
 import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
-import citationContextData.Dataset;
-import citationContextData.TextWithNgrams;
-import citationContextData.DatasetXml;
+import dataset.Dataset;
+import dataset.DatasetXml;
+import dataset.TextWithNgrams;
 
 
 public class CreateArff {

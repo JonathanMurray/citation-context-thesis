@@ -1,4 +1,4 @@
-package citationContextData;
+package dataset;
 
 public class DatasetParams<T extends Text>{
 	public TextParams<T> textParams;

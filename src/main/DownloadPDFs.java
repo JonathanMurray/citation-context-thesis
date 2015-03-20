@@ -7,11 +7,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 
-import citationContextData.Dataset;
-import citationContextData.DatasetFactory;
-import citationContextData.DatasetParams;
-import citationContextData.Text;
-import citationContextData.TextParams;
+import dataset.Dataset;
+import dataset.DatasetFactory;
+import dataset.DatasetParams;
+import dataset.Text;
+import dataset.TextParams;
 
 public class DownloadPDFs {
 	public static void downloadPDFsForHTML_Files(File htmlDir) throws IOException{

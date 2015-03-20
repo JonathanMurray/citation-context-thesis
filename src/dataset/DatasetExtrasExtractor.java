@@ -1,4 +1,4 @@
-package citationContextData;
+package dataset;
 
 import gnu.trove.iterator.TObjectIntIterator;
 import gnu.trove.map.hash.TObjectIntHashMap;

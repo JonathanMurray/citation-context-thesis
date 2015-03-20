@@ -14,12 +14,12 @@ import util.Environment;
 import util.Printer;
 import weka.core.Instances;
 import wekaWrapper.WekaClassifier;
-import citationContextData.Result;
-import citationContextData.Dataset;
-import citationContextData.Sentence;
-import citationContextData.Text;
-import citationContextData.TextWithNgrams;
-import citationContextData.DatasetXml;
+import dataset.Dataset;
+import dataset.DatasetXml;
+import dataset.Result;
+import dataset.Sentence;
+import dataset.Text;
+import dataset.TextWithNgrams;
 
 public class CompareClassifiers {
 	

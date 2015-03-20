@@ -11,8 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import citationContextData.Result;
-import citationContextData.ResultWrapper;
+import dataset.Result;
+import dataset.ResultWrapper;
 import util.Printer;
 import util.Timer;
 import weka.classifiers.AbstractClassifier;

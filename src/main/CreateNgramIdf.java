@@ -3,10 +3,10 @@ package main;
 import java.io.File;
 
 import util.Environment;
-import citationContextData.Dataset;
-import citationContextData.NgramIdf;
-import citationContextData.Text;
-import citationContextData.DatasetXml;
+import dataset.Dataset;
+import dataset.DatasetXml;
+import dataset.NgramIdf;
+import dataset.Text;
 
 public class CreateNgramIdf {
 	public static void main(String[] args) {

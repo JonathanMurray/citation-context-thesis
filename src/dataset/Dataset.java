@@ -1,4 +1,4 @@
-package citationContextData;
+package dataset;
 
 import java.text.Normalizer;
 import java.util.ArrayList;

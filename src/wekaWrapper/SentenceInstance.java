@@ -2,7 +2,7 @@ package wekaWrapper;
 
 import java.util.Map;
 
-import citationContextData.SentenceType;
+import dataset.SentenceType;
 
 public class SentenceInstance{
 	public Map<String, Comparable<?>> features;
