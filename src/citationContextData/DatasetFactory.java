@@ -81,7 +81,7 @@ public class DatasetFactory {
 				Node line = citer.childNode(i);
 				String sentiment = getTypeFromClassAttr(line.attr("class"));
 				String rawText = line.attr("title").split("\t")[1].trim().replaceAll(" +", " ");
-				Sentence<T> sentence = new Sentence<T>(sentiment, TextFactory.getText(params.textParams, rawText));
+				Sentence<T> sentence = new Sentence<T>(sentiment, TextFactory.createText(params.textParams, rawText));
 				if(isStartOfReferencesSection(sentence.text.raw)){
 					printer.println("'" + citerTitle + "' reached start of references at " + i + " / " + citer.childNodeSize());
 					break;
@@ -95,10 +95,10 @@ public class DatasetFactory {
 		}
 		
 		printer.println("Creating dataset from HTML (" + label + ") took " + t.getSecString());
-		T citedTitleText = TextFactory.getText(params.textParams, citedTitle);
-		T mergedExplicitCitationsText = TextFactory.getText(params.textParams, mergedExplicitCitations.toString());
+		T citedTitleText = TextFactory.createText(params.textParams, citedTitle);
+		T mergedExplicitCitationsText = TextFactory.createText(params.textParams, mergedExplicitCitations.toString());
 		Dataset<T> dataset = Dataset.withoutCitedData(label, mainAuthorLastName, citedTitleText, citers, mergedExplicitCitationsText);
-		dataset.citedContent = TextFactory.getText(params.textParams, citedContent);
+		dataset.citedContent = TextFactory.createText(params.textParams, citedContent);
 		if(params.isEnhanced){
 			dataset = dataset.findExtra(params.authorProxyBoundary, params.numLexicalHooks, params.numAcronyms);
 		}

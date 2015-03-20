@@ -13,7 +13,7 @@ public class TextFactory {
 	private final static int MAX_NGRAM_N = 3;
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends Text> T getText(TextParams<T> params, String raw){
+	public static <T extends Text> T createText(TextParams<T> params, String raw){
 		
 		List<String> lemmatizedWords = Lemmatizer.instance().lemmatize(raw);
 		ArrayList<String> rawWords = Texts.split(raw).collect(Collectors.toCollection(ArrayList::new));
