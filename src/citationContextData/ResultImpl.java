@@ -5,7 +5,7 @@ import java.util.List;
 
 
 
-public class ClassificationResultImpl extends ClassificationResult{
+public class ResultImpl extends Result{
 	private String label;
 	private int truePositives;
 	private int falsePositives;
@@ -15,11 +15,11 @@ public class ClassificationResultImpl extends ClassificationResult{
 	private List<Integer> fnIndices;
 	private long passedMillis;
 	
-	public ClassificationResultImpl(String label){
+	public ResultImpl(String label){
 		this(label, 0,0,0,0,new ArrayList<Integer>(),new ArrayList<Integer>(), 0);
 	}
 	
-	public ClassificationResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Integer> fpIndices, List<Integer> fnIndices, long passedMillis){
+	public ResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Integer> fpIndices, List<Integer> fnIndices, long passedMillis){
 		this.label = label;
 		this.truePositives = truePositives;
 		this.falsePositives = falsePositives;
@@ -34,7 +34,7 @@ public class ClassificationResultImpl extends ClassificationResult{
 		return label;
 	}
 	
-	public void add(ClassificationResultImpl other){
+	public void add(ResultImpl other){
 		if(!label.equals(other.label)){
 			label = label + "+" + other.label;
 		}

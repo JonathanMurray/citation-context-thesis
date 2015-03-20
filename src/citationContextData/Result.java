@@ -1,7 +1,7 @@
 package citationContextData;
 
 
-public abstract class ClassificationResult {
+public abstract class Result {
 	
 	
 	public abstract long getPassedMillis();

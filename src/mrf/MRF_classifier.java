@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 
 import util.Printer;
 import util.Timer;
-import citationContextData.ClassificationResult;
-import citationContextData.ClassificationResultImpl;
+import citationContextData.Result;
+import citationContextData.ResultImpl;
 import citationContextData.Dataset;
 import citationContextData.LexicalHook;
 import citationContextData.Sentence;
@@ -47,17 +47,17 @@ public class MRF_classifier<T extends Text> {
 		this.params = params;
 	}
 	
-	public List<ClassificationResult> classify(Collection<Dataset<T>> datasets){
+	public List<Result> classify(Collection<Dataset<T>> datasets){
 		System.out.println("Classifying multiple datasets ...");
-		List<ClassificationResult> results = new ArrayList<ClassificationResult>();
+		List<Result> results = new ArrayList<Result>();
 		for(Dataset<T> dataset : datasets){
 			results.add(classify(dataset));
 		}
 		return results;
 	}
 	
-	public ClassificationResultImpl classify(Dataset<T> dataset){
-		ClassificationResultImpl result = new ClassificationResultImpl(dataset.datasetLabel);
+	public ResultImpl classify(Dataset<T> dataset){
+		ResultImpl result = new ResultImpl(dataset.datasetLabel);
 		System.out.println("\nMRF classifying " + dataset.datasetLabel + ":");
 		System.out.println("ACRONYMS: " + dataset.getAcronyms());
 		System.out.println("HOOKS: " + dataset.getLexicalHooks()); 
@@ -73,7 +73,7 @@ public class MRF_classifier<T extends Text> {
 		return result;
 	}
 	
-	public ClassificationResultImpl classifyOneCiter(int citerIndex, Dataset<T> dataset){
+	public ResultImpl classifyOneCiter(int citerIndex, Dataset<T> dataset){
 		Timer t = new Timer();
 		setup(citerIndex, dataset);
 		initMessages();
@@ -246,7 +246,7 @@ public class MRF_classifier<T extends Text> {
 		}
 	}
 	
-	private ClassificationResultImpl getResults(String label, double beliefThreshold, long passedMillis){
+	private ResultImpl getResults(String label, double beliefThreshold, long passedMillis){
 		int truePos = 0;
 		int falsePos = 0;
 		int trueNeg = 0;
@@ -345,7 +345,7 @@ public class MRF_classifier<T extends Text> {
 			}
 		}
 		
-		return new ClassificationResultImpl(label, truePos, falsePos, trueNeg, falseNeg, fpIndices, fnIndices, passedMillis);	
+		return new ResultImpl(label, truePos, falsePos, trueNeg, falseNeg, fpIndices, fnIndices, passedMillis);	
 	}
 	
 	private double[] finalBelief(int sentence){

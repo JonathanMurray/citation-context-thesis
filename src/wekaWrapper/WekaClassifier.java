@@ -11,8 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import citationContextData.ClassificationResult;
-import citationContextData.ClassificationResultWrapper;
+import citationContextData.Result;
+import citationContextData.ResultWrapper;
 import util.Printer;
 import util.Timer;
 import weka.classifiers.AbstractClassifier;
@@ -122,11 +122,11 @@ public class WekaClassifier {
 //		return fromFiles(files.get(0), files.get(1));//TODO
 	}
 	
-	public List<ClassificationResult> manualCrossValidation(List<String> labels, List<Instances> balancedDatasets, List<Instances> fullDatasets){
+	public List<Result> manualCrossValidation(List<String> labels, List<Instances> balancedDatasets, List<Instances> fullDatasets){
 		if(labels.size() != balancedDatasets.size() || labels.size() != fullDatasets.size()){
 			throw new IllegalArgumentException(labels.size() + "  " + balancedDatasets.size() + "   " + fullDatasets.size());
 		}
-		List<ClassificationResult> results = new ArrayList<ClassificationResult>(); 
+		List<Result> results = new ArrayList<Result>(); 
 		for(int testIndex = 0; testIndex < balancedDatasets.size(); testIndex++){
 			Instances testSet = fullDatasets.get(testIndex);
 			printer.print("merging training sets ... ");
@@ -135,7 +135,7 @@ public class WekaClassifier {
 			trainOnData(trainSet, false);
 			String label = labels.get(testIndex);
 			printer.print("[x]\ntesting " + label + " ... ");
-			ClassificationResult res = testOnData(label, testSet);
+			Result res = testOnData(label, testSet);
 			printer.println("[x]    F1: " + res.positiveFMeasure(1) + "   F3: " + res.positiveFMeasure(3));
 			results.add(res);
 		}
@@ -180,7 +180,7 @@ public class WekaClassifier {
 		}
 	}
 
-	public ClassificationResult testOnData(String label, Instances data){
+	public Result testOnData(String label, Instances data){
 		try {
 			Timer t = new Timer().reset();
 			data = filterData(data, filter);
@@ -197,13 +197,13 @@ public class WekaClassifier {
 //					falseNegatives.add(i);
 //				}
 //			}
-			return new ClassificationResultWrapper(label, eval, t.getMillis());
+			return new ResultWrapper(label, eval, t.getMillis());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	public ClassificationResult crossValidate(String label, Instances data, int numFolds, boolean balanceData){
+	public Result crossValidate(String label, Instances data, int numFolds, boolean balanceData){
 		try{
 			printer.println(classifier.getClass().getName() + " - Cross validation (" + numFolds + " folds)");
 			Timer t = new Timer();
@@ -214,7 +214,7 @@ public class WekaClassifier {
 			data = filterData(data, filter);
 			Evaluation eval = new Evaluation(data);
 			eval.crossValidateModel(classifier, data, numFolds, new Random());
-			return new ClassificationResultWrapper(label, eval, t.getMillis()); //TODO no lists 
+			return new ResultWrapper(label, eval, t.getMillis()); //TODO no lists 
 		}catch(Exception e){
 			throw new RuntimeException(e);
 		}

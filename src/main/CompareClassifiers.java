@@ -14,7 +14,7 @@ import util.Environment;
 import util.Printer;
 import weka.core.Instances;
 import wekaWrapper.WekaClassifier;
-import citationContextData.ClassificationResult;
+import citationContextData.Result;
 import citationContextData.Dataset;
 import citationContextData.Sentence;
 import citationContextData.Text;
@@ -65,7 +65,7 @@ public class CompareClassifiers {
 			wekaFullDatasets.add(fullDataset);
 		}
 		
-		List<ClassificationResult> results = wekaSMO.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
+		List<Result> results = wekaSMO.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
 		printMultipleResults("SMO", results, null, true);
 		
 	}
@@ -89,19 +89,19 @@ public class CompareClassifiers {
 		}
 		
 		MRF_params params = new MRF_params(3, 0.4);
-		List<ClassificationResult> results = new MRF_classifier<TextWithNgrams>(params).classify(datasets);
+		List<Result> results = new MRF_classifier<TextWithNgrams>(params).classify(datasets);
 		System.out.println("FULL RESULTS:");
 		printMultipleResults("MRF-wiki", results, datasets, true);
 		System.out.println("COMPACT RESULTS:");
 		printMultipleResults("MRF-wiki", results, datasets, false);
 	}
 	
-	private static <T extends Text> void printMultipleResults(String title, Collection<ClassificationResult> results, List<Dataset<T>> datasets, boolean verbose){
+	private static <T extends Text> void printMultipleResults(String title, Collection<Result> results, List<Dataset<T>> datasets, boolean verbose){
 		System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 		System.out.println("                 MULTIPLE RESULTS (" + title + "): ");
 		System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 		int i = 0;
-		for(ClassificationResult result : results){
+		for(Result result : results){
 			Dataset<T> dataset = null;
 			if(datasets != null){
 				dataset = datasets.get(i);
@@ -114,7 +114,7 @@ public class CompareClassifiers {
 		System.out.println("\n\n\n");
 	}
 	
-	private static <T extends Text> void printResult(ClassificationResult result, List<Sentence<T>> testSentences, boolean verbose, Dataset<T> dataset){
+	private static <T extends Text> void printResult(Result result, List<Sentence<T>> testSentences, boolean verbose, Dataset<T> dataset){
 		NumberFormat f = new DecimalFormat("#.000"); 
 		if(verbose){
 			System.out.println();
