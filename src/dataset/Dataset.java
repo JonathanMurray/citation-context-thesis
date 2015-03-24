@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import util.Printer;
+import util.Timer;
+
 public class Dataset<T extends Text> {
 	public final String datasetLabel;
 	public final String citedMainAuthor;
@@ -69,10 +72,16 @@ public class Dataset<T extends Text> {
 	 * @return
 	 */
 	public Dataset<T> findExtra(int boundary, int numLexicalHooks, int numAcronyms){
+		Printer printer = new Printer(true);
+		Timer t = new Timer();
+		printer.print("Finding extras for " + datasetLabel + " ... ");
 		DatasetExtrasExtractor<T> extractor = new DatasetExtrasExtractor<T>(this);
+		printer.print("acronyms .. ");
 		acronyms = extractor.findAcronyms(boundary, numAcronyms);
+		printer.print("~ hooks .. ");
 		lexicalHooks = extractor.findLexicalHooks(boundary, numLexicalHooks);
 		hasExtra = true;
+		printer.println("[x]  (" + t.getSecString() + ")");
 		return this;
 	}
 	

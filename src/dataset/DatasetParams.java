@@ -2,7 +2,7 @@ package dataset;
 
 public class DatasetParams<T extends Text>{
 	public TextParams<T> textParams;
-	public boolean isEnhanced;
+	public boolean withExtra;
 	public int authorProxyBoundary;
 	public int numLexicalHooks;
 	public int numAcronyms;
@@ -17,7 +17,7 @@ public class DatasetParams<T extends Text>{
 	
 	private DatasetParams(TextParams<T> textParams, boolean withExtra, int authorProxyBoundary, int numLexicalHooks, int numAcronyms){
 		this.textParams = textParams;
-		this.isEnhanced = withExtra;
+		this.withExtra = withExtra;
 		this.authorProxyBoundary = authorProxyBoundary;
 		this.numLexicalHooks = numLexicalHooks;
 		this.numAcronyms = numAcronyms;

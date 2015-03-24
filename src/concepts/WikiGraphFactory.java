@@ -108,11 +108,10 @@ public class WikiGraphFactory {
 		//lines().parallel is extremely slow when running for a long time, due to garbage collection.
 		//Crashes with "gc limit exceeded" after being almost stuck for several minutes at around 4'800'000
 		Iterator<String> linksLines = linksReader.lines().iterator();
-		int progress = 0;
+		printer.resetProgress();
 		while(linksLines.hasNext()){
-			progress++;
 			String linksLine = linksLines.next();
-			printer.progress(progress, 100000);
+			printer.progress(100000);
 			int pos = linksLine.indexOf(' ') + 1;
 			int citer = Integer.parseInt(linksLine.substring(0, pos-2));
 			if(onlySingleWords && !oneWordIndices.contains(citer)){

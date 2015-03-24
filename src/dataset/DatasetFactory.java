@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -25,10 +26,11 @@ public class DatasetFactory {
 	public static <T extends Text> ArrayList<Dataset<T>> fromHtmlDir(DatasetParams<T> params, File dir){
 		ArrayList<Dataset<T>> datasets = new ArrayList<Dataset<T>>();
 		File[] files = dir.listFiles();
-		printer.print("Creating citation data set from dir " + dir.getAbsolutePath() + ": ");
-		printer.resetProgressBackspace();
+		Timer t = new Timer();
+		printer.println("\n-----------------------------------------");
+		printer.println("CREATING DATASETS FROM DIR: " + dir.getAbsolutePath() + ": ");
+		printer.println("-----------------------------------------");
 		for(int i = 0; i < files.length; i++){
-			printer.progress(i, 1);
 			File htmlFile = files[i];
 			if(!htmlFile.getName().endsWith(".html")){
 				continue;
@@ -37,7 +39,7 @@ public class DatasetFactory {
 			File textFile = new File(dir, baseName + ".txt");
 			datasets.add(fromFiles(params, htmlFile, textFile));
 		}
-		printer.println(" [x]");
+		printer.println("Created datasets from dir (" + t.getSecString() + ")");
 		return datasets;
 	}
 	
@@ -65,6 +67,7 @@ public class DatasetFactory {
 	
 	public static <T extends Text> Dataset<T> fromHtml(DatasetParams<T> params, String label, Document doc, String citedContent){
 		Timer t = new Timer();
+		printer.print("Creating dataset from HTML (" + label + ") ... ");
 		String citedTitle = doc.select(".dstPaperTitle").get(0).text();
 		String[] citedAuthors = doc.select(".dstPaperAuthors").get(0).text().split(";");
 		String mainAuthorLastName = citedAuthors[0].split(",")[0];
@@ -73,7 +76,9 @@ public class DatasetFactory {
 		
 		Elements citerElements = doc.select("table.srcPaper > tbody > tr");
 		StringBuilder mergedExplicitCitations = new StringBuilder();
+		printer.resetProgress();
 		for(Element citer : citerElements){
+			printer.progress();
 			List<Sentence<T>> sentences = new ArrayList<Sentence<T>>();
 			String citerTitle = citer.childNode(1).attr("title");
 			for(int i = 3; i < citer.childNodeSize(); i+= 2){
@@ -93,12 +98,13 @@ public class DatasetFactory {
 			citers.add(new CitingPaper<T>(citerTitle, sentences));
 		}
 		
-		printer.println("Creating dataset from HTML (" + label + ") took " + t.getSecString());
 		T citedTitleText = TextFactory.createText(params.textParams, citedTitle);
 		T mergedExplicitCitationsText = TextFactory.createText(params.textParams, mergedExplicitCitations.toString());
 		Dataset<T> dataset = Dataset.withoutCitedData(label, mainAuthorLastName, citedTitleText, citers, mergedExplicitCitationsText);
 		dataset.citedContent = TextFactory.createText(params.textParams, citedContent);
-		if(params.isEnhanced){
+		int numSentences = citers.stream().map(c -> c.sentences.size()).reduce(0, (x,y) -> x+y);
+		printer.println("[x]  (" + t.getSecString() + ")  {" + dataset.citers.size() + " citers, in total " + numSentences + " sentences}");
+		if(params.withExtra){
 			dataset = dataset.findExtra(params.authorProxyBoundary, params.numLexicalHooks, params.numAcronyms);
 		}
 		return dataset;
@@ -106,5 +112,28 @@ public class DatasetFactory {
 	
 	public static boolean isStartOfReferencesSection(String sentence){
 		 return sentence.startsWith("\\d?\\d?\\.?\\w*(R|r)(EFERENCES|eferences)");
+	}
+	
+	public static <T extends Text, T2 extends Text> Dataset<T> fromOtherRaw(TextParams<T> params, Dataset<T2> other){
+		printer.print("Creating dataset from other raw dataset " + other.datasetLabel + " ... ");
+		Timer t = new Timer();
+		printer.resetProgress();
+		List<CitingPaper<T>> citers = other.citers.stream().parallel()
+			.map(citer2 -> {
+				printer.progress(); //TODO prints messed up by parallel
+				List<Sentence<T>> sentences = new ArrayList<Sentence<T>>();
+				for(Sentence<T2> sentence2 : citer2.sentences){
+					T text = TextFactory.createText(params, sentence2.text.raw);
+					Sentence<T> sentence = new Sentence<T>(sentence2.type, text);
+					sentences.add(sentence);
+				}
+				return new CitingPaper<T>(citer2.title, sentences);
+			}).collect(Collectors.toCollection(ArrayList::new));
+		T citedTitle = TextFactory.createText(params, other.citedTitle.raw);
+		T mergedExplicitCitations = TextFactory.createText(params, other.mergedExplicitCitations.raw);
+		T citedContent = TextFactory.createText(params, other.citedContent.raw);
+		Dataset<T> dataset = Dataset.full(other.datasetLabel, other.citedMainAuthor, citedTitle, citers, citedContent, mergedExplicitCitations);
+		printer.println("[x]  (" + t.getSecString() + ")");
+		return dataset;
 	}
 }

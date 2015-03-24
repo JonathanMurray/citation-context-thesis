@@ -18,8 +18,8 @@ public class TextWithWordnet extends Text{
 	public static final String XML_TEXT_CLASS = "text-with-wordnet";
 	private WordNet wordnet;
 
-	public TextWithWordnet(String raw, List<String> rawWords, List<String> lemmatizedWords, WordNet wordnet) {
-		super(raw, rawWords, lemmatizedWords);
+	public TextWithWordnet(String raw, List<String> rawWords, List<String> lemmas, WordNet wordnet) {
+		super(raw, rawWords, lemmas);
 		this.wordnet = wordnet;
 	}
 	
@@ -40,24 +40,28 @@ public class TextWithWordnet extends Text{
 		
 		
 		Stream<IWord> words1 = lemmas.stream()
-				.map(w -> wordnet.dict.getIndexWord(w, POS.NOUN))
-				.filter(iw -> iw != null)
-				.flatMap(iw -> iw.getWordIDs().stream())
+				.map(lemma -> wordnet.dict.getIndexWord(lemma, POS.NOUN))
+				.filter(indexWord -> indexWord != null)
+				.flatMap(indexWord -> indexWord.getWordIDs().stream())
 				.map(wordId -> wordnet.dict.getWord(wordId));
 				
 		ArrayList<IWord> words2 = lemmas.stream()
-				.map(w -> wordnet.dict.getIndexWord(w, POS.NOUN))
-				.filter(iw -> iw != null)
-				.flatMap(iw -> iw.getWordIDs().stream())
+				.map(lemma -> wordnet.dict.getIndexWord(lemma, POS.NOUN))
+				.filter(indexWord -> indexWord != null)
+				.flatMap(indexWord -> indexWord.getWordIDs().stream())
 				.map(wordId -> wordnet.dict.getWord(wordId))
 				.collect(Collectors.toCollection(ArrayList::new));
 		
 		MutableDouble sum = new MutableDouble(0);
-		words1.forEach(word1 -> {
-			for(IWordID related1 : word1.getRelatedWords()){
-				if(words2.stream().anyMatch(word2 -> word2.equals(related1) || word2.equals(word1))){
-					sum.add(1);
-					break;
+		words1.parallel().forEach(word1 -> {
+			if(words2.stream().anyMatch(word2 -> word2.equals(word1))){
+				sum.add(1);
+			}else{
+				for(IWordID related1 : word1.getRelatedWords()){
+					if(words2.stream().anyMatch(word2 -> word2.equals(related1))){
+						sum.add(1);
+						break;
+					}
 				}
 			}
 		});

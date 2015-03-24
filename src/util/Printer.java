@@ -5,35 +5,42 @@ public class Printer {
 	public boolean enabled;
 	private boolean backspaceProgress;
 	private int lastProgressStrLen;
+	private int progress;
 	
 	public Printer(boolean enabled){
 		this.enabled = enabled;
 		backspaceProgress = Environment.exjobbInTerminal();
 	}
 	
-	public void progress(int i, int period){
+	public void progress(){
+		progress(1);
+	}
+	
+	public void progress(int period){
 		if(enabled){
+			progress ++;
 			if(backspaceProgress){
-				if(i == 0){
+				if(progress == 0){
 					lastProgressStrLen = 0; //new task, with no previously printed progress
 				}
-				if(i % period == 0){
+				if(progress % period == 0){
 					for(int c = 0; c < lastProgressStrLen; c++){
 						System.out.print("\b");
 					}
-					System.out.print(i);
-					lastProgressStrLen = Integer.toString(i).length();
+					System.out.print(progress);
+					lastProgressStrLen = Integer.toString(progress).length();
 				}
 			}else{
-				if(i % period == 0){
-					System.out.print(i + "  ");
+				if(progress % period == 0){
+					System.out.print(progress + "  ");
 				}
 			}
 		}
 	}
 	
-	public void resetProgressBackspace(){
+	public void resetProgress(){
 		lastProgressStrLen = 0;
+		progress = 0;
 	}
 	
 	public void println(String s){
@@ -62,5 +69,9 @@ public class Printer {
 			System.out.print(o);
 			lastProgressStrLen = 0;
 		}
+	}
+	
+	public static void printBigProgressHeader(int progress, int total){
+		System.out.println("-------------------------------- [ " + progress + " / " + total + " ] --------------------------------");
 	}
 }

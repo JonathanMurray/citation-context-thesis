@@ -13,6 +13,7 @@ import java.util.Random;
 
 import dataset.Result;
 import dataset.ResultWrapper;
+import util.Environment;
 import util.Printer;
 import util.Timer;
 import weka.classifiers.AbstractClassifier;
@@ -69,8 +70,6 @@ public class WekaClassifier {
 	}
 	
 	private static SMO setupSMO() throws Exception{
-		
-		
 		SMO classifier = new SMO();
 		String classifierOptions = "-N 0 -V 3";
 		String kernelOptions = "-E 1.0 -C 250007";
@@ -78,9 +77,6 @@ public class WekaClassifier {
 		Kernel kernel = new PolyKernel();
 		kernel.setOptions( weka.core.Utils.splitOptions(kernelOptions));
 		classifier.setKernel(kernel);
-		
-		
-		
 		return classifier;
 	}
 	
@@ -88,9 +84,10 @@ public class WekaClassifier {
 		printer.print("Creating WEKA-instances from files: " + Arrays.toString(files) + " ... ");
 		try{
 			Instances instances = null;
+			printer.resetProgress();
 			for(int i = 0; i < files.length; i++){
 				File file = files[i];
-				printer.progress(i, 1);
+				printer.progress();
 				if(instances == null){
 					instances = fromFile(file);
 				}else{
@@ -131,12 +128,10 @@ public class WekaClassifier {
 			Instances testSet = fullDatasets.get(testIndex);
 			printer.print("merging training sets ... ");
 			Instances trainSet = mergeDatasets(balancedDatasets, testIndex);
-			printer.print("[x]\ntraining ...");
-			trainOnData(trainSet, false);
+			printer.println("[x]");
+			trainOnData("merged", trainSet, false);
 			String label = labels.get(testIndex);
-			printer.print("[x]\ntesting " + label + " ... ");
 			Result res = testOnData(label, testSet);
-			printer.println("[x]    F1: " + res.positiveFMeasure(1) + "   F3: " + res.positiveFMeasure(3));
 			results.add(res);
 		}
 		return results;
@@ -165,39 +160,34 @@ public class WekaClassifier {
 	 * in the process, so don't reuse the data for another classifier!
 	 * @param data
 	 */
-	public void trainOnData(Instances data, boolean balanceData){
+	public void trainOnData(String label, Instances data, boolean balanceData){
 		try{
+			printer.print("Training on " + label + " ... ");
 			Timer t = new Timer().reset();
 			if(balanceData){
 				data = balanceData(data, countClasses(data));
 			}
 			filter = createNGramFilter(data,1,3);
 			data = filterData(data, filter);
+//			for(int i = 0; i < data.numAttributes(); i++){System.out.println(data.attribute(i).name());}//TODO
 			classifier.buildClassifier(data);
-			System.out.println("Training took " + t.getSecString());
+			printer.println("[x] (" + t.getSecString() + ")");
 		}catch(Exception e){
-			throw new RuntimeException(e);
+			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 
 	public Result testOnData(String label, Instances data){
 		try {
 			Timer t = new Timer().reset();
+			printer.print("Testing on " + label + " ... ");
 			data = filterData(data, filter);
 			Evaluation eval = new Evaluation(data);
 			eval.evaluateModel(classifier, data);
-//			ArrayList<Integer> falsePositives = new ArrayList<Integer>();
-//			ArrayList<Integer> falseNegatives = new ArrayList<Integer>();
-//			for(int i = 0; i < eval.predictions().size(); i ++){
-//				Prediction p = eval.predictions().get(i);
-//				if(p.predicted() == 1 && p.actual() == 0){
-//					falsePositives.add(i);
-//				}
-//				if(p.predicted() == 0 && p.actual() == 1){
-//					falseNegatives.add(i);
-//				}
-//			}
-			return new ResultWrapper(label, eval, t.getMillis());
+			ResultWrapper result = new ResultWrapper(label, eval, t.getMillis());
+			printer.println("[x]  (" + t.getSecString() + ")  F1: " + result.positiveFMeasure(1) + ",  F3: " + result.positiveFMeasure(3) + "\n");
+			return result;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -219,9 +209,6 @@ public class WekaClassifier {
 			throw new RuntimeException(e);
 		}
 	}
-	
-	
-	
 	
 	public void ROC(Instances data){
 		try{
@@ -314,7 +301,15 @@ public class WekaClassifier {
 		String ngramOptions = "-max " + maxNgram + " -min " + minNgram + " -delimiters \" \\r\\n\\t.,;:\\\'\\\"()?!\"";
 		String[] ngramOptionsVec = weka.core.Utils.splitOptions(ngramOptions);
 		int textAttributeNumber = data.numAttributes() - 1; //Number rather than index
-		String str2WordOptions = "-R " + textAttributeNumber + " -P NGRAMS_ -W 1000 -prune-rate -1.0 -N 0 -L -stemmer weka.core.stemmers.LovinsStemmer -stopwords-handler weka.core.stopwords.Rainbow -M 1";
+		String stopwordsFile = Environment.resources() + "/wordLists.stopwords.txt";
+		
+		final int minWords = 1;
+		String str2WordOptions = "-C -R " + textAttributeNumber + 
+			" -P NGRAMS_ -W 1000 -prune-rate -1.0 -N 1 -I -L " //counts, normalize, use tf-idf
+			+ "-stemmer weka.core.stemmers.LovinsStemmer ";
+//			+ "-stopwords-handler "
+//			+ "\"weka.core.stopwords.WordsFromFile -stopwords " + stopwordsFile + " -M " + minWords + "\"";
+		
 		String[] string2WordOptions = weka.core.Utils.splitOptions(str2WordOptions);
 		
 		NGramTokenizer ngramTokenizer = new NGramTokenizer();

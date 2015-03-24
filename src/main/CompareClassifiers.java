@@ -20,6 +20,7 @@ import dataset.Result;
 import dataset.Sentence;
 import dataset.Text;
 import dataset.TextWithNgrams;
+import dataset.TextWithSkipgrams;
 
 public class CompareClassifiers {
 	
@@ -36,9 +37,9 @@ public class CompareClassifiers {
 				"A92-1018", "J90-1003", "N03-1003", "P04-1035", "P07-1033", "W04-1013", "C98-2122", 
 				"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"});
 		
-//		labels = labels.subList(0, 5); //TODO
+//		labels = labels.subList(4, 5); //TODO
 		
-		testMRF(labels);
+		testMRF(TextWithSkipgrams.class, labels);
 //		testWeka(labels);
 		
 //		WikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph(
@@ -70,15 +71,16 @@ public class CompareClassifiers {
 		
 	}
 	
-	private static void testMRF(List<String> labels){
+	private static <T extends Text> void testMRF(Class<T> textClass, List<String> labels){
 		String resourcesDir = Environment.resources();
-		List<Dataset<TextWithNgrams>> datasets = new ArrayList<Dataset<TextWithNgrams>>();
+		List<Dataset<T>> datasets = new ArrayList<Dataset<T>>();
 		for(String label : labels){
 			final int MAX_CITERS = 0;
-			Dataset<TextWithNgrams> dataset = DatasetXml.parseXmlFile(
-					TextWithNgrams.class,
-					new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml"), 
+			Dataset<T> dataset = DatasetXml.parseXmlFile(
+					textClass,
+					new File(resourcesDir, "xml-datasets/" + label + "-with-skipgrams.xml"), 
 					MAX_CITERS);
+			dataset.findExtra(80, 2, 2);
 			System.out.println(dataset.datasetLabel);
 			System.out.println("(" + dataset.citedMainAuthor + ")");
 //			dataset.findExtra(80, 2, 2);
@@ -89,7 +91,7 @@ public class CompareClassifiers {
 		}
 		
 		MRF_params params = new MRF_params(3, 0.4);
-		List<Result> results = new MRF_classifier<TextWithNgrams>(params).classify(datasets);
+		List<Result> results = new MRF_classifier<T>(params).classify(datasets);
 		System.out.println("FULL RESULTS:");
 		printMultipleResults("MRF-wiki", results, datasets, true);
 		System.out.println("COMPACT RESULTS:");
@@ -101,6 +103,8 @@ public class CompareClassifiers {
 		System.out.println("                 MULTIPLE RESULTS (" + title + "): ");
 		System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 		int i = 0;
+		double sumF1 = 0;
+		double sumF3 = 0;
 		for(Result result : results){
 			Dataset<T> dataset = null;
 			if(datasets != null){
@@ -108,8 +112,13 @@ public class CompareClassifiers {
 			}
 			printResult(result, null, verbose, dataset);
 			i ++;
+			sumF1 += result.positiveFMeasure(1);
+			sumF3 += result.positiveFMeasure(3);
 		}
+		
 		System.out.println();
+		System.out.println("SUM F1: " + sumF1/(double)results.size());
+		System.out.println("SUM F3: " + sumF3/(double)results.size());
 		System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 		System.out.println("\n\n\n");
 	}

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import util.Lemmatizer;
-import concepts.Concept;
 
 public class TextFactory {
 	
@@ -14,35 +13,38 @@ public class TextFactory {
 	@SuppressWarnings("unchecked")
 	public static <T extends Text> T createText(TextParams<T> params, String raw){
 		
-		List<String> lemmatizedWords = Lemmatizer.instance().lemmatize(raw);
+		List<String> lemmas = Lemmatizer.instance().lemmatize(raw);
 		ArrayList<String> rawWords = Texts.split(raw).collect(Collectors.toCollection(ArrayList::new));
 		
 		if(params.textClass.equals(TextWithNgrams.class)){
-			List<String> lowercaseLemmas = new ArrayList<String>();
-			for(String lemma : lemmatizedWords){
-				lowercaseLemmas.add(lemma.toLowerCase());
-			}
-			Ngrams ngramsTfIdf = Texts.instance().getAllNgramsTfIdf(MAX_NGRAM_N, lowercaseLemmas, params.ngramIdf);
-			return (T) new TextWithNgrams(raw, rawWords, lemmatizedWords, ngramsTfIdf);
+			Ngrams ngramsTfIdf = NgramExtractor.ngramsTfIdf(MAX_NGRAM_N, lemmas, params.ngramIdf);
+			return (T) new TextWithNgrams(raw, rawWords, lemmas, ngramsTfIdf);
 		}
 		
-		else if(params.textClass.equals(TextWithConcepts.class)){
-			List<Concept> concepts = params.wikiGraph.sentenceToConcepts(lemmatizedWords);
-			List<String> lowercaseLemmas = new ArrayList<String>();
-			for(String lemma : lemmatizedWords){
-				lowercaseLemmas.add(lemma.toLowerCase());
-			}
-			Ngrams ngramsTfIdf = Texts.instance().getAllNgramsTfIdf(MAX_NGRAM_N, lowercaseLemmas, params.ngramIdf);
-			return (T) new TextWithConcepts(raw, rawWords, lemmatizedWords, 
-					ngramsTfIdf, concepts);
+		else if(params.textClass.equals(TextWithSkipgrams.class)){
+			Ngrams[] nAndSkipgrams = NgramExtractor.nAndSkipgramsTfIdf(MAX_NGRAM_N, lemmas, params.ngramIdf, params.skipgramIdf);
+			Ngrams ngramsTfIdf = nAndSkipgrams[0];
+			Ngrams skipgramsTfIdf = nAndSkipgrams[1];
+			return (T) new TextWithSkipgrams(raw, rawWords, lemmas, ngramsTfIdf, skipgramsTfIdf);
 		}
 		
-		else if(params.textClass.equals(TextWithWordnet.class)){
-			return (T) new TextWithWordnet(raw, rawWords, lemmatizedWords, params.wordnet);
-		}
+//		else if(params.textClass.equals(TextWithConcepts.class)){
+//			List<Concept> concepts = params.wikiGraph.sentenceToConcepts(lemmatizedWords);
+//			List<String> lowercaseLemmas = new ArrayList<String>();
+//			for(String lemma : lemmatizedWords){
+//				lowercaseLemmas.add(lemma.toLowerCase());
+//			}
+//			Ngrams ngramsTfIdf = Texts.instance().getAllNgramsTfIdf(MAX_NGRAM_N, lowercaseLemmas, params.ngramIdf);
+//			return (T) new TextWithConcepts(raw, rawWords, lemmatizedWords, 
+//					ngramsTfIdf, concepts);
+//		}
+		
+//		else if(params.textClass.equals(TextWithWordnet.class)){
+//			return (T) new TextWithWordnet(raw, rawWords, lemmatizedWords, params.wordnet);
+//		}
 
 		else if(params.textClass.equals(Text.class)){
-			return (T) new Text(raw, rawWords, lemmatizedWords);
+			return (T) new Text(raw, rawWords, lemmas);
 		}
 		
 		else{

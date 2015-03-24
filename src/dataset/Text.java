@@ -44,7 +44,7 @@ public class Text {
 		return text;
 	}
 	
-	protected static Text fromXml(Element textTag){
+	public static Text fromXml(Element textTag){
 		String raw = textTag.select("raw").text();
 		ArrayList<String> rawWords = Texts.split(raw).collect(Collectors.toCollection(ArrayList::new));
 		String lemmasString = textTag.select("lemmas").text();

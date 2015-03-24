@@ -62,8 +62,9 @@ public class MRF_classifier<T extends Text> {
 		System.out.println("ACRONYMS: " + dataset.getAcronyms());
 		System.out.println("HOOKS: " + dataset.getLexicalHooks()); 
 		printer.print("Classifying citers: ");
+		printer.resetProgress();
 		for(int i = 0; i < dataset.citers.size(); i++){
-			printer.progress(i, 1);
+			printer.progress();
 			result.add(classifyOneCiter(i, dataset));
 //			if(i == 3){
 //				break; //TODO

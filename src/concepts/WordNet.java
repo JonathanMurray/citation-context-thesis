@@ -5,26 +5,32 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.ibm.icu.text.DecimalFormat;
+import com.ibm.icu.text.NumberFormat;
+
 import util.Environment;
 import util.Lemmatizer;
 import util.Printer;
+import dataset.NgramExtractor;
+import dataset.NgramIdf;
+import dataset.Texts;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.IIndexWord;
-import edu.mit.jwi.item.IPointer;
 import edu.mit.jwi.item.ISynset;
 import edu.mit.jwi.item.ISynsetID;
 import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
+import gnu.trove.iterator.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 public class WordNet implements ConceptGraph{
 
@@ -39,49 +45,71 @@ public class WordNet implements ConceptGraph{
 		
 		boolean c = true;
 		while(c){
+			
+			NgramIdf idf = NgramIdf.fromXmlFile(new File("/home/jonathan/Documents/eclipse-workspace/exjobb/resources/xml-datasets/ngram-frequencies.xml"), 0);
+			
+			System.out.print("INPUT: ");
 			String input = s.nextLine();
-			IIndexWord iw = w.dict.getIndexWord(input, POS.NOUN);
 			
 			
+			String[] words = input.split(" ");
 			
-			System.out.println(iw);
-			if(iw != null){
-				for(IWordID id  : iw.getWordIDs()){
-					System.out.println();
-					System.out.println("lemma: " + id.getLemma());
-					IWord word = w.dict.getWord(id);
-					System.out.println("word: " + word);
-					System.out.println("synset: " + word.getSynset());
-					Map<IPointer, List<ISynsetID>> relatedMap = word.getSynset().getRelatedMap();
-					if(!relatedMap.isEmpty()){
-						System.out.println("RELATED:");
-						Entry<IPointer, List<ISynsetID>> e = relatedMap.entrySet().iterator().next();
-						System.out.println(e.getKey());
-						for(ISynsetID rel : e.getValue()){
-							System.out.println(w.dict.getSynset(rel));
-						}
-						System.out.println();
+			StringBuilder allGlosses = new StringBuilder();
+			TObjectDoubleHashMap<String> wordsMap = new TObjectDoubleHashMap<String>();
+			
+			for(String word : words){
+				IIndexWord indexWord = w.dict.getIndexWord(word, POS.NOUN);
+				if(indexWord != null){
+					for(IWordID wordId : indexWord.getWordIDs()){
+						IWord foundWord = w.dict.getWord(wordId);
+						ISynset synset = foundWord.getSynset();
+						String gloss = synset.getGloss();
+						allGlosses.append(synset.getWords().stream().map(IWord::getLemma).reduce("", (x,y) -> x + " " + y));
+						synset.getRelatedMap().entrySet().stream()
+							.forEach(entry -> {
+								entry.getValue().forEach(relatedSynset -> {
+//									allGlosses.append(" " + w.dict.getSynset(relatedSynset).getGloss());
+									allGlosses.append(" " + w.dict.getSynset(relatedSynset).getWords().stream().map(IWord::getLemma).reduce("", (x,y) -> x + " " + y));
+								});
+							});
 					}
-					System.out.println("gloss: " + word.getSynset().getGloss());
 				}
 			}
 			
-		}
-		
-		
-		
-		
-		while(true){
-			String a = s.nextLine();
-			String b = s.nextLine();
 			
-			if(w.dict.getIndexWord(a, POS.NOUN) != null){
-				System.out.println("a: " + w.dict.getIndexWord(a, POS.NOUN).getLemma());
+			
+			List<String> allGlossesWords = Lemmatizer.instance().lemmatize(allGlosses.toString());
+			
+			allGlossesWords.stream().filter(lemma -> ! Texts.instance().isStopword(lemma)).forEach(lemma -> {
+				wordsMap.adjustOrPutValue(lemma, 1, 1);
+			});
+			
+//			NgramExtractor.countsToTfIdf(1, wordsMap, idf);
+			TObjectDoubleIterator<String> it = wordsMap.iterator();
+			List<X> list = new ArrayList<X>();
+			while(it.hasNext()){
+				it.advance();
+				list.add(new X(it.key(), it.value()));
 			}
+			Collections.sort(list);
+			System.out.println(list);
 			
-			Collection<String> aWords = Lemmatizer.instance().lemmatize(a);
-			Collection<String> bWords = Lemmatizer.instance().lemmatize(b);
-			System.out.println(w.similarity(aWords, bWords));
+			
+		}
+	}
+	
+	static class X implements Comparable<X>{
+		String s;
+		double c;
+		NumberFormat f = new DecimalFormat("#0.00");
+		public X(String s, double c){
+			this.s = s;this.c=c;
+		}
+		public int compareTo(X other){
+			return (int)Math.signum(c - other.c);
+		}
+		public String toString(){
+			return s + " (" + f.format(c) + ")";
 		}
 	}
 	

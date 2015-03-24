@@ -3,11 +3,18 @@ package dataset;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -53,7 +60,7 @@ public class DatasetXml {
 		
 		final String datasetLabel = "A92-1018";
 		
-		NgramIdf wordIdf = NgramIdf.fromXmlFile(new File(resources, "xml-datasets/ngram-frequencies.xml"));
+//		NgramIdf wordIdf = NgramIdf.fromXmlFile(new File(resources, "xml-datasets/ngram-frequencies.xml"), 5);
 		
 //		Dataset<TextWithConcepts> dataset = DatasetFactory.fromFiles(
 //				DatasetParams.basic(TextParams.withWikiConcepts(wordIdf, wiki)), 
@@ -124,6 +131,76 @@ public class DatasetXml {
 		return sentenceTag;
 	}
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+    public static void parseQuick(File file)  {
+		try {
+			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+	        InputStream in = new BufferedInputStream(new FileInputStream(file));
+	        XMLStreamReader streamReader = inputFactory.createXMLStreamReader(in);
+	        streamReader.nextTag(); // Advance to "book" element
+	        streamReader.nextTag(); // Advance to "person" element
+
+	        int persons = 0;
+	        while (streamReader.hasNext()) {
+	            if (streamReader.isStartElement()) {
+	                switch (streamReader.getLocalName()) {
+	                case "first": {
+	                    System.out.print("First Name : ");
+	                    System.out.println(streamReader.getElementText());
+	                    break;
+	                }
+	                case "last": {
+	                    System.out.print("Last Name : ");
+	                    System.out.println(streamReader.getElementText());
+	                    break;
+	                }
+	                case "age": {
+	                    System.out.print("Age : ");
+	                    System.out.println(streamReader.getElementText());
+	                    break;
+	                }
+	                case "person" : {
+	                    persons ++;
+	                }
+	                }
+	            }
+	            streamReader.next();
+	        }
+	        System.out.print(persons);
+	        System.out.println(" persons");
+		} catch (FileNotFoundException | XMLStreamException e) {
+			e.printStackTrace();
+		}
+    }
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public static <T extends Text> Dataset<T> parseXmlFile(Class<T> textClass, File xmlFile, int maxNumCiters){
 		try {
 			printer.print("Parsing XML from " + xmlFile.getPath() + " ... ");
@@ -131,7 +208,7 @@ public class DatasetXml {
 			printer.println("[x]");
 			printer.print("Creating dataset from XML ... ");
 			Dataset<T> dataset = parseXml(textClass, doc, maxNumCiters);
-			printer.println("[x]");
+			printer.println(" [x]");
 			return dataset;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -154,12 +231,13 @@ public class DatasetXml {
 		
 		List<CitingPaper<T>> citers = new ArrayList<CitingPaper<T>>();
 		int i = 0;
+		printer.resetProgress();
 		for(Element citerTag : citersTag.children()){
 			i++;
 			if(maxNumCiters > 0 && i > maxNumCiters){
 				break;
 			}
-			printer.progress(i, 1);
+			printer.progress();
 			citers.add(citer(textClass, citerTag));
 			
 		}
@@ -197,15 +275,22 @@ public class DatasetXml {
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends Text> T text(Class<T> textClass, Element textTag){
-		if(textClass.equals(Text.class)){
-			return (T) Text.fromXml(textTag);
-		}else if(textClass.equals(TextWithNgrams.class)){
-			return (T) TextWithNgrams.fromXml(textTag);
-		}else if(textClass.equals(TextWithConcepts.class)){
-			return (T) TextWithConcepts.fromXml(textTag);
-		}else{
-			throw new IllegalArgumentException("Unknown text-class: " + textClass);
-		}
+		try {
+			return (T) textClass.getMethod("fromXml", Element.class).invoke(null, textTag);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+			return null;
+		} 
+//		if(textClass.equals(Text.class)){
+//			return (T) Text.fromXml(textTag);
+//		}else if(textClass.equals(TextWithNgrams.class)){
+//			return (T) TextWithNgrams.fromXml(textTag);
+//		}else if(textClass.equals(TextWithConcepts.class)){
+//			return (T) TextWithConcepts.fromXml(textTag);
+//		}else{
+//			throw new IllegalArgumentException("Unknown text-class: " + textClass);
+//		}
 	}
 	
 }

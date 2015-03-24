@@ -27,13 +27,11 @@ public class Lemmatizer {
 	}
     
     private Lemmatizer() {
-    	printer.print("Creating corenlp lemmatizer ... ");
         // Create StanfordCoreNLP object properties, with POS tagging
         // (required for lemmatization), and lemmatization
         Properties props;
         props = new Properties();
         props.put("annotators", "tokenize, ssplit, pos, lemma");
-
         /*
          * This is a pipeline that takes in a string and returns various analyzed linguistic forms. 
          * The String is tokenized via a tokenizer (such as PTBTokenizerAnnotator), 
@@ -50,7 +48,6 @@ public class Lemmatizer {
          *  only want to do this once per execution
          */
         this.pipeline = new StanfordCoreNLP(props);
-        printer.println("[x]");
     }
 
     public List<String> lemmatize(String documentText)

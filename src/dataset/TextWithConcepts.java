@@ -49,7 +49,7 @@ public class TextWithConcepts extends TextWithNgrams{
 		return text;
 	}
 	
-	protected static TextWithConcepts fromXml(Element textTag){
+	public static TextWithConcepts fromXml(Element textTag){
 		TextWithNgrams textWithNgrams = TextWithNgrams.fromXml(textTag);
 		ArrayList<Concept> concepts = new ArrayList<Concept>();
 		for(Element conceptTag : textTag.select("concepts").select("concept")){

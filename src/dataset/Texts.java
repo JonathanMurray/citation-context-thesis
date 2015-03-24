@@ -1,7 +1,10 @@
 package dataset;
 
+import gnu.trove.function.TDoubleFunction;
 import gnu.trove.iterator.TObjectDoubleIterator;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.procedure.TObjectDoubleProcedure;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +28,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 
 import util.Environment;
+import util.Printer;
 import util.Stemmer;
 
 
@@ -39,10 +44,6 @@ public class Texts {
 	public static final String HEADER_PATTERN = "\\d+\\.\\d+.*";
 	
 	private static Texts instance;
-	
-	public static void main(String[] args) {
-		System.out.println(split(" A B  C   ").collect(Collectors.toCollection(ArrayList::new)));
-	}
 	
 	public static Texts instance(){
 		if(instance == null){
@@ -302,66 +303,6 @@ public class Texts {
 		return false;
 	}
 	
-	private static final Pattern NUM_OR_CHAR = Pattern.compile("\\d+|.");
-	
-	
-	public Ngrams getAllNgramsTfIdf(int maxN , List<String> words, NgramIdf ngramIdf){
-		List<TObjectDoubleHashMap<String>> ngrams = IntStream.range(1, maxN + 1)
-				.mapToObj(n -> getNgramsTfIdf(n, words, ngramIdf))
-				.collect(Collectors.toCollection(ArrayList::new));
-		return new Ngrams(ngrams);
-	}
-	
-	private TObjectDoubleHashMap<String> getNgramsTfIdf(int n, List<String> words, NgramIdf ngramIdf){
-		
-		TObjectDoubleHashMap<String> ngrams = getNgrams(n, words);
-		TObjectDoubleHashMap<String> tfIdf = new TObjectDoubleHashMap<String>();
-		TObjectDoubleIterator<String> it = ngrams.iterator();
-		while(it.hasNext()){
-			it.advance();
-			double tf = 1 + Math.log(it.value());
-			String ngram = it.key();
-			double idfCount = ngramIdf.ngramsIdf.getNgram(n, ngram);
-			if(idfCount > 0){ //Skip super rare ngrams
-				double idf = Math.log(1 + ngramIdf.numDocuments/idfCount);
-				tfIdf.adjustOrPutValue(ngram, tf*idf, tf*idf);
-			}
-		}
-		return tfIdf;
-	}
-	
-	public Ngrams getAllNgrams(int maxN, List<String> words){
-		ArrayList<TObjectDoubleHashMap<String>> ngrams = IntStream.range(1, maxN + 1)
-			.mapToObj(n -> getNgrams(n, words))
-			.collect(Collectors.toCollection(ArrayList::new));
-		return new Ngrams(ngrams);
-	}
-	
-	private TObjectDoubleHashMap<String> getNgrams(int n, List<String> words){
-		TObjectDoubleHashMap<String> ngramCounts = new TObjectDoubleHashMap<String>();
-		
-		for(int i = n - 1; i < words.size(); i++){
-			List<String> ngramWords = words.subList(i - n + 1, i + 1);
-			final boolean skipStopwords = false; //TODO
-			if(skipStopwords){
-				if(ngramWords.stream().anyMatch(w -> stopwords.contains(w) || w.equals(NUMBER_TAG))){
-					continue;
-				}
-			}
-			if(NUM_OR_CHAR != null){
-				if(ngramWords.stream().anyMatch(w -> NUM_OR_CHAR.matcher(w).matches())){
-					continue;
-				}
-			}
-			Stream<String> ngramWordsStream = ngramWords.stream();
-			String ngram = ngramWordsStream.reduce((s1,s2) -> s1 + " " + s2).get();
-			if(ngram.length() > 0){
-				ngram = ngram.toLowerCase(); //TODO 
-				ngramCounts.adjustOrPutValue(ngram, 1, 1);
-			}
-		}
-		return ngramCounts;
-	}
 	
 	public static String stem(String word){
 		Stemmer s = new Stemmer();
