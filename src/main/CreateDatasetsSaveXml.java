@@ -3,6 +3,7 @@ package main;
 import java.io.File;
 import java.util.ArrayList;
 
+import concepts.SynsetExtractor;
 import util.Environment;
 import util.Lemmatizer;
 import util.Printer;
@@ -15,12 +16,16 @@ import dataset.Text;
 import dataset.TextParams;
 import dataset.TextWithSkipgrams;
 import dataset.TextWithNgrams;
+import dataset.TextWithSynsets;
+import edu.mit.jwi.IDictionary;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) {
 		Lemmatizer.instance(); //Want the lemma debug prints to appear first
-		withSkipgrams();
+//		withSkipgrams();
 //		withNgrams();
+		withSynsets();
 	}
 	
 	private final static int BOUNDARY = 80;
@@ -50,6 +55,30 @@ public class CreateDatasetsSaveXml {
 				new File(resourcesDir, "teufel-citation-context-corpus"));
 		for(Dataset<TextWithNgrams> dataset : datasets){
 			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-ngrams.xml"));
+		}
+	}
+	
+	private static void withSynsets(){
+		File resourcesDir = new File(Environment.resources());
+		NgramIdf ngramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"), NgramIdf.DEFAULT_NGRAM_MIN_COUNT);
+		ArrayList<Dataset<TextWithSynsets>> datasets = new ArrayList<Dataset<TextWithSynsets>>();
+		StanfordCoreNLP pipeline = SynsetExtractor.createPipeline();
+		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
+		IDictionary dict = SynsetExtractor.dictFromDir(dictDir);
+		for(int i = 0; i < 1; i++){ //TODO
+			String label = LABELS[i];
+			Printer.printBigProgressHeader(i, LABELS.length);
+			Dataset<Text> other = DatasetXml.parseXmlFile(
+					Text.class, 
+					new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml")
+//					new File(resourcesDir, "xml-datasets/D07-1031-mini.xml")
+					, 0);
+			Dataset<TextWithSynsets> dataset = DatasetFactory.fromOtherRaw(TextParams.withSynsets(ngramIdf, pipeline, dict), other);
+			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
+			datasets.add(dataset);
+		}
+		for(Dataset<TextWithSynsets> dataset : datasets){
+			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-synsets.xml"));
 		}
 	}
 	

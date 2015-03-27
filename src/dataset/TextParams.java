@@ -1,23 +1,38 @@
 package dataset;
 
+import java.util.HashMap;
+
 import concepts.WikiGraph;
-import concepts.WordNet;
+import edu.mit.jwi.IDictionary;
+import edu.mit.jwi.item.ISynset;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 public class TextParams<T extends Text>{
 	public Class<T> textClass;
 	public NgramIdf ngramIdf;
 	public NgramIdf skipgramIdf;
 	public WikiGraph wikiGraph;
-	public WordNet wordnet;
+	public StanfordCoreNLP nlpPipeline;
+	public IDictionary wordnetDict;
+	public HashMap<ISynset, Integer> synsetDepths;
 	
 	public static TextParams<Text> basic(){
 		TextParams<Text> p = new TextParams<Text>(Text.class);
 		return p;
 	}
 	
-	public static TextParams<TextWithNgrams> withNgrams(NgramIdf wordIdf){
+	public static TextParams<TextWithNgrams> withNgrams(NgramIdf ngramIdf){
 		TextParams<TextWithNgrams> p = new TextParams<TextWithNgrams>(TextWithNgrams.class);
-		p.ngramIdf = wordIdf;
+		p.ngramIdf = ngramIdf;
+		return p;
+	}
+
+	public static TextParams<TextWithSynsets> withSynsets(NgramIdf ngramIdf, StanfordCoreNLP nlpPipeline, IDictionary wordnetDict){
+		TextParams<TextWithSynsets> p = new TextParams<TextWithSynsets>(TextWithSynsets.class);
+		p.ngramIdf = ngramIdf;
+		p.nlpPipeline = nlpPipeline;
+		p.wordnetDict = wordnetDict;
+		p.synsetDepths = new HashMap<ISynset, Integer>();
 		return p;
 	}
 	

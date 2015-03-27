@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,12 +18,13 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import util.Environment;
+import util.Lemmatizer;
+import util.Printer;
 
 import com.ibm.icu.text.DecimalFormat;
 
 import dataset.NgramExtractor;
 import dataset.Texts;
-import edu.cmu.lti.jawjaw.pobj.Synset;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.IIndexWord;
@@ -33,38 +33,21 @@ import edu.mit.jwi.item.ISynset;
 import edu.mit.jwi.item.ISynsetID;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
-import edu.mit.jwi.item.WordID;
-import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.util.ArrayCoreMap;
 import edu.stanford.nlp.util.CoreMap;
 
-public class WordNet2 {
+public class SynsetExtractor {
+	
+	private static Printer printer = new Printer(false);
 	
 	private static DecimalFormat f = new DecimalFormat("#0.00");
-
-	public static void main(String[] args) {
-		WordNet2 w = WordNet2.fromFile(new File(Environment.resources(), "wordnet-dict").toString());
-		w.go();
-	}
-
-	public void go() {
-		Scanner s = new Scanner(System.in);
-		boolean c = true;
-		while (c) {
-			System.out.print("INPUT: ");
-			String input1 = s.nextLine();
-			fromSentence(input1);
-		}
-		s.close();
-	}
-
-	public IDictionary dict;
-
 	List<String> upPointers = new ArrayList<String>(Arrays.asList(new String[] {
 			// nouns
 			"+", "@", "@i", "#m", "#s", "#p", ";c", ";r", ";u",
@@ -75,77 +58,193 @@ public class WordNet2 {
 			// additional for adj
 			"&", "<", "\\", "="
 
-	// adverb no additional
+			// adverb no additional
 			}));
-
+	
+	
 	private HashMap<ISynsetID, HashMap<Integer, Integer>> shortestPaths = new HashMap<ISynsetID, HashMap<Integer, Integer>>();
-	private Queue<ISynsetID> queue = new LinkedList<ISynsetID>();
+	private Queue<ISynsetID> synsetQueue = new LinkedList<ISynsetID>();
 	private HashMap<Integer, HashMap<ISynsetID, ISynset>> predecessors = new HashMap<Integer, HashMap<ISynsetID, ISynset>>();
-	StanfordCoreNLP pipeline;
-	ArrayList<String> phrases;
-	HashMap<ISynset, Integer> depths = new HashMap<ISynset, Integer>();
+	private ArrayList<String> phrases;
+	
+	
+	//Shared by many instances
+	private final IDictionary dict;
+	private final StanfordCoreNLP pipeline;
+	private final HashMap<ISynset, Integer> depths;
 
-	public static WordNet2 fromFile(String dictDir) {
+	public static void main(String[] args) {
+		TEST();
+//		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
+//		WordNet2 w = new WordNet2(createPipeline(), dictFromDir(dictDir));
+//		w.test();
+	}
+	
+	public Annotation annotationFromLemmas(List<String> lemmas){
+//		Properties props = new Properties();
+//		props.setProperty("annotators", "pos");
+//		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
+		ArrayList<CoreMap> sentences = new ArrayList<CoreMap>();
+		ArrayList<CoreLabel> tokens = new ArrayList<CoreLabel>();
+		for(String lemma : lemmas){
+			CoreLabel label = new CoreLabel();
+			label.setWord(lemma);
+			tokens.add(label);
+		}
+		CoreMap sentence = new ArrayCoreMap();
+		sentences.add(sentence);
+		sentence.set(TokensAnnotation.class, tokens);
+		Annotation annotation = new Annotation(sentences);
+		pipeline.annotate(annotation);
+//		printPOS(annotation);
+		return annotation;
+	}
+	
+	private static void printPOS(Annotation a){
+		List<CoreMap> sentences = a.get(SentencesAnnotation.class);
+		int sentenceIndex = 0;
+		for (CoreMap sentence : sentences) {
+			System.out.print("Sentence " + sentenceIndex + ": ");
+			for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
+				String pos = token.get(PartOfSpeechAnnotation.class);
+				System.out.print(pos + " ");
+			}
+			System.out.println();
+		}
+	}
+	
+	public static void TEST(){
+		
+		List<String> lemmas = Arrays.asList(new String[]{"I", "go", "home", "today", "to", "meet", "my", "dog"});
+//		annotationFromLemmas(lemmas);
+		boolean a = true;
+		if(a){return;}
+		
+		
+		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
+		IDictionary dict = dictFromDir(dictDir);
+		Properties props = new Properties();
+		props.setProperty("annotators", "pos");
+		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
+		ArrayCoreMap coreMap = new ArrayCoreMap();
+		CoreLabel tokenLabel = new CoreLabel();
+		tokenLabel.setWord("dog");
+		coreMap.set(CoreAnnotations.TokensAnnotation.class, new ArrayList(Arrays.asList(new CoreLabel[]{tokenLabel})));
+		ArrayList<CoreMap> coremaps = new ArrayList<CoreMap>();
+		coremaps.add(coreMap);
+		Annotation annotation = new Annotation(coremaps);
+		pipeline.annotate(annotation);
+		List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
+		System.out.println("sentences: " + sentences);
+		CoreMap sentence = sentences.get(0);
+		List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+		System.out.println("tokens: " + tokens);
+		CoreLabel token = tokens.get(0);
+		String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+		System.out.println("token lemma: " + token.lemma());
+		System.out.println("token pos: " + pos);
+		
+		System.out.println(annotation);
+	}
+	
+	public static StanfordCoreNLP createPipeline(){
+		Properties props = new Properties();
+//		props.setProperty("annotators", "tokenize, ssplit, pos, lemma");
+		props.setProperty("annotators", "pos");
+		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
+		return pipeline;
+	}
+	
+	public static IDictionary dictFromDir(String dictDir){
+		URL dictUrl;
 		try {
-			URL dictUrl = new URL("file", null, dictDir);
+			dictUrl = new URL("file", null, dictDir);
 			IDictionary dict = new Dictionary(dictUrl);
-			return new WordNet2(dict);
+			dict.open();
+			return dict;
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);
 			return null;
 		}
 	}
+	
+	
 
-	public WordNet2(IDictionary dict) {
-		try {
-			this.dict = dict;
-			dict.open();
-			Properties props = new Properties();
-			props.setProperty("annotators", "tokenize, ssplit, pos, lemma");// ,
-																			// ner,
-																			// parse");
-			pipeline = new StanfordCoreNLP(props);
-		} catch (IOException e) {
-			e.printStackTrace();
+	private void test() {
+		Scanner s = new Scanner(System.in);
+		boolean c = true;
+		while (c) {
+			System.out.print("INPUT: ");
+			String input1 = s.nextLine();
+			fromText(Lemmatizer.instance().lemmatize(input1));
 		}
+		s.close();
 	}
 
-	List<IWordID>fromSentence(String sentenceText) {
-		setup(sentenceText);
-		System.out.println("size: " + queue.size());
+	
+	
+	public SynsetExtractor(StanfordCoreNLP pipeline, IDictionary dict, HashMap<ISynset, Integer> depths){
+		this.pipeline = pipeline;
+		this.dict = dict;
+		this.depths = depths;
+	}
+
+//	public static WordNet2 fromDictDir(String dictDir) {
+//		try {
+//			URL dictUrl = new URL("file", null, dictDir);
+//			IDictionary dict = new Dictionary(dictUrl);
+//			return new WordNet2(dict);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			System.exit(0);
+//			return null;
+//		}
+//	}
+
+//	public WordNet2(IDictionary dict) {
+//		try {
+//			this.dict = dict;
+//			dict.open();
+//			Properties props = new Properties();
+//			props.setProperty("annotators", "tokenize, ssplit, pos, lemma");
+//			pipeline = new StanfordCoreNLP(props);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+
+	
+	//Datasets can be created in parallell. Make sure this method is not invoked concurrently
+	synchronized public List<ISynset>fromText(List<String> lemmas) {
+		setup(lemmas);
+		printer.println("size: " + synsetQueue.size());
 		printPaths(shortestPaths);
-		List<IWordID> foundSynsets = graphSearch();
+		List<ISynset> foundSynsets = graphSearch();
 		return foundSynsets;
 	}
 
-	void setup(String sentenceText) {
+	void setup(List<String> lemmas) {
 		shortestPaths.clear();
-		queue.clear();
+		synsetQueue.clear();
 		predecessors.clear();
 		phrases = new ArrayList<String>();
-		Annotation document = new Annotation(sentenceText);
-		pipeline.annotate(document);
-		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-
+//		Annotation annotation = new Annotation(sentenceText);
+//		synchronized (pipeline) {
+//			pipeline.annotate(annotation);
+//		}
+		Annotation annotation = annotationFromLemmas(lemmas);
+		List<CoreMap> sentences = annotation.get(SentencesAnnotation.class);
+		int lemmaIndex = 0;
 		for (CoreMap sentence : sentences) {
 			int phraseIndex = 0;
 			for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
 				String pos = token.get(PartOfSpeechAnnotation.class);
-				String lemma = token.get(LemmaAnnotation.class);
+//				String lemma = token.get(LemmaAnnotation.class);
+				String lemma = lemmas.get(lemmaIndex);
+				lemmaIndex ++;
 				if (!Texts.instance().isStopword(lemma)) {
-					POS posTag;
-					if (pos.equals("VB") || pos.equals("VBD") || pos.equals("VBG") || pos.equals("VBN") || pos.equals("VBP")
-							|| pos.equals("VBZ")) {
-						posTag = POS.VERB;
-					} else if (pos.equals("JJ") || pos.equals("JJR") || pos.equals("JJS")) {
-						posTag = POS.ADJECTIVE;
-					} else if (pos.equals("RB") || pos.equals("RBR") || pos.equals("RBS")) {
-						posTag = POS.ADVERB;
-					} else {
-						System.out.println(lemma + ": " + pos);
-						posTag = POS.NOUN;
-					}
+					POS posTag = fromPennTreebank(pos);
 					if (processPhrase(phraseIndex, lemma, posTag)) {
 						phrases.add(lemma);
 						phraseIndex++;
@@ -162,14 +261,29 @@ public class WordNet2 {
 			}
 		}
 	}
+	
+	public static POS fromPennTreebank(String pos){
+		POS posTag;
+		if (pos.equals("VB") || pos.equals("VBD") || pos.equals("VBG") || pos.equals("VBN") || pos.equals("VBP")
+				|| pos.equals("VBZ")) {
+			posTag = POS.VERB;
+		} else if (pos.equals("JJ") || pos.equals("JJR") || pos.equals("JJS")) {
+			posTag = POS.ADJECTIVE;
+		} else if (pos.equals("RB") || pos.equals("RBR") || pos.equals("RBS")) {
+			posTag = POS.ADVERB;
+		} else {
+			posTag = POS.NOUN;
+		}
+		return posTag;
+	}
 
 	boolean processPhrase(int phraseIndex, String phrase, POS pos) {
-		IIndexWord indexWord = dict.getIndexWord(phrase, pos);
+		IIndexWord indexWord = getIndexWord(phrase, pos);
 		if (indexWord != null) {
-			System.out.println(phraseIndex + ": " + phrase + " (" + pos + ")");
+			printer.println(phraseIndex + ": " + phrase + " (" + pos + ")");
 			for (IWordID id : indexWord.getWordIDs()) {
 				ISynsetID synsetId = id.getSynsetID();
-				queue.add(synsetId);
+				synsetQueue.add(synsetId);
 				HashMap<Integer, Integer> pathsHere = new HashMap<Integer, Integer>();
 				pathsHere.put(phraseIndex, 0);
 				shortestPaths.put(synsetId, pathsHere);
@@ -184,30 +298,25 @@ public class WordNet2 {
 		}
 	}
 
-	List<IWordID> graphSearch() {
-		for (int i = 0; i < 10; i++) {
-			// System.out.println("ITERATION#" + i);
-			int n = queue.size();
+	List<ISynset> graphSearch() {
+		for(int i = 0; i < 10; i++) { 
+			// printer.println("ITERATION#" + i);
+			int n = synsetQueue.size();
+			//Loop through all new nodes (BFS)
 			for (int j = 0; j < n; j++) {
-				ISynset synset = dict.getSynset(queue.remove());
+				ISynset synset = getSynset(synsetQueue.remove());
 				ISynsetID synsetId = synset.getID();
-				if (!shortestPaths.containsKey(synsetId)) {
-					shortestPaths.put(synsetId, new HashMap<Integer, Integer>());
-				}
-				HashMap<Integer, Integer> pathsHere = shortestPaths.get(synsetId);
+				HashMap<Integer, Integer> pathsHere = getShortestPaths(synsetId);
 				for (Entry<IPointer, List<ISynsetID>> pointer : synset.getRelatedMap().entrySet()) {
 					if (!pointsUp(pointer.getKey())) {
 						continue;
 					}
 					for (ISynsetID parent : pointer.getValue()) {
-						if (!shortestPaths.containsKey(parent)) {
-							shortestPaths.put(parent, new HashMap<Integer, Integer>());
-						}
-						HashMap<Integer, Integer> pathsToParent = shortestPaths.get(parent);
+						HashMap<Integer, Integer> pathsToParent = getShortestPaths(parent);
 						boolean parentWasUpdated = false;
-						for (Entry<Integer, Integer> path : pathsHere.entrySet()) {
-							int wordIndex = path.getKey();
-							int newLength = path.getValue() + 1;
+						for (Entry<Integer, Integer> pathHere : pathsHere.entrySet()) {
+							int wordIndex = pathHere.getKey();
+							int newLength = pathHere.getValue() + 1;
 							boolean existingShorter = pathsToParent.containsKey(wordIndex)
 									&& pathsToParent.get(wordIndex) < newLength;
 							if (!existingShorter) {
@@ -217,32 +326,41 @@ public class WordNet2 {
 							}
 						}
 						if (parentWasUpdated) {
-							queue.add(parent);
+							synsetQueue.add(parent);
 						}
 					}
 				}
 			}
 		}
-//		System.out.println("PATHS: ");
+//		printer.println("PATHS: ");
 //		printPaths(shortestPaths);
 //		removeRedundant(shortestPaths);
-//		System.out.println("IMPORTANT PATHS: ");
+//		printer.println("IMPORTANT PATHS: ");
 //		printPaths(shortestPaths);
-		List<FoundPath> sortedPaths = getSorted(shortestPaths);
-		prettyPrintList(sortedPaths, 15);
-		List<FoundPath> cover = extractCover(sortedPaths);
-		System.out.println("EXTRACTED COVER:");
-		prettyPrintList(cover, 0);
-		return cover.stream().map(fp -> fp.firstWordId).collect(Collectors.toCollection(ArrayList::new));
+		List<FoundPath> paths = getList(shortestPaths);
+//		prettyPrintList(sortedPaths, 15);
+		List<FoundPath> cover = extractCover(paths);
+		printer.println("EXTRACTED COVER:");
+//		prettyPrintList(cover, 0);
+		return cover.stream().map(fp -> fp.goal).collect(Collectors.toCollection(ArrayList::new));
+	}
+	
+	private HashMap<Integer,Integer> getShortestPaths(ISynsetID synsetId){
+		if (!shortestPaths.containsKey(synsetId)) {
+			shortestPaths.put(synsetId, new HashMap<Integer, Integer>());
+		}
+		HashMap<Integer, Integer> pathsHere = shortestPaths.get(synsetId);
+		return pathsHere;
 	}
 
 	<T> void prettyPrintList(List<T> list, int limit) {
-		System.out.println("[");
-		for (int i = 0; i < (limit == 0 ? list.size() : limit); i++) {
+		printer.println("[");
+		int n = (limit > 0 && limit < list.size()? limit : list.size());
+		for (int i = 0; i < n; i++) {
 			T e = list.get(i);
-			System.out.println("  " + e + ",");
+			printer.println("  " + e + ",");
 		}
-		System.out.println("]");
+		printer.println("]");
 	}
 
 	void removeRedundant(HashMap<ISynsetID, HashMap<Integer, Integer>> shortestPaths) {
@@ -282,14 +400,14 @@ public class WordNet2 {
 		return possiblyBetter;
 	}
 
-	List<FoundPath> getSorted(HashMap<ISynsetID, HashMap<Integer, Integer>> shortestPaths) {
+	List<FoundPath> getList(HashMap<ISynsetID, HashMap<Integer, Integer>> shortestPaths) {
 		ArrayList<FoundPath> sorted = new ArrayList<FoundPath>();
 		for (ISynsetID id : shortestPaths.keySet()) {
 			HashMap<Integer, Integer> paths = shortestPaths.get(id);
-			ISynset synset = dict.getSynset(id);
+			ISynset synset = getSynset(id);
 			sorted.add(new FoundPath(synset, paths));
 		}
-		Collections.sort(sorted);
+//		Collections.sort(sorted);
 		return sorted;
 	}
 
@@ -356,10 +474,9 @@ public class WordNet2 {
 		while(extracted.size() < num){
 			FoundPath best = paths.stream().filter(p -> ! extracted.contains(p)).min(FoundPath::compareTo).get();
 			extracted.add(best);
-			
 			int numBestCoveredWords = Math.max(1, (int)(best.paths.size()/2.5));
 			List<Integer> bestCoveredWords = best.paths.entrySet().stream().sorted(Comparator.comparing(Entry::getValue)).limit(numBestCoveredWords).map(e -> e.getKey()).collect(Collectors.toList());
-			System.out.println("ignoring " + bestCoveredWords + ": " + bestCoveredWords.stream().map(i -> phrases.get(i)).collect(Collectors.toList()));
+			printer.println("ignoring " + bestCoveredWords + ": " + bestCoveredWords.stream().map(i -> phrases.get(i)).collect(Collectors.toList()));
 			for(FoundPath path : paths){
 				path.ignoreWords(bestCoveredWords);
 			}
@@ -368,29 +485,29 @@ public class WordNet2 {
 	}
 
 	void printPaths(HashMap<ISynsetID, HashMap<Integer, Integer>> paths) {
-		System.out.println("{");
+		printer.println("{");
 		for (Entry<ISynsetID, HashMap<Integer, Integer>> e : paths.entrySet()) {
 			HashMap<Integer, Integer> pathsHere = e.getValue();
 			if (pathsHere.size() > 1) {
 				System.out.print("  ");
-				ISynset synset = dict.getSynset(e.getKey());
+				ISynset synset = getSynset(e.getKey());
 				System.out.print(synset.getWords().stream().map(w -> w.getLemma()).collect(Collectors.toList()));
 				System.out.print(" :  " + pathsHere);
-				System.out.println("    from:");
+				printer.println("    from:");
 				// for(int wordIndex : pathsHere.keySet()){
 				// ISynset predecessor =
 				// predecessors.get(wordIndex).get(synset.getID());
 				// System.out.print("    " + wordIndex + ":");
 				// if(predecessor == null){
-				// System.out.println("NULL");
+				// printer.println("NULL");
 				// }else{
-				// System.out.println(predecessor.getWords().stream().map(w ->
+				// printer.println(predecessor.getWords().stream().map(w ->
 				// w.getLemma()).collect(Collectors.toList()) + ", ");
 				// }
 				// }
 			}
 		}
-		System.out.println("}");
+		printer.println("}");
 	}
 
 	private boolean pointsUp(IPointer pointer) {
@@ -398,8 +515,10 @@ public class WordNet2 {
 	}
 
 	int getDepth(ISynset startSynset) {
-		if (depths.containsKey(startSynset)) {
-			return depths.get(startSynset);
+		synchronized (depths) {
+			if (depths.containsKey(startSynset)) {
+				return depths.get(startSynset);
+			}
 		}
 		HashMap<ISynset, List<ISynset>> backLinks = new HashMap<ISynset, List<ISynset>>();
 		HashSet<ISynset> visited = new HashSet<ISynset>();
@@ -410,16 +529,16 @@ public class WordNet2 {
 		// int progress = 0;
 		while (true) {
 			// progress++;
-			// System.out.println("up progress: " + progress);
+			// printer.println("up progress: " + progress);
 			int n = queue.size();
-			// System.out.println(n);
+			// printer.println(n);
 			for (int i = 0; i < n; i++) {
 				ISynset topSynset = queue.remove();
 				boolean hasParent = false;
 				for (Entry<IPointer, List<ISynsetID>> e : topSynset.getRelatedMap().entrySet()) {
 					if (pointsUp(e.getKey())) {
 						for (ISynsetID parentId : e.getValue()) {
-							ISynset parent = dict.getSynset(parentId);
+							ISynset parent = getSynset(parentId);
 							if (!visited.contains(parent)) {
 								hasParent = true;
 								queue.add(parent);
@@ -446,44 +565,61 @@ public class WordNet2 {
 					backQueue.add(topSynset);
 					backVisited.add(topSynset);
 					while (!backQueue.isEmpty()) {
-						// System.out.println("still not empty");
+						// printer.println("still not empty");
 						int backQueueSize = backQueue.size();
-						// System.out.println("will loop through backqueue, size : "
+						// printer.println("will loop through backqueue, size : "
 						// + backQueueSize);
 						for (int j = 0; j < backQueueSize; j++) {
 							// System.out.print("popping..   ");
 							ISynset syn = backQueue.remove();
-							// System.out.println("popped: " + syn);
+							// printer.println("popped: " + syn);
 							if (backLinks.containsKey(syn)) {
-								// System.out.println("#children: " +
+								// printer.println("#children: " +
 								// backLinks.get(syn).size());
 								for (ISynset child : backLinks.get(syn)) {
-									// System.out.println("CHILD: " + child);
+									// printer.println("CHILD: " + child);
 									// if(!depths.containsKey(child) ||
 									// depths.get(child) > depth){
 									if (!backVisited.contains(child)) {
-										// System.out.println("Adding it!");
+										// printer.println("Adding it!");
 										backQueue.add(child);
 										backVisited.add(child);
 									} else {
-										// System.out.println("Already visited!");
+										// printer.println("Already visited!");
 									}
 								}
 							} else {
-								// System.out.println("NO CHILDREN!");
+								// printer.println("NO CHILDREN!");
 							}
-							depths.put(syn, depth);
-							// System.out.println("Added it at depth: " +
+							synchronized (depths) {
+								depths.put(syn, depth);
+							}
+							// printer.println("Added it at depth: " +
 							// depth);
 						}
 						depth++;
-						// System.out.println("increased depth to  " + depth);
+						// printer.println("increased depth to  " + depth);
 					}
-					// System.out.println("now it's empty!");
-					return depths.get(startSynset);
+					// printer.println("now it's empty!");
+					synchronized (depths) {
+						return depths.get(startSynset);
+					}
 				}
 			}
 		}
 	}
+	
+	private ISynset getSynset(ISynsetID id){
+		synchronized (dict) {
+			return dict.getSynset(id);
+		}
+	}
+	
+	private IIndexWord getIndexWord(String lemma, POS pos){
+		synchronized(dict){
+			return dict.getIndexWord(lemma, pos);
+		}
+	}
+	
 
 }

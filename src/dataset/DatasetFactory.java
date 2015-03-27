@@ -124,6 +124,7 @@ public class DatasetFactory {
 				List<Sentence<T>> sentences = new ArrayList<Sentence<T>>();
 				for(Sentence<T2> sentence2 : citer2.sentences){
 					T text = TextFactory.createText(params, sentence2.text.raw);
+					System.out.print(".");
 					Sentence<T> sentence = new Sentence<T>(sentence2.type, text);
 					sentences.add(sentence);
 				}

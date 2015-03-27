@@ -39,8 +39,8 @@ public class CompareClassifiers {
 		
 //		labels = labels.subList(4, 5); //TODO
 		
-		testMRF(TextWithSkipgrams.class, labels);
-//		testWeka(labels);
+//		testMRF(TextWithSkipgrams.class, labels);
+		testWeka(labels);
 		
 //		WikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph(
 //				new File(resourcesDir, "ser/linksSingleWords.ser"), 
@@ -67,7 +67,10 @@ public class CompareClassifiers {
 		}
 		
 		List<Result> results = wekaSMO.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
+		System.out.println("FULL RESULTS:");
 		printMultipleResults("SMO", results, null, true);
+		System.out.println("COMPACT RESULTS:");
+		printMultipleResults("SMO", results, null, false);
 		
 	}
 	

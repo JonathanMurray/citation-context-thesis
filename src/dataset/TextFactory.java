@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import concepts.SynsetExtractor;
 import util.Lemmatizer;
+import edu.mit.jwi.item.ISynset;
 
 public class TextFactory {
 	
@@ -26,6 +28,13 @@ public class TextFactory {
 			Ngrams ngramsTfIdf = nAndSkipgrams[0];
 			Ngrams skipgramsTfIdf = nAndSkipgrams[1];
 			return (T) new TextWithSkipgrams(raw, rawWords, lemmas, ngramsTfIdf, skipgramsTfIdf);
+		}
+		
+		else if(params.textClass.equals(TextWithSynsets.class)){
+			Ngrams ngramsTfIdf = NgramExtractor.ngramsTfIdf(MAX_NGRAM_N, lemmas, params.ngramIdf);
+			SynsetExtractor wordnet = new SynsetExtractor(params.nlpPipeline, params.wordnetDict, params.synsetDepths);
+			List<ISynset> synsets = wordnet.fromText(lemmas);
+			return (T) new TextWithSynsets(raw, rawWords, lemmas, ngramsTfIdf, synsets);
 		}
 		
 //		else if(params.textClass.equals(TextWithConcepts.class)){
