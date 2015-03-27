@@ -12,11 +12,11 @@ public class Printer {
 		backspaceProgress = Environment.exjobbInTerminal();
 	}
 	
-	public void progress(){
+	public synchronized void progress(){
 		progress(1);
 	}
 	
-	public void progress(int period){
+	public synchronized void progress(int period){
 		if(enabled){
 			progress ++;
 			if(backspaceProgress){
