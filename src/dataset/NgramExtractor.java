@@ -55,6 +55,15 @@ public class NgramExtractor {
 		};
 	}
 	
+	public static List<String> allNgramPhrases(int minN, int maxN, List<String> words){
+		List<TObjectDoubleHashMap<String>> allNgrams = allNgrams(maxN, words);
+		List<String> phrases = new ArrayList<String>();
+		for(int i = minN - 1; i < maxN; i++){
+			phrases.addAll(allNgrams.get(i).keySet());
+		}
+		return phrases;
+	}
+	
 	public static List<TObjectDoubleHashMap<String>> allNgrams(int maxN, List<String> words){
 		return IntStream.range(1, maxN + 1)
 					.mapToObj(n -> ngrams(n, words))
