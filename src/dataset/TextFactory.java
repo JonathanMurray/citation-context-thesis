@@ -33,7 +33,7 @@ public class TextFactory {
 		else if(params.textClass.equals(TextWithSynsets.class)){
 			Ngrams ngramsTfIdf = NgramExtractor.ngramsTfIdf(MAX_NGRAM_N, lemmas, params.ngramIdf);
 			SynsetExtractor wordnet = new SynsetExtractor(params.nlpPipeline, params.wordnetDict, params.synsetDepths);
-			List<ISynset> synsets = wordnet.fromText(lemmas);
+			List<ISynset> synsets = wordnet.fromSentence(lemmas);
 			return (T) new TextWithSynsets(raw, rawWords, lemmas, ngramsTfIdf, synsets);
 		}
 		

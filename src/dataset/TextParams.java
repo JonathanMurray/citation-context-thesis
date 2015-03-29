@@ -1,11 +1,10 @@
 package dataset;
 
-import java.util.HashMap;
-
 import concepts.WikiGraph;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.ISynset;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class TextParams<T extends Text>{
 	public Class<T> textClass;
@@ -14,7 +13,7 @@ public class TextParams<T extends Text>{
 	public WikiGraph wikiGraph;
 	public StanfordCoreNLP nlpPipeline;
 	public IDictionary wordnetDict;
-	public HashMap<ISynset, Integer> synsetDepths;
+	public TObjectIntHashMap<ISynset> synsetDepths;
 	
 	public static TextParams<Text> basic(){
 		TextParams<Text> p = new TextParams<Text>(Text.class);
@@ -32,7 +31,7 @@ public class TextParams<T extends Text>{
 		p.ngramIdf = ngramIdf;
 		p.nlpPipeline = nlpPipeline;
 		p.wordnetDict = wordnetDict;
-		p.synsetDepths = new HashMap<ISynset, Integer>();
+		p.synsetDepths = new TObjectIntHashMap<ISynset>();
 		return p;
 	}
 	

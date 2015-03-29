@@ -32,7 +32,7 @@ public class CreateDatasetsSaveXml {
 	private final static int NUM_HOOKS = 2;
 	private final static int NUM_ACRONYMS = 2;
 	
-	private final static String[] LABELS = new String[]{
+	private static String[] LABELS = new String[]{
 			"D07-1031", "J96-2004", "N06-1020", "P04-1015", "P05-1045", "W02-1011", "W06-1615",
 			"A92-1018", "J90-1003", "N03-1003", "P04-1035", "P07-1033", "W04-1013", "C98-2122", 
 			"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"};
@@ -65,15 +65,15 @@ public class CreateDatasetsSaveXml {
 		StanfordCoreNLP pipeline = SynsetExtractor.createPipeline();
 		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
 		IDictionary dict = SynsetExtractor.dictFromDir(dictDir);
-		for(int i = 0; i < 1; i++){ //TODO
+		TextParams<TextWithSynsets> textParams = TextParams.withSynsets(ngramIdf, pipeline, dict);
+		for(int i = 0; i < 3; i++){ //TODO
 			String label = LABELS[i];
 			Printer.printBigProgressHeader(i, LABELS.length);
 			Dataset<Text> other = DatasetXml.parseXmlFile(
 					Text.class, 
 					new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml")
-//					new File(resourcesDir, "xml-datasets/D07-1031-mini.xml")
 					, 0);
-			Dataset<TextWithSynsets> dataset = DatasetFactory.fromOtherRaw(TextParams.withSynsets(ngramIdf, pipeline, dict), other);
+			Dataset<TextWithSynsets> dataset = DatasetFactory.fromOtherRaw(textParams, other);
 			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
 			datasets.add(dataset);
 		}

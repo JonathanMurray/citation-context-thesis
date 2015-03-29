@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import util.Environment;
@@ -42,6 +43,9 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.ArrayCoreMap;
 import edu.stanford.nlp.util.CoreMap;
+import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.map.hash.TIntIntHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class SynsetExtractor {
 	
@@ -60,18 +64,19 @@ public class SynsetExtractor {
 
 			// adverb no additional
 			}));
+
+	private static final Pattern PUNCTUATION = Pattern.compile("[\\.\\?\\!\\;]");
 	
-	
-	private HashMap<ISynsetID, HashMap<Integer, Integer>> shortestPaths = new HashMap<ISynsetID, HashMap<Integer, Integer>>();
+	private HashMap<ISynsetID, TIntIntHashMap> shortestPaths = new HashMap<ISynsetID, TIntIntHashMap>();
 	private Queue<ISynsetID> synsetQueue = new LinkedList<ISynsetID>();
-	private HashMap<Integer, HashMap<ISynsetID, ISynset>> predecessors = new HashMap<Integer, HashMap<ISynsetID, ISynset>>();
+//	private HashMap<Integer, HashMap<ISynsetID, ISynset>> predecessors = new HashMap<Integer, HashMap<ISynsetID, ISynset>>();
 	private ArrayList<String> phrases;
 	
 	
 	//Shared by many instances
 	private final IDictionary dict;
 	private final StanfordCoreNLP pipeline;
-	private final HashMap<ISynset, Integer> depths;
+	private final TObjectIntHashMap<ISynset> depths;
 
 	public static void main(String[] args) {
 		TEST();
@@ -80,25 +85,7 @@ public class SynsetExtractor {
 //		w.test();
 	}
 	
-	public Annotation annotationFromLemmas(List<String> lemmas){
-//		Properties props = new Properties();
-//		props.setProperty("annotators", "pos");
-//		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
-		ArrayList<CoreMap> sentences = new ArrayList<CoreMap>();
-		ArrayList<CoreLabel> tokens = new ArrayList<CoreLabel>();
-		for(String lemma : lemmas){
-			CoreLabel label = new CoreLabel();
-			label.setWord(lemma);
-			tokens.add(label);
-		}
-		CoreMap sentence = new ArrayCoreMap();
-		sentences.add(sentence);
-		sentence.set(TokensAnnotation.class, tokens);
-		Annotation annotation = new Annotation(sentences);
-		pipeline.annotate(annotation);
-//		printPOS(annotation);
-		return annotation;
-	}
+	
 	
 	private static void printPOS(Annotation a){
 		List<CoreMap> sentences = a.get(SentencesAnnotation.class);
@@ -114,42 +101,28 @@ public class SynsetExtractor {
 	}
 	
 	public static void TEST(){
-		
-		List<String> lemmas = Arrays.asList(new String[]{"I", "go", "home", "today", "to", "meet", "my", "dog"});
-//		annotationFromLemmas(lemmas);
-		boolean a = true;
-		if(a){return;}
-		
-		
+		List<String> lemmas = Arrays.asList(new String[]{"I", "go", "home", "today", ".", "I", "will", "meet", "my", "dog"});
 		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
 		IDictionary dict = dictFromDir(dictDir);
 		Properties props = new Properties();
 		props.setProperty("annotators", "pos");
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
-		ArrayCoreMap coreMap = new ArrayCoreMap();
-		CoreLabel tokenLabel = new CoreLabel();
-		tokenLabel.setWord("dog");
-		coreMap.set(CoreAnnotations.TokensAnnotation.class, new ArrayList(Arrays.asList(new CoreLabel[]{tokenLabel})));
-		ArrayList<CoreMap> coremaps = new ArrayList<CoreMap>();
-		coremaps.add(coreMap);
-		Annotation annotation = new Annotation(coremaps);
-		pipeline.annotate(annotation);
+		SynsetExtractor s = new SynsetExtractor(pipeline, dict, new TObjectIntHashMap<ISynset>());
+		Annotation annotation = s.annotationFromLemmas(lemmas);
 		List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
 		System.out.println("sentences: " + sentences);
-		CoreMap sentence = sentences.get(0);
-		List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
-		System.out.println("tokens: " + tokens);
-		CoreLabel token = tokens.get(0);
-		String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-		System.out.println("token lemma: " + token.lemma());
-		System.out.println("token pos: " + pos);
-		
+		for(CoreMap sentence : sentences){
+			List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+			for(CoreLabel token : tokens){
+				System.out.print(token.get(CoreAnnotations.PartOfSpeechAnnotation.class) + " ");
+			}
+			System.out.println();
+		}
 		System.out.println(annotation);
 	}
 	
 	public static StanfordCoreNLP createPipeline(){
 		Properties props = new Properties();
-//		props.setProperty("annotators", "tokenize, ssplit, pos, lemma");
 		props.setProperty("annotators", "pos");
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
 		return pipeline;
@@ -177,62 +150,32 @@ public class SynsetExtractor {
 		while (c) {
 			System.out.print("INPUT: ");
 			String input1 = s.nextLine();
-			fromText(Lemmatizer.instance().lemmatize(input1));
+			fromSentence(Lemmatizer.instance().lemmatize(input1));
 		}
 		s.close();
 	}
-
 	
-	
-	public SynsetExtractor(StanfordCoreNLP pipeline, IDictionary dict, HashMap<ISynset, Integer> depths){
+	public SynsetExtractor(StanfordCoreNLP pipeline, IDictionary dict, TObjectIntHashMap<ISynset> depths){
 		this.pipeline = pipeline;
 		this.dict = dict;
 		this.depths = depths;
 	}
-
-//	public static WordNet2 fromDictDir(String dictDir) {
-//		try {
-//			URL dictUrl = new URL("file", null, dictDir);
-//			IDictionary dict = new Dictionary(dictUrl);
-//			return new WordNet2(dict);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			System.exit(0);
-//			return null;
-//		}
-//	}
-
-//	public WordNet2(IDictionary dict) {
-//		try {
-//			this.dict = dict;
-//			dict.open();
-//			Properties props = new Properties();
-//			props.setProperty("annotators", "tokenize, ssplit, pos, lemma");
-//			pipeline = new StanfordCoreNLP(props);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
-
 	
 	//Datasets can be created in parallell. Make sure this method is not invoked concurrently
-	synchronized public List<ISynset>fromText(List<String> lemmas) {
+	synchronized public List<ISynset>fromSentence(List<String> lemmas) {
 		setup(lemmas);
 		printer.println("size: " + synsetQueue.size());
 		printPaths(shortestPaths);
 		List<ISynset> foundSynsets = graphSearch();
 		return foundSynsets;
 	}
+	
 
 	void setup(List<String> lemmas) {
 		shortestPaths.clear();
 		synsetQueue.clear();
-		predecessors.clear();
+//		predecessors.clear();
 		phrases = new ArrayList<String>();
-//		Annotation annotation = new Annotation(sentenceText);
-//		synchronized (pipeline) {
-//			pipeline.annotate(annotation);
-//		}
 		Annotation annotation = annotationFromLemmas(lemmas);
 		List<CoreMap> sentences = annotation.get(SentencesAnnotation.class);
 		int lemmaIndex = 0;
@@ -240,7 +183,6 @@ public class SynsetExtractor {
 			int phraseIndex = 0;
 			for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
 				String pos = token.get(PartOfSpeechAnnotation.class);
-//				String lemma = token.get(LemmaAnnotation.class);
 				String lemma = lemmas.get(lemmaIndex);
 				lemmaIndex ++;
 				if (!Texts.instance().isStopword(lemma)) {
@@ -260,6 +202,30 @@ public class SynsetExtractor {
 				phrases.add(phraseNgram);
 			}
 		}
+	}
+	
+	Annotation annotationFromLemmas(List<String> lemmas){
+		ArrayList<CoreMap> sentences = new ArrayList<CoreMap>();
+		ArrayList<CoreLabel> tokens = new ArrayList<CoreLabel>();
+		for(String lemma : lemmas){
+			CoreLabel label = new CoreLabel();
+			label.setWord(lemma);
+			tokens.add(label);
+			if(PUNCTUATION.matcher(lemma).find()){
+				CoreMap sentence = new ArrayCoreMap();
+				sentence.set(TokensAnnotation.class, tokens);
+				sentences.add(sentence);
+				tokens = new ArrayList<CoreLabel>();
+			}
+		}
+		CoreMap sentence = new ArrayCoreMap();
+		sentence.set(TokensAnnotation.class, tokens);
+		
+		sentences.add(sentence);
+		Annotation annotation = new Annotation(sentences);
+		pipeline.annotate(annotation);
+//		printPOS(annotation);
+		return annotation;
 	}
 	
 	public static POS fromPennTreebank(String pos){
@@ -284,13 +250,13 @@ public class SynsetExtractor {
 			for (IWordID id : indexWord.getWordIDs()) {
 				ISynsetID synsetId = id.getSynsetID();
 				synsetQueue.add(synsetId);
-				HashMap<Integer, Integer> pathsHere = new HashMap<Integer, Integer>();
+				TIntIntHashMap pathsHere = new TIntIntHashMap();
 				pathsHere.put(phraseIndex, 0);
 				shortestPaths.put(synsetId, pathsHere);
-				if (!predecessors.containsKey(phraseIndex)) {
-					predecessors.put(phraseIndex, new HashMap<ISynsetID, ISynset>());
-				}
-				predecessors.get(phraseIndex).put(synsetId, null);
+//				if (!predecessors.containsKey(phraseIndex)) {
+//					predecessors.put(phraseIndex, new HashMap<ISynsetID, ISynset>());
+//				}
+//				predecessors.get(phraseIndex).put(synsetId, null);
 			}
 			return true;
 		} else {
@@ -299,29 +265,31 @@ public class SynsetExtractor {
 	}
 
 	List<ISynset> graphSearch() {
-		for(int i = 0; i < 10; i++) { 
+		for(int i = 0; i < 10; i++) { //max depth from word to representative synset
 			// printer.println("ITERATION#" + i);
 			int n = synsetQueue.size();
 			//Loop through all new nodes (BFS)
 			for (int j = 0; j < n; j++) {
 				ISynset synset = getSynset(synsetQueue.remove());
 				ISynsetID synsetId = synset.getID();
-				HashMap<Integer, Integer> pathsHere = getShortestPaths(synsetId);
+				TIntIntHashMap pathsHere = getShortestPaths(synsetId);
 				for (Entry<IPointer, List<ISynsetID>> pointer : synset.getRelatedMap().entrySet()) {
 					if (!pointsUp(pointer.getKey())) {
 						continue;
 					}
 					for (ISynsetID parent : pointer.getValue()) {
-						HashMap<Integer, Integer> pathsToParent = getShortestPaths(parent);
+						TIntIntHashMap pathsToParent = getShortestPaths(parent);
 						boolean parentWasUpdated = false;
-						for (Entry<Integer, Integer> pathHere : pathsHere.entrySet()) {
-							int wordIndex = pathHere.getKey();
-							int newLength = pathHere.getValue() + 1;
+						TIntIntIterator it = pathsHere.iterator();
+						while(it.hasNext()){
+							it.advance();
+							int wordIndex = it.key();
+							int newLength = it.value() + 1;
 							boolean existingShorter = pathsToParent.containsKey(wordIndex)
 									&& pathsToParent.get(wordIndex) < newLength;
 							if (!existingShorter) {
 								pathsToParent.put(wordIndex, newLength);
-								predecessors.get(wordIndex).put(parent, synset);
+//								predecessors.get(wordIndex).put(parent, synset);
 								parentWasUpdated = true;
 							}
 						}
@@ -345,11 +313,11 @@ public class SynsetExtractor {
 		return cover.stream().map(fp -> fp.goal).collect(Collectors.toCollection(ArrayList::new));
 	}
 	
-	private HashMap<Integer,Integer> getShortestPaths(ISynsetID synsetId){
+	private TIntIntHashMap getShortestPaths(ISynsetID synsetId){
 		if (!shortestPaths.containsKey(synsetId)) {
-			shortestPaths.put(synsetId, new HashMap<Integer, Integer>());
+			shortestPaths.put(synsetId, new TIntIntHashMap());
 		}
-		HashMap<Integer, Integer> pathsHere = shortestPaths.get(synsetId);
+		TIntIntHashMap pathsHere = shortestPaths.get(synsetId);
 		return pathsHere;
 	}
 
@@ -363,17 +331,17 @@ public class SynsetExtractor {
 		printer.println("]");
 	}
 
-	void removeRedundant(HashMap<ISynsetID, HashMap<Integer, Integer>> shortestPaths) {
-		Iterator<Entry<ISynsetID, HashMap<Integer, Integer>>> it = shortestPaths.entrySet().iterator();
+	void removeRedundant(HashMap<ISynsetID, TIntIntHashMap> shortestPaths) {
+		Iterator<Entry<ISynsetID, TIntIntHashMap>> it = shortestPaths.entrySet().iterator();
 		while (it.hasNext()) {
-			Entry<ISynsetID, HashMap<Integer, Integer>> e = it.next();
-			HashMap<Integer, Integer> paths = e.getValue();
+			Entry<ISynsetID, TIntIntHashMap> e = it.next();
+			TIntIntHashMap paths = e.getValue();
 			boolean isRedundant = false;
 			for (ISynsetID otherId : shortestPaths.keySet()) {
 				if (otherId.equals(e.getKey())) {
 					continue; // avoid self comparison
 				}
-				HashMap<Integer, Integer> otherPaths = shortestPaths.get(otherId);
+				TIntIntHashMap otherPaths = shortestPaths.get(otherId);
 				if (strictlyBetterThan(otherPaths, paths)) {
 					isRedundant = true;
 					break;
@@ -385,11 +353,13 @@ public class SynsetExtractor {
 		}
 	}
 
-	boolean strictlyBetterThan(HashMap<Integer, Integer> a, HashMap<Integer, Integer> b) {
+	boolean strictlyBetterThan(TIntIntHashMap a, TIntIntHashMap b) {
 		boolean possiblyBetter = false;
-		for (Entry<Integer, Integer> e : b.entrySet()) {
-			int key = e.getKey();
-			int val = e.getValue();
+		TIntIntIterator bIt = b.iterator();
+		while(bIt.hasNext()){
+			bIt.advance();
+			int key = bIt.key();
+			int val = bIt.value();
 			if (!a.containsKey(key) || a.get(key) > val) {
 				return false;
 			}
@@ -400,10 +370,10 @@ public class SynsetExtractor {
 		return possiblyBetter;
 	}
 
-	List<FoundPath> getList(HashMap<ISynsetID, HashMap<Integer, Integer>> shortestPaths) {
+	List<FoundPath> getList(HashMap<ISynsetID, TIntIntHashMap> shortestPaths) {
 		ArrayList<FoundPath> sorted = new ArrayList<FoundPath>();
 		for (ISynsetID id : shortestPaths.keySet()) {
-			HashMap<Integer, Integer> paths = shortestPaths.get(id);
+			TIntIntHashMap paths = shortestPaths.get(id);
 			ISynset synset = getSynset(id);
 			sorted.add(new FoundPath(synset, paths));
 		}
@@ -414,13 +384,13 @@ public class SynsetExtractor {
 	class FoundPath implements Comparable<FoundPath> {
 		IWordID firstWordId;
 		ISynset goal;
-		HashMap<Integer, Integer> paths;
+		TIntIntHashMap paths;
 		double score;
 		int depth;
 		
 		private HashSet<Integer> ignoredWords = new HashSet<Integer>();
 		
-		FoundPath(ISynset goal, HashMap<Integer, Integer> paths) {
+		FoundPath(ISynset goal, TIntIntHashMap paths) {
 			firstWordId = goal.getWords().get(0).getID();
 			this.goal = goal;
 			this.depth = getDepth(goal);
@@ -441,10 +411,12 @@ public class SynsetExtractor {
 		private void computeScore(){
 			score = 0;
 			int numWords = 0;
-			for (Entry<Integer,Integer> e : paths.entrySet()) {
-				int wordIndex = e.getKey();
+			TIntIntIterator it = paths.iterator();
+			while(it.hasNext()){
+				it.advance();
+				int wordIndex = it.key();
 				if(!ignoredWords.contains(wordIndex)){
-					int length = e.getValue();
+					int length = it.value();
 					score += 1.0 / Math.pow(1.5, length);
 					numWords ++;
 				}
@@ -461,21 +433,30 @@ public class SynsetExtractor {
 			StringBuilder s = new StringBuilder();
 			s.append(goal.getPOS() + "#" + goal.getWords().stream().map(w -> w.getLemma()).collect(Collectors.toList()));
 			s.append(" [score: " + f.format(score) + ", depth: " + depth + "]");
-			s.append(" ~ "
-					+ paths.entrySet().stream().map(e -> e.getKey() + ":" + phrases.get(e.getKey()) + "(" + e.getValue() + ")")
-							.collect(Collectors.toList()));
+			s.append(" ~ ");
+			TIntIntIterator it = paths.iterator();
+			while(it.hasNext()){
+				it.advance();
+				s.append(it.key() + ":" + phrases.get(it.key()) + "(" + it.value() + "), ");
+			}
 			return s.toString();
 		}
 	}
 
 	List<FoundPath> extractCover(List<FoundPath> paths){
-		int num = Math.min(paths.size() / 3, 5);
+		int num = Math.min((int)Math.sqrt(paths.size()), 5);
 		List<FoundPath> extracted = new ArrayList<FoundPath>();
 		while(extracted.size() < num){
 			FoundPath best = paths.stream().filter(p -> ! extracted.contains(p)).min(FoundPath::compareTo).get();
 			extracted.add(best);
 			int numBestCoveredWords = Math.max(1, (int)(best.paths.size()/2.5));
-			List<Integer> bestCoveredWords = best.paths.entrySet().stream().sorted(Comparator.comparing(Entry::getValue)).limit(numBestCoveredWords).map(e -> e.getKey()).collect(Collectors.toList());
+			HashMap<Integer,Integer> map = new HashMap<Integer,Integer>();
+			TIntIntIterator it = best.paths.iterator();
+			while(it.hasNext()){ //Expensive, but no easy way of finding best covered words without hashmap
+				it.advance();
+				map.put(it.key(), it.value());
+			}
+			List<Integer> bestCoveredWords = map.entrySet().stream().sorted(Comparator.comparing(Entry::getValue)).limit(numBestCoveredWords).map(e -> e.getKey()).collect(Collectors.toList());
 			printer.println("ignoring " + bestCoveredWords + ": " + bestCoveredWords.stream().map(i -> phrases.get(i)).collect(Collectors.toList()));
 			for(FoundPath path : paths){
 				path.ignoreWords(bestCoveredWords);
@@ -484,10 +465,10 @@ public class SynsetExtractor {
 		return extracted;
 	}
 
-	void printPaths(HashMap<ISynsetID, HashMap<Integer, Integer>> paths) {
+	void printPaths(HashMap<ISynsetID, TIntIntHashMap> paths) {
 		printer.println("{");
-		for (Entry<ISynsetID, HashMap<Integer, Integer>> e : paths.entrySet()) {
-			HashMap<Integer, Integer> pathsHere = e.getValue();
+		for (Entry<ISynsetID, TIntIntHashMap> e : paths.entrySet()) {
+			TIntIntHashMap pathsHere = e.getValue();
 			if (pathsHere.size() > 1) {
 				System.out.print("  ");
 				ISynset synset = getSynset(e.getKey());
