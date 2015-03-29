@@ -1,8 +1,13 @@
 package util;
 
+/**
+ * Printer that can be disabled, and has advanced progress printing capabilities.
+ * @author jonathan
+ *
+ */
 public class Printer {
 	
-	public boolean enabled;
+	public final boolean enabled;
 	private boolean backspaceProgress;
 	private int lastProgressStrLen;
 	private int progress;
