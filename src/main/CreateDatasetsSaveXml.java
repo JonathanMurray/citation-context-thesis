@@ -22,10 +22,16 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) {
+		
+		int numDatasets = -1;
+		if(args.length == 1){
+			numDatasets = Integer.parseInt(args[0]);
+		}
+		
 		Lemmatizer.instance(); //Want the lemma debug prints to appear first
 //		withSkipgrams();
 //		withNgrams();
-		withSynsets();
+		withSynsets(numDatasets);
 	}
 	
 	private final static int BOUNDARY = 80;
@@ -58,16 +64,17 @@ public class CreateDatasetsSaveXml {
 		}
 	}
 	
-	private static void withSynsets(){
+	private static void withSynsets(int numDatasets){
 		File resourcesDir = new File(Environment.resources());
 		NgramIdf ngramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"), NgramIdf.DEFAULT_NGRAM_MIN_COUNT);
 		StanfordCoreNLP pipeline = SynsetExtractor.createPipeline();
 		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
 		IDictionary dict = SynsetExtractor.dictFromDir(dictDir);
 		TextParams<TextWithSynsets> textParams = TextParams.withSynsets(ngramIdf, pipeline, dict);
-		for(int i = 0; i < LABELS.length; i++){ //TODO
+		int n = numDatasets > -1 ? numDatasets : LABELS.length;
+		for(int i = 0; i < n; i++){
 			String label = LABELS[i];
-			Printer.printBigProgressHeader(i, LABELS.length);
+			Printer.printBigProgressHeader(i, n);
 			Dataset<Text> other = DatasetXml.parseXmlFile(
 					Text.class, 
 					new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml")
