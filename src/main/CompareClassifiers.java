@@ -38,7 +38,7 @@ public class CompareClassifiers {
 				"A92-1018", "J90-1003", "N03-1003", "P04-1035", "P07-1033", "W04-1013", "C98-2122", 
 				"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"});
 		
-		labels = labels.subList(0, 3); //TODO
+//		labels = labels.subList(0, 1); //TODO
 		
 		testMRF(TextWithSynsets.class, "-with-synsets", labels);
 //		testWeka(labels);
@@ -61,18 +61,21 @@ public class CompareClassifiers {
 		List<Instances> wekaBalancedDatasets = new ArrayList<Instances>();
 		List<Instances> wekaFullDatasets = new ArrayList<Instances>();
 		for(String label : labels){
-			Instances balancedDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + "-enhanced.arff"));
+			//TODO enhanced
+			Instances balancedDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + ".arff"));
 			wekaBalancedDatasets.add(balancedDataset);
-			Instances fullDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + "-enhanced-full.arff"));
+			Instances fullDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + "-full.arff"));
 			wekaFullDatasets.add(fullDataset);
 		}
 		
-		List<Result> results = wekaSMO.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
-		System.out.println("FULL RESULTS:");
-		printMultipleResults("SMO", results, null, true);
-		System.out.println("COMPACT RESULTS:");
-		printMultipleResults("SMO", results, null, false);
+//		List<Result> results = wekaSMO.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
+//		System.out.println("FULL RESULTS:");
+//		printMultipleResults("SMO", results, null, true);
+//		System.out.println("COMPACT RESULTS:");
+//		printMultipleResults("SMO", results, null, false);
 		
+		Result result = wekaSMO.crossValidateMerged("Merged full datasets", wekaFullDatasets, 4);
+		printResult(result, null, true, null);
 	}
 	
 	private static <T extends Text> void testMRF(Class<T> textClass, String afterLabelInFileName, List<String> labels){
@@ -141,7 +144,8 @@ public class CompareClassifiers {
 			System.out.println("Macro avg. F: " + f.format(result.macroAvgFMeasure(1)));
 			System.out.println();
 		}else{
-			System.out.print("pos F: " + f.format(result.positiveFMeasure(1)));
+			System.out.print("neg F: " + f.format(result.negativeFMeasure(1)));
+			System.out.print("    pos F: " + f.format(result.positiveFMeasure(1)));
 			System.out.print("    pos F3: " + f.format(result.positiveFMeasure(3)));
 			if(dataset != null){
 				System.out.print("  (" + dataset.citedMainAuthor + ")");

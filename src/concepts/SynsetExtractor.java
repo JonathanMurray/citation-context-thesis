@@ -30,11 +30,13 @@ import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.IIndexWord;
 import edu.mit.jwi.item.IPointer;
+import edu.mit.jwi.item.ISenseEntry;
+import edu.mit.jwi.item.ISenseKey;
 import edu.mit.jwi.item.ISynset;
 import edu.mit.jwi.item.ISynsetID;
+import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
-import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
@@ -44,6 +46,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.ArrayCoreMap;
 import edu.stanford.nlp.util.CoreMap;
 import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
@@ -69,9 +72,8 @@ public class SynsetExtractor {
 	
 	private HashMap<ISynsetID, TIntIntHashMap> shortestPaths = new HashMap<ISynsetID, TIntIntHashMap>();
 	private Queue<ISynsetID> synsetQueue = new LinkedList<ISynsetID>();
-//	private HashMap<Integer, HashMap<ISynsetID, ISynset>> predecessors = new HashMap<Integer, HashMap<ISynsetID, ISynset>>();
 	private ArrayList<String> phrases;
-	
+	private HashMap<ISynsetID, TIntDoubleHashMap> wordSenseProbabilities = new HashMap<ISynsetID, TIntDoubleHashMap>();
 	
 	//Shared by many instances
 	private final IDictionary dict;
@@ -101,24 +103,16 @@ public class SynsetExtractor {
 	}
 	
 	public static void TEST(){
-		List<String> lemmas = Arrays.asList(new String[]{"I", "go", "home", "today", ".", "I", "will", "meet", "my", "dog"});
+		List<String> lemmas = Lemmatizer.instance().lemmatize("In this paper, we show that this approach misses much of the existing sentiment.");
+//		List<String> lemmas = Arrays.asList(new String[]{"I", "go", "home", "today", ".", "I", "will", "meet", "my", "dog"});
+		
+//		List<String> lemmas = Arrays.asList(new String[]{"tag"});
 		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
 		IDictionary dict = dictFromDir(dictDir);
-		Properties props = new Properties();
-		props.setProperty("annotators", "pos");
-		StanfordCoreNLP pipeline = new StanfordCoreNLP(props, false);
-		SynsetExtractor s = new SynsetExtractor(pipeline, dict, new TObjectIntHashMap<ISynset>());
-		Annotation annotation = s.annotationFromLemmas(lemmas);
-		List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
-		System.out.println("sentences: " + sentences);
-		for(CoreMap sentence : sentences){
-			List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
-			for(CoreLabel token : tokens){
-				System.out.print(token.get(CoreAnnotations.PartOfSpeechAnnotation.class) + " ");
-			}
-			System.out.println();
-		}
-		System.out.println(annotation);
+		SynsetExtractor s = new SynsetExtractor(createPipeline(), dict, new TObjectIntHashMap<ISynset>());
+		List<ISynset> synsets = s.fromSentence(lemmas);
+		s.prettyPrintList(synsets, 100);
+		s.prettyPrintHashMap(s.wordSenseProbabilities);
 	}
 	
 	public static StanfordCoreNLP createPipeline(){
@@ -242,16 +236,51 @@ public class SynsetExtractor {
 		}
 		return posTag;
 	}
+	
+	double getTotalSenseCounts(IIndexWord indexWord, int smoothing){
+		double sumCounts = 0;
+		synchronized (dict) {
+			for(IWordID wordId : indexWord.getWordIDs()){
+				IWord word = dict.getWord(wordId);
+				if(word == null){
+					continue;
+				}
+				ISenseKey senseKey = word.getSenseKey();
+				ISenseEntry senseEntry = dict.getSenseEntry(senseKey);
+				if(senseEntry == null){
+					continue;
+				}
+				sumCounts += senseEntry.getTagCount() + smoothing;
+			}
+		}
+		return sumCounts;
+	}
 
 	boolean processPhrase(int phraseIndex, String phrase, POS pos) {
 		IIndexWord indexWord = getIndexWord(phrase, pos);
 		if (indexWord != null) {
 			printer.println(phraseIndex + ": " + phrase + " (" + pos + ")");
+			final int smoothing = 1;
+			double sumCounts = getTotalSenseCounts(indexWord, smoothing);
+//			System.out.println("SUM COUNTS: " + sumCounts);
+			
 			for (IWordID id : indexWord.getWordIDs()) {
 				ISynsetID synsetId = id.getSynsetID();
+				
+				double senseCount;
+				synchronized(dict){
+					ISenseEntry sense = dict.getSenseEntry(dict.getWord(id).getSenseKey());
+					senseCount = (sense == null ? 0 : sense.getTagCount()) + smoothing;
+				}
+				double senseProbability = senseCount / sumCounts;
+				wordSenseProbabilities(synsetId).put(phraseIndex, senseProbability);
+//				System.out.println(dict.getSynset(synsetId).getWords());
+//				System.out.println("count: " + senseCount);
+				
 				synsetQueue.add(synsetId);
 				TIntIntHashMap pathsHere = new TIntIntHashMap();
-				pathsHere.put(phraseIndex, 0);
+				int artificialWordSynsetDistance = 5 - (int)Math.round(5*senseProbability);
+				pathsHere.put(phraseIndex, artificialWordSynsetDistance);
 				shortestPaths.put(synsetId, pathsHere);
 //				if (!predecessors.containsKey(phraseIndex)) {
 //					predecessors.put(phraseIndex, new HashMap<ISynsetID, ISynset>());
@@ -265,20 +294,20 @@ public class SynsetExtractor {
 	}
 
 	List<ISynset> graphSearch() {
-		for(int i = 0; i < 10; i++) { //max depth from word to representative synset
+		for(int i = 0; i < 10; i++) { //max depth-distance from word to representative synset
 			// printer.println("ITERATION#" + i);
 			int n = synsetQueue.size();
 			//Loop through all new nodes (BFS)
 			for (int j = 0; j < n; j++) {
 				ISynset synset = getSynset(synsetQueue.remove());
 				ISynsetID synsetId = synset.getID();
-				TIntIntHashMap pathsHere = getShortestPaths(synsetId);
+				TIntIntHashMap pathsHere = pathsToSynset(synsetId);
 				for (Entry<IPointer, List<ISynsetID>> pointer : synset.getRelatedMap().entrySet()) {
 					if (!pointsUp(pointer.getKey())) {
 						continue;
 					}
 					for (ISynsetID parent : pointer.getValue()) {
-						TIntIntHashMap pathsToParent = getShortestPaths(parent);
+						TIntIntHashMap pathsToParent = pathsToSynset(parent);
 						boolean parentWasUpdated = false;
 						TIntIntIterator it = pathsHere.iterator();
 						while(it.hasNext()){
@@ -313,22 +342,36 @@ public class SynsetExtractor {
 		return cover.stream().map(fp -> fp.goal).collect(Collectors.toCollection(ArrayList::new));
 	}
 	
-	private TIntIntHashMap getShortestPaths(ISynsetID synsetId){
+	private TIntIntHashMap pathsToSynset(ISynsetID synsetId){
 		if (!shortestPaths.containsKey(synsetId)) {
 			shortestPaths.put(synsetId, new TIntIntHashMap());
 		}
 		TIntIntHashMap pathsHere = shortestPaths.get(synsetId);
 		return pathsHere;
 	}
+	
+	private TIntDoubleHashMap wordSenseProbabilities(ISynsetID synsetId){
+		if(!wordSenseProbabilities.containsKey(synsetId)){
+			wordSenseProbabilities.put(synsetId, new TIntDoubleHashMap());
+		}
+		return wordSenseProbabilities.get(synsetId);
+	}
 
 	<T> void prettyPrintList(List<T> list, int limit) {
-		printer.println("[");
+		System.out.println("[");
 		int n = (limit > 0 && limit < list.size()? limit : list.size());
 		for (int i = 0; i < n; i++) {
 			T e = list.get(i);
-			printer.println("  " + e + ",");
+			System.out.println("  " + e + ",");
 		}
-		printer.println("]");
+		System.out.println("]");
+	}
+	
+	<K,V> void prettyPrintHashMap(HashMap<K,V> map){
+		for(K key : map.keySet()){
+			System.out.print(key + ": ");
+			System.out.println(map.get(key) + "\n");
+		}
 	}
 
 	void removeRedundant(HashMap<ISynsetID, TIntIntHashMap> shortestPaths) {
@@ -444,7 +487,10 @@ public class SynsetExtractor {
 	}
 
 	List<FoundPath> extractCover(List<FoundPath> paths){
-		int num = Math.min((int)Math.sqrt(paths.size()), 5);
+		int num = (int)Math.pow(paths.size(), 0.3);
+		final int min = 2;
+		final int max = 6;
+		num = Math.min(max, Math.min(paths.size(), Math.max(min, num)));
 		List<FoundPath> extracted = new ArrayList<FoundPath>();
 		while(extracted.size() < num){
 			FoundPath best = paths.stream().filter(p -> ! extracted.contains(p)).min(FoundPath::compareTo).get();

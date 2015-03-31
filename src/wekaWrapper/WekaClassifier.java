@@ -11,8 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import dataset.Result;
-import dataset.ResultWrapper;
 import util.Environment;
 import util.Printer;
 import util.Timer;
@@ -34,6 +32,8 @@ import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.StringToWordVector;
 import weka.gui.visualize.PlotData2D;
 import weka.gui.visualize.ThresholdVisualizePanel;
+import dataset.Result;
+import dataset.ResultWrapper;
 
 public class WekaClassifier {
 	
@@ -119,6 +119,44 @@ public class WekaClassifier {
 //		return fromFiles(files.get(0), files.get(1));//TODO
 	}
 	
+	public Result crossValidateMerged(String label, List<Instances> datasets, int numFolds){
+		final boolean balanceData = false; 
+		Instances merged = mergeDatasets(datasets, -1);
+		return crossValidate(label, merged, numFolds, balanceData);
+	}
+	
+	public List<Result> crossValidateMany(List<String> labels, List<Instances> datasets){
+		final int numFolds = 10;
+		final boolean balanceData = false; 
+		ArrayList<Result> results = new ArrayList<Result>();
+		for(int i = 0; i < labels.size(); i++){
+			Instances dataset = datasets.get(i);
+			String label = labels.get(i);
+			Printer.printBigProgressHeader(i, labels.size());
+			results.add(crossValidate(label, dataset, numFolds, balanceData));
+		}
+		return results;
+	}
+	
+	public Result crossValidate(String label, Instances data, int numFolds, boolean balanceData){
+		try{
+			printer.print("Cross validating " + label + " (" + numFolds + " folds, " + data.numInstances() + " instances) ... ");
+			Timer t = new Timer();
+			if(balanceData){
+				data = balanceData(data, countClasses(data));
+			}
+			filter = createNGramFilter(data,1,3);
+			data = filterData(data, filter);
+			Evaluation eval = new Evaluation(data);
+			eval.crossValidateModel(classifier, data, numFolds, new Random());
+			ResultWrapper result = new ResultWrapper(label, eval, t.getMillis());
+			printer.println("[x] (" + t.getSecString() + ")  Pos. F(1): " + result.positiveFMeasure(1) + " F(3): " + result.positiveFMeasure(3));
+			return result; 
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public List<Result> manualCrossValidation(List<String> labels, List<Instances> balancedDatasets, List<Instances> fullDatasets){
 		if(labels.size() != balancedDatasets.size() || labels.size() != fullDatasets.size()){
 			throw new IllegalArgumentException(labels.size() + "  " + balancedDatasets.size() + "   " + fullDatasets.size());
@@ -193,22 +231,9 @@ public class WekaClassifier {
 		}
 	}
 	
-	public Result crossValidate(String label, Instances data, int numFolds, boolean balanceData){
-		try{
-			printer.println(classifier.getClass().getName() + " - Cross validation (" + numFolds + " folds)");
-			Timer t = new Timer();
-			if(balanceData){
-				data = balanceData(data, countClasses(data));
-			}
-			filter = createNGramFilter(data,1,3);
-			data = filterData(data, filter);
-			Evaluation eval = new Evaluation(data);
-			eval.crossValidateModel(classifier, data, numFolds, new Random());
-			return new ResultWrapper(label, eval, t.getMillis()); //TODO no lists 
-		}catch(Exception e){
-			throw new RuntimeException(e);
-		}
-	}
+	
+	
+	
 	
 	public void ROC(Instances data){
 		try{

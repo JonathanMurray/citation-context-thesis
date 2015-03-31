@@ -227,7 +227,7 @@ public class MRF_classifier<T extends Text> {
 		score += 1.5 * Math.max(hookScore, acronymScore);
 		
 		if(Double.isNaN(score)){
-			throw new RuntimeException();
+			throw new RuntimeException("score == NaN");
 		}
 		
 		return score;

@@ -1,6 +1,7 @@
 package dataset;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.jsoup.nodes.Element;
 
 import util.Environment;
 import concepts.SynsetExtractor;
+import edu.cmu.lti.jawjaw.pobj.POS;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
 import edu.cmu.lti.lexical_db.data.Concept;
@@ -73,6 +75,7 @@ public class TextWithSynsets extends TextWithNgrams{
 	private List<Concept> concepts;
 	
 	
+	
 	public TextWithSynsets(String raw, List<String> rawWords, List<String> lemmas, Ngrams ngramsTfIdf,
 			List<ISynset> synsets) {
 		super(raw, rawWords, lemmas, ngramsTfIdf);
@@ -84,10 +87,12 @@ public class TextWithSynsets extends TextWithNgrams{
 		concepts = new ArrayList<Concept>();
 		for(ISynset s : synsets){
 			String synsetString = s.toString();
-			String conceptString = synsetString.substring(4, 13);
-			char pos = Character.toLowerCase(synsetString.charAt(13));
+			String conceptString = synsetString.substring(11, 20);
+			char pos = Character.toLowerCase(synsetString.charAt(20));
 			conceptString += pos;
-			concepts.add(new Concept(conceptString));
+//			System.out.println("\n\n\n\n" + synsetString);
+//			System.out.println("\n" + pos);
+			concepts.add(new Concept(conceptString, POS.valueOf("" + pos)));
 		}
 	}
 	
@@ -97,9 +102,9 @@ public class TextWithSynsets extends TextWithNgrams{
 		text.attr("class", XML_TEXT_CLASS);
 		Element synsetsTag = text.appendElement(TAG_SYNSETS);
 		StringBuilder synsetsText = new StringBuilder();
-		System.out.println(synsets);
+//		System.out.println(synsets);
 		for(ISynset synset : synsets){
-			System.out.println(synset); //TODO
+//			System.out.println(synset); //TODO
 			IWordID wordId = synset.getWord(1).getID();
 			synsetsText.append(wordId.toString() + " "); //store word-ids since it's more readable
 		}
@@ -109,28 +114,54 @@ public class TextWithSynsets extends TextWithNgrams{
 	
 	public static TextWithSynsets fromXml(Element textTag, IDictionary dict){
 		TextWithNgrams text = TextWithNgrams.fromXml(textTag);
-		String synsetsText = textTag.select(TAG_SYNSETS).first().text();
+		String synsetsText = textTag.select(TAG_SYNSETS).first().text().trim();
 		String[] split = SPACE.split(synsetsText);
 		List<ISynset> synsets = new ArrayList<ISynset>();
-		for(String id : split){ //store word-ids since it's more readable
-			ISynset synset = dict.getWord(WordID.parseWordID(id)).getSynset();
-			synsets.add(synset);
+		try {
+			dict.open();
+			for(String id : split){ //store word-ids since it's more readable
+				if(id.length() > 0){
+					ISynset synset = dict.getWord(WordID.parseWordID(id)).getSynset();
+					synsets.add(synset);	
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+		dict.close();
+		
 		return new TextWithSynsets(text.raw, text.rawWords, text.lemmas, text.ngramsTfIdf, synsets);
 	}
 	
 	@Override
 	public double similarity(Object o){
 		TextWithSynsets other = (TextWithSynsets)o;
-		System.out.println("my synsets: " + synsets);
-		System.out.println("other synsets: " + other.synsets);
+//		System.out.println("my synsets: " + synsets);
+//		System.out.println("other synsets: " + other.synsets);
 		double ngramSimilarity =  ngramsTfIdf.similarity(other.ngramsTfIdf);
 		double synsetSimilarity = 0;
+		int numScores = 0;
 		for(Concept concept : concepts){
 			for(Concept otherConcept : other.concepts){
-				synsetSimilarity += path.calcRelatednessOfSynset(concept, otherConcept).getScore();
+				double score = lin.calcRelatednessOfSynset(concept, otherConcept).getScore();
+//				System.out.println(score);
+				if(score != -1){ 
+					synsetSimilarity += score; //TODO different calculators have different min/max-scores. We want [0-1] 
+					numScores ++;
+				}
 			}
 		}
+		
+		if(numScores > 0){
+			synsetSimilarity /= numScores;
+		}
+		
+		if(Double.isNaN(synsetSimilarity)){
+			throw new RuntimeException("similarity == NaN");
+		}
+//		return synsetSimilarity;
+//		return 0;
+//		return ngramSimilarity;
 		return (ngramSimilarity + synsetSimilarity)/2;
 	}
 	

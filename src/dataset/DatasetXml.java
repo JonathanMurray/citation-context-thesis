@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,9 +21,12 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 
+import util.Environment;
 import util.Printer;
 import concepts.WikiGraph;
 import concepts.WikiGraphFactory;
+import edu.mit.jwi.Dictionary;
+import edu.mit.jwi.IDictionary;
 
 public class DatasetXml {
 	
@@ -203,7 +205,7 @@ public class DatasetXml {
 	
 	public static <T extends Text> Dataset<T> parseXmlFile(Class<T> textClass, File xmlFile, int maxNumCiters){
 		try {
-			printer.print("Parsing XML from " + xmlFile.getPath() + " ... ");
+			printer.print("Parsing XML (" + textClass + ") from " + xmlFile.getPath() + " ... ");
 			Document doc = Jsoup.parse(new BufferedInputStream(new FileInputStream(xmlFile)), null, "", Parser.xmlParser());
 			printer.println("[x]");
 			printer.print("Creating dataset from XML ... ");
@@ -275,22 +277,19 @@ public class DatasetXml {
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends Text> T text(Class<T> textClass, Element textTag){
-		try {
-			return (T) textClass.getMethod("fromXml", Element.class).invoke(null, textTag);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(0);
-			return null;
-		} 
-//		if(textClass.equals(Text.class)){
-//			return (T) Text.fromXml(textTag);
-//		}else if(textClass.equals(TextWithNgrams.class)){
-//			return (T) TextWithNgrams.fromXml(textTag);
-//		}else if(textClass.equals(TextWithConcepts.class)){
-//			return (T) TextWithConcepts.fromXml(textTag);
-//		}else{
-//			throw new IllegalArgumentException("Unknown text-class: " + textClass);
-//		}
+		if(textClass.equals(Text.class)){
+			return (T) Text.fromXml(textTag);
+		}else if(textClass.equals(TextWithNgrams.class)){
+			return (T) TextWithNgrams.fromXml(textTag);
+		}else if(textClass.equals(TextWithConcepts.class)){
+			return (T) TextWithConcepts.fromXml(textTag);
+		}else if(textClass.equals(TextWithSynsets.class)){
+			File wordnetDir = new File(Environment.resources(), "wordnet-dict");
+			IDictionary dict = new Dictionary(wordnetDir);
+			return (T) TextWithSynsets.fromXml(textTag, dict);
+		}else{
+			throw new IllegalArgumentException("Unknown text-class: " + textClass);
+		}
 	}
 	
 }

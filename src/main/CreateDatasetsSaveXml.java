@@ -61,12 +61,11 @@ public class CreateDatasetsSaveXml {
 	private static void withSynsets(){
 		File resourcesDir = new File(Environment.resources());
 		NgramIdf ngramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"), NgramIdf.DEFAULT_NGRAM_MIN_COUNT);
-		ArrayList<Dataset<TextWithSynsets>> datasets = new ArrayList<Dataset<TextWithSynsets>>();
 		StanfordCoreNLP pipeline = SynsetExtractor.createPipeline();
 		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
 		IDictionary dict = SynsetExtractor.dictFromDir(dictDir);
 		TextParams<TextWithSynsets> textParams = TextParams.withSynsets(ngramIdf, pipeline, dict);
-		for(int i = 0; i < 3; i++){ //TODO
+		for(int i = 0; i < LABELS.length; i++){ //TODO
 			String label = LABELS[i];
 			Printer.printBigProgressHeader(i, LABELS.length);
 			Dataset<Text> other = DatasetXml.parseXmlFile(
@@ -75,9 +74,6 @@ public class CreateDatasetsSaveXml {
 					, 0);
 			Dataset<TextWithSynsets> dataset = DatasetFactory.fromOtherRaw(textParams, other);
 			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
-			datasets.add(dataset);
-		}
-		for(Dataset<TextWithSynsets> dataset : datasets){
 			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-synsets.xml"));
 		}
 	}

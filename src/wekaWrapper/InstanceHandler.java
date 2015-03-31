@@ -102,8 +102,12 @@ public class InstanceHandler {
 				Sentence<T> previous = i > 0 ? citer.sentences.get(i-1) : null;
 				Sentence<T> sentence = citer.sentences.get(i);
 				Sentence<T> next = i < citer.sentences.size() - 1? citer.sentences.get(i+1) : null;
-//				Map<String, Comparable<?>> features = extractFeatures(previous, sentence, next, dataset, onlyText, i);
-				Map<String, Comparable<?>> features = extractFeaturesEnhanced(citer.sentences, i, dataset);
+				Map<String,Comparable<?>> features;
+				if(onlyText){
+					features = extractFeatures(previous, sentence, next, dataset, onlyText, i);
+				}else{
+					features = extractFeaturesEnhanced(citer.sentences, i, dataset);
+				}
 				if(sentence.type == SentenceType.EXPLICIT_REFERENCE){ //TODO
 					continue; //Excluded
 				}
@@ -141,7 +145,7 @@ public class InstanceHandler {
 		List<String> rawWords = sentence.text.rawWords;
 		String[] prevWords = previous != null? previous.text.rawWords.toArray(new String[0]) : new String[0];
 		if(!onlyText){
-			features.put(FeatureName.STARTS_DET_WORK.toString(), texts.containsDetWork(rawWords));
+			features.put(FeatureName.CONTAINS_DET_WORK.toString(), texts.containsDetWork(rawWords));
 			features.put(FeatureName.STARTS_3_PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
 			features.put(FeatureName.STARTS_CONNECTOR.toString(), texts.startsWithConnector(rawWords));
 			features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
@@ -172,7 +176,7 @@ public class InstanceHandler {
 		
 		List<String> rawWords = sentence.text.rawWords;
 		String[] prevWords = previous != null? previous.text.rawWords.toArray(new String[0]) : new String[0];
-		features.put(FeatureName.STARTS_DET_WORK.toString(), texts.containsDetWork(rawWords));
+		features.put(FeatureName.CONTAINS_DET_WORK.toString(), texts.containsDetWork(rawWords));
 		features.put(FeatureName.STARTS_3_PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
 		features.put(FeatureName.STARTS_CONNECTOR.toString(), texts.startsWithConnector(rawWords));
 		features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
@@ -180,8 +184,10 @@ public class InstanceHandler {
 		features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(rawWords));
 		features.put(FeatureName.BEFORE_HEADING.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
 		features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
+		features.put(FeatureName.CONTAINS_ONLY_OTHER_AUTHOR.toString(), texts.containsOtherReferencesButNotThis(sentence.text.raw, rawWords, dataset.citedMainAuthor));
 		features.put(FeatureName.CONTAINS_ACRONYM_SCORE.toString(), texts.containsAcronymScore(rawWords, dataset.getAcronyms()));
 		features.put(FeatureName.CONTAINS_LEXICAL_HOOK_SCORE.toString(), texts.containsHookScore(sentence.text.raw, dataset.getLexicalHooks()));
+		
 		features.put(FeatureName.SENTENCE_NUMBER.toString(), sentenceIndex);
 		features.put(FeatureName.TEXT.toString(), "'" + sentence.text.raw.replaceAll("'", "") + "'");
 		

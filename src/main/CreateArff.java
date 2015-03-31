@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import util.Environment;
+import util.Printer;
 import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
 import dataset.Dataset;
@@ -28,35 +29,37 @@ public class CreateArff {
 				"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"};
 		
 		List<Dataset<TextWithNgrams>> datasets = new ArrayList<Dataset<TextWithNgrams>>();
-		for(String label : labels){
+		for(int i = 0; i < labels.length; i++){
+			String label = labels[i];
 			final int MAX_CITERS = 0;
 			Dataset<TextWithNgrams> dataset = DatasetXml.parseXmlFile(
 				TextWithNgrams.class,
 				new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml"), 
 				MAX_CITERS);
+			Printer.printBigProgressHeader(i, labels.length);
 			System.out.println(dataset.datasetLabel);
 			System.out.println("(" + dataset.citedMainAuthor + ")");
 			datasets.add(dataset);
 		}
 		
 		
-		
+		final boolean onlyText = true;
 		HashMap<String, ArrayList<SentenceInstance>> balancedDatasets = 
-				InstanceHandler.createInstanceSets(datasets, false, true);
+				InstanceHandler.createInstanceSets(datasets, onlyText, true);
 		for(Entry<String, ArrayList<SentenceInstance>> e : balancedDatasets.entrySet()){
 			String label = e.getKey();
 			ArrayList<SentenceInstance> instances = e.getValue();
 				InstanceHandler.writeToArffFile(instances, new File(Environment.resources(), 
-						"arff/" + label + "-enhanced.arff"));	
+						"arff/" + label + ".arff"));	
 		}
 		
 		HashMap<String, ArrayList<SentenceInstance>> fullDatasets = 
-				InstanceHandler.createInstanceSets(datasets, false, false);
+				InstanceHandler.createInstanceSets(datasets, onlyText, false);
 		for(Entry<String, ArrayList<SentenceInstance>> e : fullDatasets.entrySet()){
 			String label = e.getKey();
 			ArrayList<SentenceInstance> fullDataset = e.getValue();
 				InstanceHandler.writeToArffFile(fullDataset, new File(Environment.resources(), 
-						"arff/" + label + "-enhanced-full.arff"));	
+						"arff/" + label + "-full.arff"));	
 		}
 		
 	}
