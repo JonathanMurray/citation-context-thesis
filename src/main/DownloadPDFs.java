@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 
+import util.Printer;
 import dataset.Dataset;
 import dataset.DatasetFactory;
 import dataset.DatasetParams;
@@ -15,6 +16,7 @@ import dataset.TextParams;
 
 public class DownloadPDFs {
 	public static void downloadPDFsForHTML_Files(File htmlDir) throws IOException{
+		Printer.printBigHeader("Download PDFs");
 		for(File f : htmlDir.listFiles()){
 			if(f.getName().endsWith(".html")){
 				Dataset<Text> dataset = DatasetFactory.fromHtmlFile(DatasetParams.basic(TextParams.basic()), f, "");

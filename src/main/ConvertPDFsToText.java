@@ -7,7 +7,7 @@ import org.apache.pdfbox.ExtractText;
 public class ConvertPDFsToText {
 	
 	public static void main(String[] args) {
-//		convertAllPDFsToText(dir);
+//		convertAllPDFsToText(dir); //TODO
 	}
 	
 	public static void convertAllPDFsToText(File dir){

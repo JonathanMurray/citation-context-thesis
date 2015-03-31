@@ -17,6 +17,8 @@ import dataset.Text;
  */
 public class Printer {
 	
+	private final static DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+	
 	public final boolean enabled;
 	private boolean backspaceProgress;
 	private int lastProgressStrLen;
@@ -141,5 +143,17 @@ public class Printer {
 			}
 			System.out.println();
 		}
+	}
+	
+	public static void printBigHeader(String text){
+		System.out.println();
+		System.out.println("--------------------------------------------------");
+		System.out.println("                 " + text);
+		System.out.println("--------------------------------------------------");
+		System.out.println();
+	}
+	
+	public static String toString(double d){
+		return decimalFormat.format(d);
 	}
 }

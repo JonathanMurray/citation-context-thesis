@@ -209,7 +209,7 @@ public class DatasetXml {
 			Document doc = Jsoup.parse(new BufferedInputStream(new FileInputStream(xmlFile)), null, "", Parser.xmlParser());
 			printer.println("[x]");
 			printer.print("Creating dataset from XML ... ");
-			Dataset<T> dataset = parseXml(textClass, doc, maxNumCiters);
+			Dataset<T> dataset = datasetFromXml(textClass, doc, maxNumCiters);
 			printer.println(" [x]");
 			return dataset;
 		} catch (IOException e) {
@@ -219,7 +219,7 @@ public class DatasetXml {
 		}
 	}
 	
-	public static <T extends Text> Dataset<T> parseXml(Class<T> textClass, Document doc, int maxNumCiters){
+	public static <T extends Text> Dataset<T> datasetFromXml(Class<T> textClass, Document doc, int maxNumCiters){
 		Element datasetTag = doc.child(0);
 		
 		String label = datasetTag.select(TAG_DATASET_LABEL).first().text();

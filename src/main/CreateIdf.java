@@ -17,6 +17,7 @@ public class CreateIdf {
 			"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"};
 	
 	public static void main(String[] args) {
+		Printer.printBigHeader("Create IDF-file");
 		NgramIdf ngramIdf = new NgramIdf();
 		NgramIdf skipgramIdf = new NgramIdf();
 		for(int i = 0; i < LABELS.length; i++){

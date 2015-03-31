@@ -20,9 +20,7 @@ public class Weka {
 			numDatasets = Integer.parseInt(args[0]);
 		}
 		
-		System.out.println("Weka classifier:");
-		System.out.println("--------------------------------------------------");
-		System.out.println();
+		Printer.printBigHeader("Weka-classifier");
 
 		List<String> labels = Arrays.asList(new String[]{
 				"D07-1031", "J96-2004", "N06-1020", "P04-1015", "P05-1045", "W02-1011", "W06-1615",

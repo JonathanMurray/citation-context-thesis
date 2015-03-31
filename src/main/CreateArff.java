@@ -18,8 +18,7 @@ import dataset.TextWithNgrams;
 public class CreateArff {
 	
 	public static void main(String[] args) {
-		System.out.println("Create ARFF-file");
-		System.out.println("--------------------------");
+		Printer.printBigHeader("Create .arff-datasets");
 		
 		String resourcesDir = Environment.resources();
 		

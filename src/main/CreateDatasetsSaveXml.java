@@ -23,6 +23,8 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) {
 		
+		Printer.printBigHeader("Create XML-datasets");
+		
 		int numDatasets = -1;
 		if(args.length == 1){
 			numDatasets = Integer.parseInt(args[0]);

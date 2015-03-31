@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import org.jsoup.nodes.Element;
 
 import util.Environment;
+import util.Printer;
 import concepts.SynsetExtractor;
 import edu.cmu.lti.jawjaw.pobj.POS;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
@@ -136,15 +137,12 @@ public class TextWithSynsets extends TextWithNgrams{
 	@Override
 	public double similarity(Object o){
 		TextWithSynsets other = (TextWithSynsets)o;
-//		System.out.println("my synsets: " + synsets);
-//		System.out.println("other synsets: " + other.synsets);
 		double ngramSimilarity =  ngramsTfIdf.similarity(other.ngramsTfIdf);
 		double synsetSimilarity = 0;
 		int numScores = 0;
 		for(Concept concept : concepts){
 			for(Concept otherConcept : other.concepts){
-				double score = lin.calcRelatednessOfSynset(concept, otherConcept).getScore();
-//				System.out.println(score);
+				double score = wup.calcRelatednessOfSynset(concept, otherConcept).getScore();
 				if(score != -1){ 
 					synsetSimilarity += score; //TODO different calculators have different min/max-scores. We want [0-1] 
 					numScores ++;
@@ -159,10 +157,22 @@ public class TextWithSynsets extends TextWithNgrams{
 		if(Double.isNaN(synsetSimilarity)){
 			throw new RuntimeException("similarity == NaN");
 		}
-//		return synsetSimilarity;
-//		return 0;
-//		return ngramSimilarity;
-		return (ngramSimilarity + synsetSimilarity)/2;
+		
+		
+//		if(synsetSimilarity > 0.3){
+//			System.out.println("Similarity: " + synsetSimilarity);
+//			System.out.println(this.synsets + "\n");
+//			System.out.println(other.synsets + "\n");
+//			System.out.println(this.raw + "\n");
+//			System.out.println(other.raw);
+//			System.out.println("\n\n\n");
+//		}
+		
+		final double synsetWeight = 0.2; //TODO ad-hoc. Common value for synsetsim is around 0.4, ngrams give 0 very often, and sometimes > 0.1
+		double weightedSynset = synsetWeight*synsetSimilarity;
+		double weightedNgram = (1-synsetWeight)*ngramSimilarity;
+		System.out.println(Printer.toString(weightedSynset) + "  ---  " + weightedNgram);
+		return weightedSynset + weightedNgram;
 	}
 	
 }

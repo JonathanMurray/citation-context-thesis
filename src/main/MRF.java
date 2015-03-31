@@ -24,9 +24,7 @@ public class MRF {
 			numDatasets = Integer.parseInt(args[0]);
 		}
 		
-		System.out.println("MRF-classifier");
-		System.out.println("--------------------------------------------------");
-		System.out.println();
+		Printer.printBigHeader("MRF-classifier");
 
 		List<String> labels = Arrays.asList(new String[]{
 				"D07-1031", "J96-2004", "N06-1020", "P04-1015", "P05-1045", "W02-1011", "W06-1615",
@@ -56,7 +54,9 @@ public class MRF {
 			datasets.add(dataset);
 		}
 		
-		MRF_params params = new MRF_params(3, 0.4);
+		final int neighbourhood = 3;
+		final double beliefThreshold = 0.4;
+		MRF_params params = new MRF_params(neighbourhood, beliefThreshold);
 		List<Result> results = new MRF_classifier<T>(params).classify(datasets);
 		System.out.println("FULL RESULTS:");
 		Printer.printMultipleResults("MRF-wiki", results, datasets, true);
