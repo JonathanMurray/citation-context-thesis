@@ -27,6 +27,7 @@ import edu.mit.jwi.item.ISynsetID;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.WordID;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import gnu.trove.list.array.TDoubleArrayList;
 
 public class TextWithSynsets extends TextWithNgrams{
 	
@@ -61,7 +62,8 @@ public class TextWithSynsets extends TextWithNgrams{
 		double sim = t1.similarity(t2);
 		System.out.println("Similarity: " + sim);
 	}
-	
+
+	private static final Pattern SPACE = Pattern.compile("\\s+");
 	private static final String TAG_SYNSETS = "synsets";
 	private static final String XML_TEXT_CLASS = "text-with-synsets";
 	
@@ -69,9 +71,9 @@ public class TextWithSynsets extends TextWithNgrams{
     private static final RelatednessCalculator lin = new Lin(db);
     private static final RelatednessCalculator wup = new WuPalmer(db);
     private static final RelatednessCalculator path = new Path(db);
+    
 
-	private static final Pattern SPACE = Pattern.compile("\\s+");
-	
+	private TDoubleArrayList scoreBuffer = new TDoubleArrayList();
 	private List<ISynset> synsets;
 	private List<Concept> concepts;
 	
@@ -140,18 +142,27 @@ public class TextWithSynsets extends TextWithNgrams{
 		double ngramSimilarity =  ngramsTfIdf.similarity(other.ngramsTfIdf);
 		double synsetSimilarity = 0;
 		int numScores = 0;
+		scoreBuffer.reset();
 		for(Concept concept : concepts){
 			for(Concept otherConcept : other.concepts){
 				double score = wup.calcRelatednessOfSynset(concept, otherConcept).getScore();
 				if(score != -1){ 
-					synsetSimilarity += score; //TODO different calculators have different min/max-scores. We want [0-1] 
+//					synsetSimilarity += score; //TODO different calculators have different min/max-scores. We want [0-1] 
 					numScores ++;
+					scoreBuffer.add(score);
 				}
 			}
 		}
 		
+		//TODO only count highest 50% of scores
 		if(numScores > 0){
-			synsetSimilarity /= numScores;
+			scoreBuffer.sort();
+			int mid = scoreBuffer.size()/2;
+			for(int i = mid; i < scoreBuffer.size(); i++){
+				synsetSimilarity += scoreBuffer.get(i);
+			}
+			synsetSimilarity /= (scoreBuffer.size() - mid);
+//			synsetSimilarity /= numScores;
 		}
 		
 		if(Double.isNaN(synsetSimilarity)){
@@ -171,7 +182,7 @@ public class TextWithSynsets extends TextWithNgrams{
 		final double synsetWeight = 0.2; //TODO ad-hoc. Common value for synsetsim is around 0.4, ngrams give 0 very often, and sometimes > 0.1
 		double weightedSynset = synsetWeight*synsetSimilarity;
 		double weightedNgram = (1-synsetWeight)*ngramSimilarity;
-		System.out.println(Printer.toString(weightedSynset) + "  ---  " + weightedNgram);
+//		System.out.println(Printer.toString(weightedSynset) + "  ---  " + weightedNgram);
 		return weightedSynset + weightedNgram;
 	}
 	

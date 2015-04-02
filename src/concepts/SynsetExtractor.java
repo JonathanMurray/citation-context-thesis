@@ -2,7 +2,6 @@ package concepts;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -26,8 +25,9 @@ import com.ibm.icu.text.DecimalFormat;
 
 import dataset.NgramExtractor;
 import dataset.Texts;
-import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
+import edu.mit.jwi.RAMDictionary;
+import edu.mit.jwi.data.ILoadPolicy;
 import edu.mit.jwi.item.IIndexWord;
 import edu.mit.jwi.item.IPointer;
 import edu.mit.jwi.item.ISenseEntry;
@@ -46,6 +46,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.ArrayCoreMap;
 import edu.stanford.nlp.util.CoreMap;
 import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
@@ -68,18 +69,25 @@ public class SynsetExtractor {
 			// adverb no additional
 			}));
 
-	private static final Pattern PUNCTUATION = Pattern.compile("[\\.\\?\\!\\;]");
+	private static final Pattern PUNCTUATION = Pattern.compile("[\\.\\?\\!\\;\\:]");
+	
+	final static List<POS> badPOS = new ArrayList<POS>(Arrays.asList(new POS[]{
+			POS.ADJECTIVE, POS.ADVERB	
+		}));
 	
 	private HashMap<ISynsetID, TIntIntHashMap> shortestPaths = new HashMap<ISynsetID, TIntIntHashMap>();
 	private Queue<ISynsetID> synsetQueue = new LinkedList<ISynsetID>();
 	private ArrayList<String> phrases;
 	private HashMap<ISynsetID, TIntDoubleHashMap> wordSenseProbabilities = new HashMap<ISynsetID, TIntDoubleHashMap>();
 	
+	
+	
 	//Shared by many instances
 	private final IDictionary dict;
 	private final StanfordCoreNLP pipeline;
 	private final TObjectIntHashMap<ISynset> depths;
-
+	
+	
 	public static void main(String[] args) {
 		TEST();
 //		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
@@ -123,11 +131,13 @@ public class SynsetExtractor {
 	}
 	
 	public static IDictionary dictFromDir(String dictDir){
-		URL dictUrl;
 		try {
-			dictUrl = new URL("file", null, dictDir);
-			IDictionary dict = new Dictionary(dictUrl);
+//			URL dictUrl = new URL("file", null, dictDir);
+//			IDictionary dict = new Dictionary(dictUrl);
+			IDictionary dict = new RAMDictionary(new File(dictDir), ILoadPolicy.IMMEDIATE_LOAD);
+			System.out.print("opening dict ... ");
 			dict.open();
+			System.out.println("[x]");
 			return dict;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -158,9 +168,21 @@ public class SynsetExtractor {
 	//Datasets can be created in parallell. Make sure this method is not invoked concurrently
 	synchronized public List<ISynset>fromSentence(List<String> lemmas) {
 		setup(lemmas);
+//		System.out.println(lemmas); //TODOs
 		printer.println("size: " + synsetQueue.size());
-		printPaths(shortestPaths);
-		List<ISynset> foundSynsets = graphSearch();
+//		printPaths(shortestPaths);
+		findShortestPaths();
+		printer.println("PATHS: ");
+//		printPaths(shortestPaths);
+//		removeRedundant(shortestPaths);
+//		printer.println("IMPORTANT PATHS: ");
+//		printPaths(shortestPaths);
+		List<SynsetWithPaths> paths = getList(shortestPaths);
+//		prettyPrintList(sortedPaths, 15);
+		List<SynsetWithPaths> bestSynsets = pickBest(paths);
+		printer.println("EXTRACTED COVER:");
+//		prettyPrintList(cover, 0);
+		List<ISynset> foundSynsets =  bestSynsets.stream().map(fp -> fp.goal).collect(Collectors.toCollection(ArrayList::new));
 		return foundSynsets;
 	}
 	
@@ -262,11 +284,8 @@ public class SynsetExtractor {
 			printer.println(phraseIndex + ": " + phrase + " (" + pos + ")");
 			final int smoothing = 1;
 			double sumCounts = getTotalSenseCounts(indexWord, smoothing);
-//			System.out.println("SUM COUNTS: " + sumCounts);
-			
 			for (IWordID id : indexWord.getWordIDs()) {
 				ISynsetID synsetId = id.getSynsetID();
-				
 				double senseCount;
 				synchronized(dict){
 					ISenseEntry sense = dict.getSenseEntry(dict.getWord(id).getSenseKey());
@@ -279,7 +298,7 @@ public class SynsetExtractor {
 				
 				synsetQueue.add(synsetId);
 				TIntIntHashMap pathsHere = new TIntIntHashMap();
-				int artificialWordSynsetDistance = 5 - (int)Math.round(5*senseProbability);
+				int artificialWordSynsetDistance = 3 - (int)Math.round(3*senseProbability);
 				pathsHere.put(phraseIndex, artificialWordSynsetDistance);
 				shortestPaths.put(synsetId, pathsHere);
 //				if (!predecessors.containsKey(phraseIndex)) {
@@ -293,8 +312,8 @@ public class SynsetExtractor {
 		}
 	}
 
-	List<ISynset> graphSearch() {
-		for(int i = 0; i < 10; i++) { //max depth-distance from word to representative synset
+	void findShortestPaths() {
+		for(int i = 0; i < 5; i++) { //max depth-distance from word to representative synset //TODO
 			// printer.println("ITERATION#" + i);
 			int n = synsetQueue.size();
 			//Loop through all new nodes (BFS)
@@ -329,17 +348,7 @@ public class SynsetExtractor {
 				}
 			}
 		}
-//		printer.println("PATHS: ");
-//		printPaths(shortestPaths);
-//		removeRedundant(shortestPaths);
-//		printer.println("IMPORTANT PATHS: ");
-//		printPaths(shortestPaths);
-		List<FoundPath> paths = getList(shortestPaths);
-//		prettyPrintList(sortedPaths, 15);
-		List<FoundPath> cover = extractCover(paths);
-		printer.println("EXTRACTED COVER:");
-//		prettyPrintList(cover, 0);
-		return cover.stream().map(fp -> fp.goal).collect(Collectors.toCollection(ArrayList::new));
+//		
 	}
 	
 	private TIntIntHashMap pathsToSynset(ISynsetID synsetId){
@@ -413,27 +422,28 @@ public class SynsetExtractor {
 		return possiblyBetter;
 	}
 
-	List<FoundPath> getList(HashMap<ISynsetID, TIntIntHashMap> shortestPaths) {
-		ArrayList<FoundPath> sorted = new ArrayList<FoundPath>();
-		for (ISynsetID id : shortestPaths.keySet()) {
-			TIntIntHashMap paths = shortestPaths.get(id);
-			ISynset synset = getSynset(id);
-			sorted.add(new FoundPath(synset, paths));
+	List<SynsetWithPaths> getList(HashMap<ISynsetID, TIntIntHashMap> shortestPaths) {
+		ArrayList<SynsetWithPaths> sorted = new ArrayList<SynsetWithPaths>();
+		for (ISynsetID synsetId : shortestPaths.keySet()) {
+			TIntIntHashMap paths = shortestPaths.get(synsetId);
+			ISynset synset = getSynset(synsetId);
+			sorted.add(new SynsetWithPaths(synset, paths));
 		}
 //		Collections.sort(sorted);
 		return sorted;
 	}
 
-	class FoundPath implements Comparable<FoundPath> {
+	class SynsetWithPaths implements Comparable<SynsetWithPaths> {
 		IWordID firstWordId;
 		ISynset goal;
 		TIntIntHashMap paths;
 		double score;
 		int depth;
 		
+		
 		private HashSet<Integer> ignoredWords = new HashSet<Integer>();
 		
-		FoundPath(ISynset goal, TIntIntHashMap paths) {
+		SynsetWithPaths(ISynset goal, TIntIntHashMap paths) {
 			firstWordId = goal.getWords().get(0).getID();
 			this.goal = goal;
 			this.depth = getDepth(goal);
@@ -453,22 +463,30 @@ public class SynsetExtractor {
 		
 		private void computeScore(){
 			score = 0;
-			int numWords = 0;
 			TIntIntIterator it = paths.iterator();
+			TIntArrayList pathLengths = new TIntArrayList();
 			while(it.hasNext()){
 				it.advance();
 				int wordIndex = it.key();
 				if(!ignoredWords.contains(wordIndex)){
-					int length = it.value();
-					score += 1.0 / Math.pow(1.5, length);
-					numWords ++;
+					int pathLength = it.value();
+//					score += 1.0 / Math.pow(pathLength, 1);
+					pathLengths.add(pathLength);
 				}
 			}
-			score *= Math.pow(numWords, 1);
-			score *= Math.pow(depth-0.5, 1);
+			pathLengths.sort();
+			for(int i = 0; i < 3 && pathLengths.size() - 1 - i >= 0; i++){
+				int pathLength = pathLengths.get(pathLengths.size() - 1 - i );
+				score += 1.0 / Math.pow(pathLength, 0.5);
+			}
+			if(badPOS.contains(goal.getPOS())){
+				score = 0;
+			}
+//			score *= Math.pow(numWords, 1.5);
+//			score *= Math.pow(depth-0.5, 0.3);
 		}
 
-		public int compareTo(FoundPath other) {
+		public int compareTo(SynsetWithPaths other) {
 			return (int) Math.signum(other.score - score);
 		}
 
@@ -486,15 +504,17 @@ public class SynsetExtractor {
 		}
 	}
 
-	List<FoundPath> extractCover(List<FoundPath> paths){
+	List<SynsetWithPaths> pickBest(List<SynsetWithPaths> paths){
 		int num = (int)Math.pow(paths.size(), 0.3);
 		final int min = 2;
 		final int max = 6;
 		num = Math.min(max, Math.min(paths.size(), Math.max(min, num)));
-		List<FoundPath> extracted = new ArrayList<FoundPath>();
+		List<SynsetWithPaths> extracted = new ArrayList<SynsetWithPaths>();
 		while(extracted.size() < num){
-			FoundPath best = paths.stream().filter(p -> ! extracted.contains(p)).min(FoundPath::compareTo).get();
+			SynsetWithPaths best = paths.stream().filter(p -> ! extracted.contains(p)).min(SynsetWithPaths::compareTo).get();
 			extracted.add(best);
+//			System.out.println(best.goal.getWords().stream().map(w -> w.getLemma()).collect(Collectors.toList()));
+//			System.out.println(best.depth + "   " + best.paths); //TODO
 			int numBestCoveredWords = Math.max(1, (int)(best.paths.size()/2.5));
 			HashMap<Integer,Integer> map = new HashMap<Integer,Integer>();
 			TIntIntIterator it = best.paths.iterator();
@@ -503,11 +523,12 @@ public class SynsetExtractor {
 				map.put(it.key(), it.value());
 			}
 			List<Integer> bestCoveredWords = map.entrySet().stream().sorted(Comparator.comparing(Entry::getValue)).limit(numBestCoveredWords).map(e -> e.getKey()).collect(Collectors.toList());
-			printer.println("ignoring " + bestCoveredWords + ": " + bestCoveredWords.stream().map(i -> phrases.get(i)).collect(Collectors.toList()));
-			for(FoundPath path : paths){
+//			System.out.println("ignoring " + bestCoveredWords + ": " + bestCoveredWords.stream().map(i -> phrases.get(i)).collect(Collectors.toList()));
+			for(SynsetWithPaths path : paths){
 				path.ignoreWords(bestCoveredWords);
 			}
 		}
+//		System.out.println("\n\n"); //TODO
 		return extracted;
 	}
 

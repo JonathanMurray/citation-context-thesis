@@ -57,21 +57,23 @@ public class MRF_classifier<T extends Text> {
 	}
 	
 	public ResultImpl classify(Dataset<T> dataset){
-		ResultImpl result = new ResultImpl(dataset.datasetLabel);
-		System.out.println("\nMRF classifying " + dataset.datasetLabel + ":");
-		System.out.println("ACRONYMS: " + dataset.getAcronyms());
-		System.out.println("HOOKS: " + dataset.getLexicalHooks()); 
-		printer.print("Classifying citers: ");
+		ResultImpl sumResult = new ResultImpl(dataset.datasetLabel);
+		System.out.print("\nMRF classifying " + dataset.datasetLabel + "  ");
+		System.out.print(dataset.getAcronyms() + ", ");
+		System.out.print(dataset.getLexicalHooks()); 
+		printer.print(" ... ");
 		printer.resetProgress();
 		for(int i = 0; i < dataset.citers.size(); i++){
 			printer.progress();
-			result.add(classifyOneCiter(i, dataset));
+			ResultImpl res = classifyOneCiter(i, dataset);
+			sumResult.add(res);
 //			if(i == 3){
 //				break; //TODO
 //			}
 		}
-		printer.println("");
-		return result;
+		printer.println(" pos F(1):" + Printer.toString(sumResult.positiveFMeasure(1)) + ", pos F(3):" + Printer.toString(sumResult.positiveFMeasure(3)));
+		printer.println(sumResult.confusionMatrixToString());
+		return sumResult;
 	}
 	
 	public ResultImpl classifyOneCiter(int citerIndex, Dataset<T> dataset){
@@ -476,7 +478,7 @@ public class MRF_classifier<T extends Text> {
 //		double probSame = 1 / (1 + Math.exp( - relatedness)); //interval : [0.5 , 1]
 		probSame = 0.5 + (Math.pow(relatedness,2) / 2);
 		if(probSame > 1.01){
-			System.err.println("compatability for " + s1 + ", " + s2 + " == " + probSame);//TODO
+			System.err.println("ERROR: compatibility for " + s1 + ", " + s2 + " == " + probSame);//TODO
 		}
 //		probSame -= 0.1; //interval : [0.4 , 0.9]
 //		System.out.println(probContext); //TODO
@@ -495,15 +497,16 @@ public class MRF_classifier<T extends Text> {
 		T t1 = sentences.get(s1).text;
 		T t2 = sentences.get(s2).text;
 		
-//		double relatedness = (t1.similarity(t2) - minNeighbourSimilarity) / (maxNeighbourSimilarity - minNeighbourSimilarity);;
+//		double relatedness = (t1.similarity(t2) - minNeighbourSimilarity) / (maxNeighbourSimilarity - minNeighbourSimilarity);
 		double relatedness = 0;
 		if(s2 == s1 + 1){
 			relatedness = relatednessToPrevious(t2);
 		}else if(s1 == s2 + 1){
 			relatedness = relatednessToPrevious(t1);
 		}
-		
-		relatedness = Math.max(relatedness, t1.similarity(t2));
+		double similarity = t1.similarity(t2);
+//		double similarity = (unnormalizedSimilarity - minSimilarity)/(maxSimilarity-minSimilarity);
+		relatedness = Math.max(relatedness, similarity);
 		relatednessMemoization.get(s1).put(s2, relatedness);
 		return relatedness;
 	}

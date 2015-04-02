@@ -18,6 +18,8 @@ public class TextFactory {
 		List<String> lemmas = Lemmatizer.instance().lemmatize(raw);
 		ArrayList<String> rawWords = Texts.split(raw).collect(Collectors.toCollection(ArrayList::new));
 		
+		
+		
 		if(params.textClass.equals(TextWithNgrams.class)){
 			Ngrams ngramsTfIdf = NgramExtractor.ngramsTfIdf(MAX_NGRAM_N, lemmas, params.ngramIdf);
 			return (T) new TextWithNgrams(raw, rawWords, lemmas, ngramsTfIdf);
@@ -35,6 +37,10 @@ public class TextFactory {
 			SynsetExtractor wordnet = new SynsetExtractor(params.nlpPipeline, params.wordnetDict, params.synsetDepths);
 			List<ISynset> synsets = wordnet.fromSentence(lemmas);
 			return (T) new TextWithSynsets(raw, rawWords, lemmas, ngramsTfIdf, synsets);
+		}
+		
+		else if(params.textClass.equals(TextWithRI.class)){
+			return (T) new Text(raw, rawWords, lemmas);
 		}
 		
 //		else if(params.textClass.equals(TextWithConcepts.class)){

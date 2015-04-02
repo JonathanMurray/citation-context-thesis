@@ -69,7 +69,6 @@ public class Ngrams {
 		for(int i = 0; i < ngramMaps.size(); i++){
 			TObjectDoubleHashMap<String> mine = ngramMaps.get(i);
 			TObjectDoubleHashMap<String> others = other.ngramMaps.get(i);
-			
 			sum += CosineSimilarity.calculateCosineSimilarity(mine, others);
 		}
 		return sum / (double)ngramMaps.size();

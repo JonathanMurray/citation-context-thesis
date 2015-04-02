@@ -118,13 +118,13 @@ public class DatasetFactory {
 		printer.print("Creating dataset from other raw dataset " + other.datasetLabel + " ... ");
 		Timer t = new Timer();
 		printer.resetProgress();
-		List<CitingPaper<T>> citers = other.citers.stream().parallel()
+		List<CitingPaper<T>> citers = other.citers.stream().parallel() //TODO
 			.map(citer2 -> {
-				printer.progress(); //TODO prints messed up by parallel
+				printer.progress();
 				List<Sentence<T>> sentences = new ArrayList<Sentence<T>>();
 				for(Sentence<T2> sentence2 : citer2.sentences){
 					T text = TextFactory.createText(params, sentence2.text.raw);
-					System.out.print(".");
+//					System.out.print(".");
 					Sentence<T> sentence = new Sentence<T>(sentence2.type, text);
 					sentences.add(sentence);
 				}

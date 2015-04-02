@@ -13,7 +13,7 @@ import dataset.Dataset;
 import dataset.DatasetXml;
 import dataset.Result;
 import dataset.Text;
-import dataset.TextWithSynsets;
+import dataset.TextWithRI;
 
 public class MRF {
 
@@ -33,7 +33,7 @@ public class MRF {
 		if(numDatasets > -1){
 			labels = labels.subList(0, numDatasets);
 		}
-		testMRF(TextWithSynsets.class, "-with-synsets", labels);
+		testMRF(TextWithRI.class, "-with-ngrams", labels);
 	}
 	
 	private static <T extends Text> void testMRF(Class<T> textClass, String afterLabelInFileName, List<String> labels){
@@ -55,7 +55,7 @@ public class MRF {
 		}
 		
 		final int neighbourhood = 3;
-		final double beliefThreshold = 0.4;
+		final double beliefThreshold = 0.4; //0.4
 		MRF_params params = new MRF_params(neighbourhood, beliefThreshold);
 		List<Result> results = new MRF_classifier<T>(params).classify(datasets);
 		System.out.println("FULL RESULTS:");
