@@ -3,7 +3,10 @@ package util;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import dataset.Dataset;
 import dataset.Result;
@@ -92,13 +95,17 @@ public class Printer {
 		System.out.println("-------------------------------- [ " + progress + " / " + total + " ] --------------------------------");
 	}
 	
-	public static <T extends Text> void printMultipleResults(String title, Collection<Result> results, List<Dataset<T>> datasets, boolean verbose){
+	public static <T extends Text, R extends Result> void printMultipleResults(String title, Collection<R> results, List<Dataset<T>> datasets, boolean verbose){
 		System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 		System.out.println("                 MULTIPLE RESULTS (" + title + "): ");
 		System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 		int i = 0;
-		double sumF1 = 0;
-		double sumF3 = 0;
+		double sumNegF1 = 0;
+		double sumPosF1 = 0;
+		double sumPosF3 = 0;
+		double sumMicroAvgF = 0;
+		double sumMacroAvgF = 0;
+		int sumPassedMillis = 0;
 		for(Result result : results){
 			Dataset<T> dataset = null;
 			if(datasets != null){
@@ -106,13 +113,21 @@ public class Printer {
 			}
 			printResult(result, null, verbose, dataset);
 			i ++;
-			sumF1 += result.positiveFMeasure(1);
-			sumF3 += result.positiveFMeasure(3);
+			sumNegF1 += result.negativeFMeasure(1);
+			sumPosF1 += result.positiveFMeasure(1);
+			sumPosF3 += result.positiveFMeasure(3);
+			sumPassedMillis += result.getPassedMillis();
+			sumMicroAvgF += result.microAvgFMeasure(1);
+			sumMacroAvgF += result.macroAvgFMeasure(1);
 		}
 		
 		System.out.println();
-		System.out.println("SUM F1: " + sumF1/(double)results.size());
-		System.out.println("SUM F3: " + sumF3/(double)results.size());
+		System.out.println("Avg neg. F1: " + sumNegF1/(double)results.size());
+		System.out.println("Avg pos. F1: " + sumPosF1/(double)results.size());
+		System.out.println("Avg pos. F3: " + sumPosF3/(double)results.size());
+		System.out.println("Avg micro avg. F: " + decimalFormat.format(sumMicroAvgF/(double)results.size()));
+		System.out.println("Avg macro avg. F: " + decimalFormat.format(sumMacroAvgF/(double)results.size()));
+		System.out.println("Total time: " + (sumPassedMillis/1000.0) + "s");
 		System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 		System.out.println("\n\n\n");
 	}
@@ -132,7 +147,7 @@ public class Printer {
 			System.out.println("Macro avg. F: " + f.format(result.macroAvgFMeasure(1)));
 			System.out.println();
 		}else{
-			System.out.print("neg F: " + f.format(result.negativeFMeasure(1)));
+			System.out.print(result.label() + "\tneg F: " + f.format(result.negativeFMeasure(1)));
 			System.out.print("    pos F: " + f.format(result.positiveFMeasure(1)));
 			System.out.print("    pos F3: " + f.format(result.positiveFMeasure(3)));
 			if(dataset != null){
@@ -155,5 +170,18 @@ public class Printer {
 	
 	public static String toString(double d){
 		return decimalFormat.format(d);
+	}
+	
+	public static <K,V extends Comparable<V>> String valueSortedMap(HashMap<K,V> map, int limit){
+		StringBuilder s= new StringBuilder();
+		s.append("{\n");
+		map.entrySet().stream()
+			.sorted((e1,e2) -> e2.getValue().compareTo(e1.getValue()))
+			.limit(limit)
+			.forEach(e -> {
+				s.append("  " + e.getKey() + ": " + e.getValue() + ",\n");
+			});
+		s.append("}");
+		return s.toString();
 	}
 }

@@ -15,6 +15,7 @@ import dataset.Dataset;
 import dataset.Sentence;
 import dataset.SentenceType;
 import dataset.Text;
+import dataset.TextWithRI;
 import dataset.Texts;
 
 
@@ -36,7 +37,11 @@ public class InstanceHandler {
 				FeatureName.DISTANCE_NEXT_EXPLICIT.toString(),
 				FeatureName.SIMILAR_TO_EXPLICIT.toString(),
 				FeatureName.SIMILAR_TO_CITED_TITLE.toString(),
-				FeatureName.SIMILAR_TO_CITED_CONTENT.toString()
+				FeatureName.SIMILAR_TO_CITED_CONTENT.toString(),
+				
+				FeatureName.SEMANTIC_SIMILAR_TO_EXPLICIT.toString(),
+				
+				FeatureName.MRF_PROBABILITY.toString()
 		});
 		
 		NonThrowingFileWriter writer = new NonThrowingFileWriter(arffFile);
@@ -48,6 +53,8 @@ public class InstanceHandler {
 				writer.write("NUMERIC\n");
 			}else if(feature.equals(FeatureName.TEXT.toString())){
 				writer.write("STRING\n");
+			}else if(feature.contains(FeatureName.SEMANTIC_VECTOR.toString())){
+				writer.write("NUMERIC\n");
 			}else{
 				writer.write("{true, false}\n");
 			}
@@ -73,7 +80,7 @@ public class InstanceHandler {
 		
 		List<SentenceInstance> allInstances = new ArrayList<SentenceInstance>();
 		for(Dataset<T> dataset : datasets){
-			allInstances.addAll(createInstances(dataset, onlyText, balanceData));
+			allInstances.addAll(createInstances(dataset, onlyText, balanceData, null));
 		}
 		return allInstances;
 	}
@@ -83,7 +90,7 @@ public class InstanceHandler {
 		
 		HashMap<String, ArrayList<SentenceInstance>> instanceSets = new HashMap<String, ArrayList<SentenceInstance>>();
 		for(Dataset<T> dataset : datasets){
-			instanceSets.put(dataset.datasetLabel, createInstances(dataset, onlyText, balanceData));
+			instanceSets.put(dataset.datasetLabel, createInstances(dataset, onlyText, balanceData, null));
 		}
 		return instanceSets;
 	}
@@ -94,7 +101,7 @@ public class InstanceHandler {
 	 * @return
 	 */
 	public static <T extends Text> ArrayList<SentenceInstance> createInstances(Dataset<T> dataset, 
-			boolean onlyText, boolean balanceData){
+			boolean onlyText, boolean balanceData, List<Double> mrfClassificationProbabilities){
 		
 		ArrayList<SentenceInstance> instances = new ArrayList<SentenceInstance>();
 		for(CitingPaper<T> citer : dataset.citers){
@@ -106,7 +113,7 @@ public class InstanceHandler {
 				if(onlyText){
 					features = extractFeatures(previous, sentence, next, dataset, onlyText, i);
 				}else{
-					features = extractFeaturesEnhanced(citer.sentences, i, dataset);
+					features = extractFeaturesEnhanced(citer.sentences, i, dataset, mrfClassificationProbabilities);
 				}
 				if(sentence.type == SentenceType.EXPLICIT_REFERENCE){ //TODO
 					continue; //Excluded
@@ -161,7 +168,7 @@ public class InstanceHandler {
 		return features;
 	}
 	
-	private static <T extends Text> Map<String, Comparable<?>> extractFeaturesEnhanced(List<Sentence<T>> sentences, int sentenceIndex, Dataset<T> dataset){
+	private static <T extends Text> Map<String, Comparable<?>> extractFeaturesEnhanced(List<Sentence<T>> sentences, int sentenceIndex, Dataset<T> dataset, List<Double> mrfClassificationProbabilities){
 		Texts texts = Texts.instance();
 		Map<String, Comparable<?>> features = new HashMap<String, Comparable<?>>();
 		Sentence<T> sentence = sentences.get(sentenceIndex);
@@ -213,6 +220,20 @@ public class InstanceHandler {
 		features.put(FeatureName.STARTS_DET.toString(), Texts.instance().startsWithDet(rawWords));
 		features.put(FeatureName.CONTAINS_DET.toString(), Texts.instance().containsDet(rawWords));
 		
+		if(sentence.text instanceof TextWithRI){
+			double[] vector = ((TextWithRI)sentence.text).vector;
+			for(int i = 0; i < vector.length; i++){
+				features.put(FeatureName.SEMANTIC_VECTOR.toString() + "_" + i, vector[i]);
+			}
+			double semanticSimToExplicit = ((TextWithRI)sentence.text).vectorSim((TextWithRI)dataset.mergedExplicitCitations);
+			features.put(FeatureName.SEMANTIC_SIMILAR_TO_EXPLICIT.toString(), semanticSimToExplicit);
+		}
+		
+		if(mrfClassificationProbabilities != null){
+			double prob = mrfClassificationProbabilities.get(sentenceIndex);
+			features.put(FeatureName.MRF_PROBABILITY.toString(), prob);
+		}
+
 		return features;
 	}
 

@@ -1,6 +1,9 @@
 package dataset;
 
+import java.util.ArrayList;
+
 import weka.classifiers.Evaluation;
+import weka.classifiers.evaluation.Prediction;
 
 public class ResultWrapper extends Result{
 	
@@ -26,5 +29,10 @@ public class ResultWrapper extends Result{
 	@Override
 	public long getPassedMillis() {
 		return passedMillis;
+	}
+
+	@Override
+	public ArrayList<Prediction> predictions() {
+		return wekaEvaluation.predictions();
 	}
 }

@@ -1,11 +1,5 @@
 package dataset;
 
-import gnu.trove.function.TDoubleFunction;
-import gnu.trove.iterator.TObjectDoubleIterator;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.map.hash.TObjectDoubleHashMap;
-import gnu.trove.procedure.TObjectDoubleProcedure;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,20 +9,17 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
 import util.Environment;
-import util.Printer;
 import util.Stemmer;
 
 
@@ -41,7 +32,8 @@ public class Texts {
 	private HashSet<String> stopwords;
 	
 	public static final String NUMBER_TAG = "<NUMBER>";
-	public static final String HEADER_PATTERN = "\\d+\\.\\d+.*";
+	public final static Pattern HEADER = Pattern.compile("\\d+\\.\\d+.*");
+	private final static Pattern CONTAINS_YEAR = Pattern.compile(".*\\d\\d\\d?\\d?.*");
 	
 	private static Texts instance;
 	
@@ -188,7 +180,7 @@ public class Texts {
 		return false;
 	}
 	
-	public boolean startoksWithDetWork(List<String> words){
+	public boolean startsWithDetWork(List<String> words){
 		return words.size() >= 2 && looseContains(determiners, words.get(0)) && looseContains(workNouns, words.get(1));
 	}
 	
@@ -206,7 +198,7 @@ public class Texts {
 	
 	
 	public boolean startsWithSectionHeader(List<String> words){
-		return words != null && words.get(0).matches(HEADER_PATTERN);
+		return words != null && HEADER.matcher(words.get(0)).matches();
 //		return words != null ? words.stream().anyMatch(word -> word.matches(HEADER_PATTERN)) : false;
 	}
 	
@@ -297,8 +289,7 @@ public class Texts {
 			int start = Math.min(authorIndex+1, words.size()-1);
 			int end = Math.min(authorIndex+6, words.size());
 			List<String> vicinity = words.subList(start, end);
-			String yearRegex = ".*\\d\\d\\d?\\d?.*";
-			return vicinity.stream().anyMatch(word -> word.matches(yearRegex));
+			return vicinity.stream().anyMatch(word -> CONTAINS_YEAR.matcher(word).matches());
 		}
 		return false;
 	}

@@ -1,11 +1,16 @@
 package dataset;
 
+import java.util.ArrayList;
+
+import weka.classifiers.evaluation.Prediction;
+
 
 public abstract class Result {
 	
 	
 	public abstract long getPassedMillis();
 	public abstract double[][] confusionMatrix();
+	public abstract ArrayList<Prediction> predictions();
 	
 	public abstract String label();
 	
@@ -75,4 +80,6 @@ public abstract class Result {
 	protected double fMeasure(double precision, double recall, double beta){
 		return (1+Math.pow(beta, 2)) * (precision*recall)/(Math.pow(beta, 2)*precision + recall);
 	}
+	
+	
 }

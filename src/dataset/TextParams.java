@@ -25,6 +25,12 @@ public class TextParams<T extends Text>{
 		p.ngramIdf = ngramIdf;
 		return p;
 	}
+	
+	public static TextParams<TextWithRI> withRI(NgramIdf ngramIdf){
+		TextParams<TextWithRI> p = new TextParams<TextWithRI>(TextWithRI.class);
+		p.ngramIdf = ngramIdf;
+		return p;
+	}
 
 	public static TextParams<TextWithSynsets> withSynsets(NgramIdf ngramIdf, StanfordCoreNLP nlpPipeline, IDictionary wordnetDict){
 		TextParams<TextWithSynsets> p = new TextParams<TextWithSynsets>(TextWithSynsets.class);

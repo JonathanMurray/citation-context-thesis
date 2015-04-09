@@ -9,11 +9,12 @@ import mrf.MRF_classifier;
 import mrf.MRF_params;
 import util.Environment;
 import util.Printer;
+import wekaWrapper.WekaClassifier;
 import dataset.Dataset;
 import dataset.DatasetXml;
-import dataset.Result;
+import dataset.ResultImpl;
 import dataset.Text;
-import dataset.TextWithRI;
+import dataset.TextWithNgrams;
 
 public class MRF {
 
@@ -33,12 +34,13 @@ public class MRF {
 		if(numDatasets > -1){
 			labels = labels.subList(0, numDatasets);
 		}
-		testMRF(TextWithRI.class, "-with-ngrams", labels);
+		testMRF(TextWithNgrams.class, "-with-ngrams", labels);
 	}
 	
 	private static <T extends Text> void testMRF(Class<T> textClass, String afterLabelInFileName, List<String> labels){
 		String resourcesDir = Environment.resources();
 		List<Dataset<T>> datasets = new ArrayList<Dataset<T>>();
+//		labels = labels.subList(0, 1); //TODO
 		for(String label : labels){
 			final int MAX_CITERS = 0;
 			Dataset<T> dataset = DatasetXml.parseXmlFile(
@@ -54,10 +56,17 @@ public class MRF {
 			datasets.add(dataset);
 		}
 		
-		final int neighbourhood = 3;
-		final double beliefThreshold = 0.4; //0.4
-		MRF_params params = new MRF_params(neighbourhood, beliefThreshold);
-		List<Result> results = new MRF_classifier<T>(params).classify(datasets);
+		final int neighbourhood = 4;
+		final double beliefThreshold = 0.6;
+		final int maxRuns = 0;
+		MRF_params params = new MRF_params(neighbourhood, beliefThreshold, maxRuns);
+		
+		List<ResultImpl> results = new MRF_classifier<T>(params).classify(datasets);
+		
+		ResultImpl mergedResults = ResultImpl.mergeMany(results);
+		int classIndex = 1;
+		WekaClassifier.plotROC_curve(mergedResults.predictions(), classIndex);
+		
 		System.out.println("FULL RESULTS:");
 		Printer.printMultipleResults("MRF-wiki", results, datasets, true);
 		System.out.println("COMPACT RESULTS:");

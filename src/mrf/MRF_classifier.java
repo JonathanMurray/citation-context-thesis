@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 import util.Printer;
 import util.Timer;
+import weka.classifiers.evaluation.NominalPrediction;
+import weka.classifiers.evaluation.Prediction;
 import dataset.Dataset;
 import dataset.LexicalHook;
 import dataset.Result;
@@ -28,7 +30,7 @@ public class MRF_classifier<T extends Text> {
 	
 	protected static Printer printer = new Printer(true);
 	private static final double DELTA = 0.02;
-	private static final int MAX_RUNS = 10;
+//	private static final int MAX_RUNS = 10;
 	private static final int NO = 0;
 	private static final int YES = 1;
 	
@@ -47,9 +49,9 @@ public class MRF_classifier<T extends Text> {
 		this.params = params;
 	}
 	
-	public List<Result> classify(Collection<Dataset<T>> datasets){
+	public List<ResultImpl> classify(Collection<Dataset<T>> datasets){
 		System.out.println("Classifying multiple datasets ...");
-		List<Result> results = new ArrayList<Result>();
+		List<ResultImpl> results = new ArrayList<ResultImpl>();
 		for(Dataset<T> dataset : datasets){
 			results.add(classify(dataset));
 		}
@@ -80,7 +82,7 @@ public class MRF_classifier<T extends Text> {
 		Timer t = new Timer();
 		setup(citerIndex, dataset);
 		initMessages();
-		for(int i = 0; i < MAX_RUNS; i++){ 
+		for(int i = 0; i < params.maxRuns; i++){ 
 			boolean anyChange = iterate();
 			if(!anyChange){
 //				printer.println("Done after " + i + " iterations.");
@@ -257,10 +259,14 @@ public class MRF_classifier<T extends Text> {
 		
 		ArrayList<Integer> fpIndices = new ArrayList<Integer>();
 		ArrayList<Integer> fnIndices = new ArrayList<Integer>();
+		ArrayList<Double> classificationProbabilities = new ArrayList<Double>();
+		ArrayList<Prediction> predictions = new ArrayList<Prediction>();
 		
 		for(int i = 0; i < sentences.size(); i++){
 			Sentence<T> sentence = sentences.get(i);
 			double[] belief = finalBelief(i);
+			classificationProbabilities.add(belief[1]);
+			
 			if(sentence.type == SentenceType.EXPLICIT_REFERENCE){
 //				System.out.println();
 //				System.out.println("EXPLICIT: " + sentence.text.raw);
@@ -272,15 +278,22 @@ public class MRF_classifier<T extends Text> {
 //			System.out.println( sentence.type + " (" + f.format(selfBeliefs.get(i)[1]) + " -> " + f.format(belief[1]) +  "):   " + sentence.text.raw); //TODO
 			
 			//TODO ignore those too far away from explicit
-			boolean closeToExplicit = false;
-			final int LIMIT = 3;
-			for(int j = Math.max(0, i-LIMIT); j < Math.min(sentences.size()-1, i+LIMIT); j++){
-				if(sentences.get(j).type==SentenceType.EXPLICIT_REFERENCE){
-					closeToExplicit = true;
-				}
+//			boolean closeToExplicit = false;
+//			final int LIMIT = 3;
+//			for(int j = Math.max(0, i-LIMIT); j < Math.min(sentences.size()-1, i+LIMIT); j++){
+//				if(sentences.get(j).type==SentenceType.EXPLICIT_REFERENCE){
+//					closeToExplicit = true;
+//				}
+//			}
+			
+			
+			if(sentence.type == SentenceType.NOT_REFERENCE){
+				predictions.add(new NominalPrediction(0.0, belief));
+			}else{
+				predictions.add(new NominalPrediction(1.0, belief));
 			}
 			
-			double HIGHER_THRESH = 0.98;
+//			double HIGHER_THRESH = 0.98;
 			boolean predictInContext = belief[1] > beliefThreshold;// && closeToExplicit || belief[1] > HIGHER_THRESH;
 			if(predictInContext){
 				if(sentence.type == SentenceType.NOT_REFERENCE){
@@ -348,7 +361,7 @@ public class MRF_classifier<T extends Text> {
 			}
 		}
 		
-		return new ResultImpl(label, truePos, falsePos, trueNeg, falseNeg, fpIndices, fnIndices, passedMillis);	
+		return new ResultImpl(label, truePos, falsePos, trueNeg, falseNeg, classificationProbabilities, passedMillis, predictions);	
 	}
 	
 	private double[] finalBelief(int sentence){

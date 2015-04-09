@@ -3,6 +3,7 @@ package main;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import util.Environment;
@@ -31,34 +32,44 @@ public class Weka {
 			labels = labels.subList(0, numDatasets);
 		}
 
-		testWeka(labels);
+		testWeka(labels, "with-mrf");
 	}
 	
-	private static void testWeka(List<String> labels){
-		WekaClassifier wekaSMO = WekaClassifier.SMO();
-		WekaClassifier wekaNB = WekaClassifier.NaiveBayes();
-		WekaClassifier wekaTree = WekaClassifier.J48();
-		WekaClassifier wekaKnn = WekaClassifier.KNN();
+	private static void testWeka(List<String> labels, String afterLabel){
+		WekaClassifier smo = WekaClassifier.SMO();
+		WekaClassifier nb = WekaClassifier.NaiveBayes();
+		WekaClassifier j48 = WekaClassifier.J48();
+		WekaClassifier knn = WekaClassifier.KNN();
+		WekaClassifier adaboost = WekaClassifier.Adaboost();
+		WekaClassifier vote = WekaClassifier.Vote();
 
 		String resourcesDir = Environment.resources();
 		
 		List<Instances> wekaBalancedDatasets = new ArrayList<Instances>();
 		List<Instances> wekaFullDatasets = new ArrayList<Instances>();
 		for(String label : labels){
-			//TODO enhanced
-			Instances balancedDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + ".arff"));
+			Instances balancedDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + "-" + afterLabel + ".arff"));
 			wekaBalancedDatasets.add(balancedDataset);
-			Instances fullDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + "-full.arff"));
+			Instances fullDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + "-" + afterLabel + "-full.arff"));
 			wekaFullDatasets.add(fullDataset);
 		}
 		
-//		List<Result> results = wekaSMO.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
-//		System.out.println("FULL RESULTS:");
-//		printMultipleResults("SMO", results, null, true);
-//		System.out.println("COMPACT RESULTS:");
-//		printMultipleResults("SMO", results, null, false);
 		
-		Result result = wekaSMO.crossValidateMerged("Merged full datasets", wekaFullDatasets, 4);
-		Printer.printResult(result, null, true, null);
+		//TODO Run infogain on full dataset (on server?)
+//		HashMap<String,Double> infogains = wekaSMO.evaluateAttributes(WekaClassifier.mergeDatasets(wekaFullDatasets, -1));
+//		System.out.println("INFO-GAIN:");
+//		System.out.println(Printer.valueSortedMap(infogains, 15));
+		
+		smo.ROC(wekaBalancedDatasets.get(0));
+		
+		
+		List<Result> results = vote.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
+		System.out.println("FULL RESULTS:");
+		Printer.printMultipleResults("SMO", results, null, true);
+		System.out.println("COMPACT RESULTS:");
+		Printer.printMultipleResults("SMO", results, null, false);
+		
+//		Result result = wekaSMO.crossValidateMerged("Merged full datasets", wekaFullDatasets, 4);
+//		Printer.printResult(result, null, true, null);
 	}
 }

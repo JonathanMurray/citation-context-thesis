@@ -3,6 +3,8 @@ package dataset;
 import java.util.ArrayList;
 import java.util.List;
 
+import weka.classifiers.evaluation.Prediction;
+
 
 
 public class ResultImpl extends Result{
@@ -11,23 +13,28 @@ public class ResultImpl extends Result{
 	private int falsePositives;
 	private int trueNegatives;
 	private int falseNegatives;
-	private List<Integer> fpIndices;
-	private List<Integer> fnIndices;
 	private long passedMillis;
+	private List<Double> classificationProbabilities;
+	private ArrayList<Prediction> predictions;
 	
 	public ResultImpl(String label){
-		this(label, 0,0,0,0,new ArrayList<Integer>(),new ArrayList<Integer>(), 0);
+		this(label, 0,0,0,0,new ArrayList<Double>(), 0, new ArrayList<Prediction>());
 	}
 	
-	public ResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Integer> fpIndices, List<Integer> fnIndices, long passedMillis){
+	public ResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Double> classificationProbabilities, 
+			long passedMillis, ArrayList<Prediction> predicitions){
 		this.label = label;
 		this.truePositives = truePositives;
 		this.falsePositives = falsePositives;
 		this.trueNegatives = trueNegatives;
 		this.falseNegatives = falseNegatives;
-		this.fpIndices = fpIndices;
-		this.fnIndices = fnIndices;
 		this.passedMillis = passedMillis;
+		this.classificationProbabilities = classificationProbabilities;
+		this.predictions = predicitions;
+	}
+	
+	public List<Double> classificationProbabilities(){
+		return classificationProbabilities;
 	}
 	
 	public String label(){
@@ -42,9 +49,9 @@ public class ResultImpl extends Result{
 		falsePositives += other.falsePositives;
 		trueNegatives += other.trueNegatives;
 		falseNegatives += other.falseNegatives;
-		fpIndices.addAll(other.fpIndices);
-		fnIndices.addAll(other.fnIndices);
 		passedMillis += other.passedMillis;
+		classificationProbabilities.addAll(other.classificationProbabilities);
+		predictions.addAll(other.predictions);
 	}
 	
 	@Override
@@ -58,5 +65,18 @@ public class ResultImpl extends Result{
 	@Override
 	public long getPassedMillis() {
 		return passedMillis;
+	}
+
+	@Override
+	public ArrayList<Prediction> predictions() {
+		return predictions;
+	}
+	
+	public static ResultImpl mergeMany(List<ResultImpl> results){
+		ResultImpl merged = new ResultImpl("merged");
+		for(ResultImpl result : results){
+			merged.add(result);
+		}
+		return merged;
 	}
 }

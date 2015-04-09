@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -14,15 +15,19 @@ import java.util.Random;
 import util.Environment;
 import util.Printer;
 import util.Timer;
+import weka.attributeSelection.InfoGainAttributeEval;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.evaluation.Prediction;
 import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
 import weka.classifiers.lazy.IBk;
+import weka.classifiers.meta.AdaBoostM1;
 import weka.classifiers.trees.J48;
+import weka.classifiers.meta.Vote;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -30,6 +35,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 import weka.core.tokenizers.NGramTokenizer;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.StringToWordVector;
+import weka.gui.visualize.Plot2D;
 import weka.gui.visualize.PlotData2D;
 import weka.gui.visualize.ThresholdVisualizePanel;
 import dataset.Result;
@@ -40,12 +46,21 @@ public class WekaClassifier {
 	private static Printer printer = new Printer(true);
 	private static Printer debug = new Printer(false);
 	
+	private final boolean useVoting;
+	private List<AbstractClassifier> votingClassifiers;
+	private Vote vote;
 	private AbstractClassifier classifier;
 	private StringToWordVector filter;
 	
 	public WekaClassifier(AbstractClassifier classifier){
 		this.classifier = classifier;
 		debug.println("Classifier-options: " + Arrays.toString(classifier.getOptions()));
+		useVoting = false;
+	}
+	
+	public WekaClassifier(List<AbstractClassifier> votingClassifiers){
+		this.votingClassifiers = votingClassifiers;
+		useVoting = true;
 	}
 	
 	public static WekaClassifier SMO(){
@@ -67,6 +82,23 @@ public class WekaClassifier {
 	public static WekaClassifier J48(){
 		J48 j48 = new J48();
 		return new WekaClassifier(j48);
+	}
+	
+	public static WekaClassifier Adaboost(){
+		AdaBoostM1 adaboost = new AdaBoostM1();
+		return new WekaClassifier(adaboost);
+	}
+	
+	public static WekaClassifier Vote(){
+		try{
+			List<AbstractClassifier> votingClassifiers = new ArrayList<AbstractClassifier>();
+			votingClassifiers.add(setupSMO());
+			votingClassifiers.add(new AdaBoostM1());
+			votingClassifiers.add(new J48());
+			return new WekaClassifier(votingClassifiers);
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
 	}
 	
 	private static SMO setupSMO() throws Exception{
@@ -164,9 +196,7 @@ public class WekaClassifier {
 		List<Result> results = new ArrayList<Result>(); 
 		for(int testIndex = 0; testIndex < balancedDatasets.size(); testIndex++){
 			Instances testSet = fullDatasets.get(testIndex);
-			printer.print("merging training sets ... ");
 			Instances trainSet = mergeDatasets(balancedDatasets, testIndex);
-			printer.println("[x]");
 			trainOnData("merged", trainSet, false);
 			String label = labels.get(testIndex);
 			Result res = testOnData(label, testSet);
@@ -175,8 +205,9 @@ public class WekaClassifier {
 		return results;
 	}
 	
-	private Instances mergeDatasets(List<Instances> datasets, int exceptIndex){
+	public static Instances mergeDatasets(List<Instances> datasets, int exceptIndex){
 		Instances merged = null;
+		printer.print("merging datasets ... ");
 		for(int trainIndex = 0; trainIndex < datasets.size(); trainIndex++){
 			if(trainIndex == exceptIndex){
 				continue;
@@ -190,6 +221,7 @@ public class WekaClassifier {
 		if(merged == null){
 			throw new IllegalArgumentException(datasets + "     " + exceptIndex);
 		}
+		printer.println("[x]");
 		return merged;
 	}
 	
@@ -207,8 +239,15 @@ public class WekaClassifier {
 			}
 			filter = createNGramFilter(data,1,3);
 			data = filterData(data, filter);
-//			for(int i = 0; i < data.numAttributes(); i++){System.out.println(data.attribute(i).name());}//TODO
-			classifier.buildClassifier(data);
+			if(useVoting){
+				vote = new Vote();
+				for(AbstractClassifier voter : votingClassifiers){
+					voter.buildClassifier(data);
+					vote.addPreBuiltClassifier(voter);
+				}
+			}else{
+				classifier.buildClassifier(data);
+			}
 			printer.println("[x] (" + t.getSecString() + ")");
 		}catch(Exception e){
 			e.printStackTrace();
@@ -222,7 +261,12 @@ public class WekaClassifier {
 			printer.print("Testing on " + label + " ... ");
 			data = filterData(data, filter);
 			Evaluation eval = new Evaluation(data);
-			eval.evaluateModel(classifier, data);
+			if(useVoting){
+				eval.evaluateModel(vote, data);
+			}else{
+				eval.evaluateModel(classifier, data);
+			}
+			
 			ResultWrapper result = new ResultWrapper(label, eval, t.getMillis());
 			printer.println("[x]  (" + t.getSecString() + ")  F1: " + result.positiveFMeasure(1) + ",  F3: " + result.positiveFMeasure(3) + "\n");
 			return result;
@@ -231,27 +275,48 @@ public class WekaClassifier {
 		}
 	}
 	
-	
-	
-	
+	public HashMap<String,Double> evaluateAttributes(Instances data){
+		try {
+			printer.print("Filtering data ... ");
+			filter = createNGramFilter(data,1,3);
+			data = filterData(data, filter);
+			printer.println("[x]");
+			HashMap<String, Double> infogains = new HashMap<String,Double>();
+			InfoGainAttributeEval eval = new InfoGainAttributeEval();
+			printer.print("Evaluating attributes ... ");
+			eval.buildEvaluator(data);
+			for(int i  = 0; i < data.numAttributes(); i++){
+				String name = data.attribute(i).name();
+				double infogain = eval.evaluateAttribute(i);
+				infogains.put(name, infogain);
+			}
+			printer.println("[x]");
+			return infogains;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 	
 	public void ROC(Instances data){
 		try{
 			data.setClassIndex(data.numAttributes()-1);
-			System.out.println(Arrays.toString(countClasses(data)));
+			System.out.println("count classes: " + Arrays.toString(countClasses(data)));
 			data = filterData(data, createNGramFilter(data,2,3));
 			
 			Evaluation eval = new Evaluation(data);
-			
-//			eval.evaluateModel(classifier, data);
-			
-			eval.crossValidateModel(classifier, data, 2, new Random());
-		
-			// generate curve
+			int numFolds = 5;
+			eval.crossValidateModel(classifier, data, numFolds, new Random());
+			int classIndex = 0;	
+			plotROC_curve(eval.predictions(), classIndex);
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public static void plotROC_curve(ArrayList<Prediction> predictions, int classIndex){
+		try{
 			ThresholdCurve tc = new ThresholdCurve();
-			int classIndex = 0;
-			Instances result = tc.getCurve(eval.predictions(), classIndex);
-			
+			Instances result = tc.getCurve(predictions, classIndex);
 			System.out.println("area: " + ThresholdCurve.getROCArea(result));
 		 
 		     // plot curve
@@ -259,15 +324,18 @@ public class WekaClassifier {
 		    vmc.setROCString("(Area under ROC = " + ThresholdCurve.getROCArea(result) + ")");
 		    vmc.setName(result.relationName());
 		    
-		    System.out.println(result.attribute("Recall").index());
-		    System.out.println(result.attribute("Precision").index());
+		    System.out.println("Recall index: " + result.attribute("Recall").index());
+		    System.out.println("Precision index: " + result.attribute("Precision").index());
 		    
 //		    vmc.setXIndex(result.attribute("Recall").index());
 //		    vmc.setYIndex(result.attribute("Precision").index());
 		    
 		    PlotData2D tempd = new PlotData2D(result);
+		    
+		    
 		    tempd.setPlotName(result.relationName());
 		    tempd.addInstanceNumberAttribute();
+		    
 		    
 		    // specify which points are connected
 		    boolean[] cp = new boolean[result.numInstances()];
@@ -280,22 +348,27 @@ public class WekaClassifier {
 		 
 		    // display curve
 		    String plotName = vmc.getName();
-		    final javax.swing.JFrame jf = new javax.swing.JFrame("Weka Classifier Visualize: "+plotName);
-		    jf.setSize(500,400);
-		    jf.getContentPane().setLayout(new BorderLayout());
-		    jf.getContentPane().add(vmc, BorderLayout.CENTER);
-		    jf.addWindowListener(new java.awt.event.WindowAdapter() {
+		    final javax.swing.JFrame jframe = new javax.swing.JFrame("Weka Classifier Visualize: "+plotName);
+		    jframe.setSize(1366,768);
+		    jframe.getContentPane().setLayout(new BorderLayout());
+		    jframe.getContentPane().add(vmc, BorderLayout.CENTER);
+		    jframe.addWindowListener(new java.awt.event.WindowAdapter() {
 		    	public void windowClosing(java.awt.event.WindowEvent e) {
-		    		jf.dispose();
+		    		System.out.println("window closing.");
+		    		jframe.dispose();
 			    }
 			});
-		    jf.setVisible(true);
+		    jframe.setVisible(true);
+		    jframe.toFront();
 		}catch(Exception e){
 			throw new RuntimeException(e);
 		}
 	}
 	
 	private int[] countClasses(Instances data){
+		for(int i = 0; i < data.numAttributes(); i++){
+			System.out.println(i + ": " + data.attribute(i).name());
+		}
 		data.setClassIndex(data.numAttributes()-1);
 		int[] counts = new int[2];
 		for(Instance i : data){
