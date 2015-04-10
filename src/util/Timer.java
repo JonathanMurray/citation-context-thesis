@@ -1,7 +1,6 @@
 package util;
 
 import com.ibm.icu.text.DecimalFormat;
-import com.ibm.icu.text.NumberFormat;
 
 public class Timer {
 	private long startTime;
