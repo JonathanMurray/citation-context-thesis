@@ -14,6 +14,7 @@ public class TextParams<T extends Text>{
 	public StanfordCoreNLP nlpPipeline;
 	public IDictionary wordnetDict;
 	public TObjectIntHashMap<ISynset> synsetDepths;
+	public SSpaceWrapper sspace;
 	
 	public static TextParams<Text> basic(){
 		TextParams<Text> p = new TextParams<Text>(Text.class);
@@ -26,9 +27,10 @@ public class TextParams<T extends Text>{
 		return p;
 	}
 	
-	public static TextParams<TextWithRI> withRI(NgramIdf ngramIdf){
+	public static TextParams<TextWithRI> withRI(NgramIdf ngramIdf, SSpaceWrapper sspace){
 		TextParams<TextWithRI> p = new TextParams<TextWithRI>(TextWithRI.class);
 		p.ngramIdf = ngramIdf;
+		p.sspace = sspace;
 		return p;
 	}
 

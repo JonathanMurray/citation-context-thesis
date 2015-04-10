@@ -1,4 +1,4 @@
-package old.wiki_neo4j;
+package wiki_neo4j;
 
 import org.neo4j.graphdb.Label;
 

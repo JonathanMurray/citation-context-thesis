@@ -32,7 +32,7 @@ public class Weka {
 			labels = labels.subList(0, numDatasets);
 		}
 
-		testWeka(labels, "with-mrf");
+		testWeka(labels, "ri");
 	}
 	
 	private static void testWeka(List<String> labels, String afterLabel){
@@ -56,15 +56,15 @@ public class Weka {
 		
 		
 		//TODO Run infogain on full dataset (on server?)
-//		HashMap<String,Double> infogains = wekaSMO.evaluateAttributes(WekaClassifier.mergeDatasets(wekaFullDatasets, -1));
+//		HashMap<String,Double> infogains = smo.evaluateAttributes(WekaClassifier.mergeDatasets(wekaBalancedDatasets, -1));
 //		System.out.println("INFO-GAIN:");
 //		System.out.println(Printer.valueSortedMap(infogains, 15));
 		
-		smo.ROC(wekaBalancedDatasets.get(0));
+//		smo.ROC(wekaBalancedDatasets.get(0));
 		
 		
-		List<Result> results = vote.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
 		System.out.println("FULL RESULTS:");
+		List<Result> results = adaboost.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
 		Printer.printMultipleResults("SMO", results, null, true);
 		System.out.println("COMPACT RESULTS:");
 		Printer.printMultipleResults("SMO", results, null, false);

@@ -195,6 +195,7 @@ public class WekaClassifier {
 		}
 		List<Result> results = new ArrayList<Result>(); 
 		for(int testIndex = 0; testIndex < balancedDatasets.size(); testIndex++){
+			Printer.printBigProgressHeader(testIndex, balancedDatasets.size());
 			Instances testSet = fullDatasets.get(testIndex);
 			Instances trainSet = mergeDatasets(balancedDatasets, testIndex);
 			trainOnData("merged", trainSet, false);

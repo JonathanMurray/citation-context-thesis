@@ -1,4 +1,4 @@
-package old.wiki_neo4j;
+package wiki_neo4j;
 
 import java.io.BufferedReader;
 import java.io.File;

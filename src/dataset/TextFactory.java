@@ -41,7 +41,7 @@ public class TextFactory {
 		
 		else if(params.textClass.equals(TextWithRI.class)){
 			Ngrams ngramsTfIdf = NgramExtractor.ngramsTfIdf(MAX_NGRAM_N, lemmas, params.ngramIdf);
-			return (T) new TextWithRI(raw, rawWords, lemmas, ngramsTfIdf);
+			return (T) new TextWithRI(raw, rawWords, lemmas, ngramsTfIdf, params.sspace);
 		}
 		
 //		else if(params.textClass.equals(TextWithConcepts.class)){
