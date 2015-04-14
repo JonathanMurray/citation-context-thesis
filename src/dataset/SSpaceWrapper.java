@@ -63,6 +63,7 @@ public class SSpaceWrapper {
 			boolean permutations = true;
 			Printer.printBigHeader("Creating S-Space {veclen: " + vecLen + ", windowsize: " + windowSize + ", permutations: "
 					+ permutations);
+			System.out.println("from dir " + txtDir);
 //			SemanticSpace sspace = new RandomIndexing(vecLen, windowSize, permutations, new DefaultPermutationFunction(), true,
 //					0, System.getProperties());
 			
