@@ -15,6 +15,7 @@ import dataset.DatasetXml;
 import dataset.ResultImpl;
 import dataset.Text;
 import dataset.TextWithNgrams;
+import dataset.TextWithSspace;
 
 public class MRF {
 
@@ -34,7 +35,7 @@ public class MRF {
 		if(numDatasets > -1){
 			labels = labels.subList(0, numDatasets);
 		}
-		testMRF(TextWithNgrams.class, "-with-ngrams", labels);
+		testMRF(TextWithSspace.class, "-with-ngrams", labels);
 	}
 	
 	private static <T extends Text> void testMRF(Class<T> textClass, String afterLabelInFileName, List<String> labels){

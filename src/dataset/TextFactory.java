@@ -39,9 +39,9 @@ public class TextFactory {
 			return (T) new TextWithSynsets(raw, rawWords, lemmas, ngramsTfIdf, synsets);
 		}
 		
-		else if(params.textClass.equals(TextWithRI.class)){
+		else if(params.textClass.equals(TextWithSspace.class)){
 			Ngrams ngramsTfIdf = NgramExtractor.ngramsTfIdf(MAX_NGRAM_N, lemmas, params.ngramIdf);
-			return (T) new TextWithRI(raw, rawWords, lemmas, ngramsTfIdf, params.sspace);
+			return (T) new TextWithSspace(raw, rawWords, lemmas, ngramsTfIdf, params.sspace);
 		}
 		
 //		else if(params.textClass.equals(TextWithConcepts.class)){

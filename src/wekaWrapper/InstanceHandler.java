@@ -15,7 +15,7 @@ import dataset.Dataset;
 import dataset.Sentence;
 import dataset.SentenceType;
 import dataset.Text;
-import dataset.TextWithRI;
+import dataset.TextWithSspace;
 import dataset.Texts;
 
 
@@ -220,12 +220,12 @@ public class InstanceHandler {
 		features.put(FeatureName.STARTS_DET.toString(), Texts.instance().startsWithDet(rawWords));
 		features.put(FeatureName.CONTAINS_DET.toString(), Texts.instance().containsDet(rawWords));
 		
-		if(sentence.text instanceof TextWithRI){
-			double[] vector = ((TextWithRI)sentence.text).vector;
+		if(sentence.text instanceof TextWithSspace){
+			double[] vector = ((TextWithSspace)sentence.text).vector;
 			for(int i = 0; i < vector.length; i++){
 				features.put(FeatureName.SEMANTIC_VECTOR.toString() + "_" + i, vector[i]);
 			}
-			double semanticSimToExplicit = ((TextWithRI)sentence.text).vectorSim((TextWithRI)dataset.mergedExplicitCitations);
+			double semanticSimToExplicit = ((TextWithSspace)sentence.text).vectorSim((TextWithSspace)dataset.mergedExplicitCitations);
 			features.put(FeatureName.SEMANTIC_SIMILAR_TO_EXPLICIT.toString(), semanticSimToExplicit);
 		}
 		

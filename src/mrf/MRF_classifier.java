@@ -200,7 +200,16 @@ public class MRF_classifier<T extends Text> {
 			similarities.add(sim);
 		}
 		for(int i = 0; i < similarities.size(); i++){
-			double normalized = (similarities.get(i) - minSimilarity) / (maxSimilarity-minSimilarity);
+			double normalized;
+			if(minSimilarity == maxSimilarity){
+				System.out.println("minsim == maxsim == " + minSimilarity);
+				normalized = 0.5;
+			}else{
+				normalized = (similarities.get(i) - minSimilarity) / (maxSimilarity-minSimilarity);
+			}
+			if(Double.isNaN(normalized)){
+				throw new RuntimeException("min:" + minSimilarity + ", max:" + maxSimilarity + ", i=" + i);
+			}
 			similarities.set(i, normalized);
 		}
 		return similarities;

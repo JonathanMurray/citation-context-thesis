@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,16 +19,14 @@ import java.util.stream.Collectors;
 import util.Environment;
 import util.Printer;
 import util.Timer;
-import edu.stanford.nlp.ling.tokensregex.SequencePattern.SequenceStartPatternExpr;
 import edu.ucla.sspace.clustering.Assignments;
 import edu.ucla.sspace.clustering.DirectClustering;
 import edu.ucla.sspace.common.SemanticSpace;
 import edu.ucla.sspace.common.SemanticSpaceIO;
 import edu.ucla.sspace.common.SemanticSpaceIO.SSpaceFormat;
-import edu.ucla.sspace.index.DefaultPermutationFunction;
+import edu.ucla.sspace.lsa.LatentSemanticAnalysis;
 import edu.ucla.sspace.matrix.Matrices;
 import edu.ucla.sspace.matrix.Matrix;
-import edu.ucla.sspace.ri.RandomIndexing;
 import edu.ucla.sspace.vector.DenseVector;
 import edu.ucla.sspace.vector.DoubleVector;
 import edu.ucla.sspace.vector.Vector;
@@ -42,11 +41,8 @@ public class SSpaceWrapper {
 	
 	private static SSpaceWrapper instance;
 	
-	public static SSpaceWrapper instance(){
+	public static SSpaceWrapper instance(File sspaceFile, File wordFrequenciesFile){
 		if(instance == null){
-			String sspaceDir = Environment.resources() + "/sspace";
-			File sspaceFile = new File(sspaceDir + "/small-space.sspace");
-			File wordFrequenciesFile = new File(sspaceDir + "/wordfrequencies.ser");
 			instance = SSpaceWrapper.load(sspaceFile, wordFrequenciesFile);
 		}
 		return instance;
@@ -64,11 +60,15 @@ public class SSpaceWrapper {
 		try {
 			// int vecLen = 500;
 			// int windowSize = 6;
-			boolean permutations = false;
+			boolean permutations = true;
 			Printer.printBigHeader("Creating S-Space {veclen: " + vecLen + ", windowsize: " + windowSize + ", permutations: "
 					+ permutations);
-			SemanticSpace sspace = new RandomIndexing(vecLen, windowSize, permutations, new DefaultPermutationFunction(), true,
-					0, System.getProperties());
+//			SemanticSpace sspace = new RandomIndexing(vecLen, windowSize, permutations, new DefaultPermutationFunction(), true,
+//					0, System.getProperties());
+			
+			int lsaDimensions = 500;
+			LatentSemanticAnalysis sspace = new LatentSemanticAnalysis(lsaDimensions, true);
+			
 			File[] files = txtDir.listFiles();
 			TObjectIntHashMap<String> wordFrequencies = new TObjectIntHashMap<String>();
 			for (int i = 0; i < files.length; i++) {
@@ -76,12 +76,14 @@ public class SSpaceWrapper {
 				if (i % 100 == 0) {
 					System.out.print(i + "   ");
 				}
+				
 				sspace.processDocument(new BufferedReader(new FileReader(textFile)));
 				Scanner scanner = new Scanner(new BufferedReader(new FileReader(textFile)));
 				while (scanner.hasNext()) {
 					String lemma = scanner.next();
 					wordFrequencies.adjustOrPutValue(lemma, 1, 1);
 				}
+				scanner.close();
 			}
 			System.out.println();
 			sspace.processSpace(System.getProperties());
@@ -119,6 +121,7 @@ public class SSpaceWrapper {
 
 	public static SSpaceWrapper load(File sspaceFile, File wordFrequenciesFile) {
 		try {
+			System.out.print("Loading sspace from " + sspaceFile.getName() + " and " + wordFrequenciesFile.getName() + " ... ");
 			SemanticSpace sspace = SemanticSpaceIO.load(sspaceFile);
 			// TObjectIntHashMap<String> wordFrequencies =
 			// (TObjectIntHashMap<String>) new ObjectInputStream(new
@@ -126,6 +129,7 @@ public class SSpaceWrapper {
 			TObjectIntHashMap<String> wordFrequencies = new TObjectIntHashMap<String>();
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(wordFrequenciesFile));
 			wordFrequencies.readExternal(in);
+			System.out.println("[x]");
 			return new SSpaceWrapper(sspace, wordFrequencies);
 		} catch (IOException | ClassNotFoundException e) {
 			throw new RuntimeException(e);
@@ -178,11 +182,11 @@ public class SSpaceWrapper {
 				numVectors+=wordFrequency;
 			}
 		}
-		double invNumVectors = 1.0 / numVectors;
+//		double invNumVectors = 1.0 / numVectors;
 		System.out.println("numV: " + numVectors);
 		for (int i = 0; i < sspace.getVectorLength(); i++) {
-			meanVector[i] *= invNumVectors;
-			System.out.println(meanVector[i]); //TODO
+			meanVector[i] /= numVectors;
+//			System.out.println(meanVector[i]); //TODO
 		}
 
 		System.out.println("mean vec magn: " + magnitude(meanVector));
@@ -190,26 +194,36 @@ public class SSpaceWrapper {
 	}
 
 	public double[] getVectorForDocument(List<String> words) {
-		double[] vector = new double[sspace.getVectorLength()];
-		double numVecsAdded = 0;
+		double[] docVector = new double[sspace.getVectorLength()];
+		double numVecsInDoc = 0;
 		for (String word : words) {
 			Vector vec = sspace.getVector(word);
 			if (vec != null) {
-				
+//				System.out.println("word: " + word);
+//				System.out.println("word vector in dcument. Magnitude : " + vec.magnitude());
+				double[] normalizedWordVec = new double[sspace.getVectorLength()];
+				double[] normalizedWordVecMinusMean = new double[sspace.getVectorLength()];
 				for (int i = 0; i < sspace.getVectorLength(); i++) {
-					double termVectorVal = (double) vec.getValue(i) / vec.magnitude();
+					double termVectorVal = (double) vec.getValue(i).doubleValue() / vec.magnitude();
 					double termMinusMean = termVectorVal - meanVector[i];
-					vector[i] += termMinusMean;
+					docVector[i] += termMinusMean;
+					normalizedWordVec[i] = termVectorVal;
+					normalizedWordVecMinusMean[i] = termMinusMean;
 				}
-				numVecsAdded += 1;
+//				System.out.println("Normalized word vec. Magnitude : " + magnitude(normalizedWordVec));
+//				System.out.println("Normalized word vec minus mean. Magnitude : " + magnitude(normalizedWordVecMinusMean));
+				numVecsInDoc += 1;
 			}
 		}
 
-		for (int i = 0; i < sspace.getVectorLength(); i++) {
-			vector[i] /= numVecsAdded;
+		if(numVecsInDoc > 0){
+			for (int i = 0; i < sspace.getVectorLength(); i++) {
+				docVector[i] /= numVecsInDoc;
+			}	
 		}
-
-		return vector;
+		
+//		System.out.println("vector for document. Magnitude : " + magnitude(docVector));
+		return docVector;
 	}
 
 	public List<ArrayList<String>> getClusters(int numClusters, int numWordsPerCluster) {

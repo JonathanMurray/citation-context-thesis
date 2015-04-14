@@ -15,7 +15,7 @@ import wekaWrapper.SentenceInstance;
 import dataset.Dataset;
 import dataset.DatasetXml;
 import dataset.TextWithNgrams;
-import dataset.TextWithRI;
+import dataset.TextWithSspace;
 
 
 public class CreateArff {
@@ -34,14 +34,14 @@ public class CreateArff {
 		
 		final boolean onlyText = false; //TODO
 		
-		MRF_classifier<TextWithRI> mrfClassifier = 
-				new MRF_classifier<TextWithRI>(new MRF_params(3, 0.4, 10));
+		MRF_classifier<TextWithSspace> mrfClassifier = 
+				new MRF_classifier<TextWithSspace>(new MRF_params(3, 0.4, 10));
 		
 		for(int i = 0; i < labels.length; i++){
 			String label = labels[i];
 			final int MAX_CITERS = 0; //0 means unlimited
-			Dataset<TextWithRI> dataset = DatasetXml.parseXmlFile(
-					TextWithRI.class,
+			Dataset<TextWithSspace> dataset = DatasetXml.parseXmlFile(
+					TextWithSspace.class,
 				new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml"), 
 				MAX_CITERS);
 			Printer.printBigProgressHeader(i, labels.length);
@@ -52,15 +52,15 @@ public class CreateArff {
 			List<Double> mrfProbabilities = mrfClassifier.classify(dataset).classificationProbabilities();
 			mrfProbabilities = null;
 			
-			String afterLabel = "ri";
+			String outAfterLabel = "lsa";
 			
 			ArrayList<SentenceInstance> balancedInstances =  InstanceHandler.createInstances(dataset, onlyText, true, mrfProbabilities);
 			InstanceHandler.writeToArffFile(balancedInstances, new File(Environment.resources(), 
-					"arff/" + dataset.datasetLabel + "-" + afterLabel + ".arff"));	
+					"arff/" + dataset.datasetLabel + "-" + outAfterLabel + ".arff"));	
 			
 			ArrayList<SentenceInstance> fullInstances =  InstanceHandler.createInstances(dataset, onlyText, false, mrfProbabilities);
 			InstanceHandler.writeToArffFile(fullInstances, new File(Environment.resources(), 
-					"arff/" + dataset.datasetLabel + "-" + afterLabel + "-full.arff"));	
+					"arff/" + dataset.datasetLabel + "-" + outAfterLabel + "-full.arff"));	
 		}
 		
 	}

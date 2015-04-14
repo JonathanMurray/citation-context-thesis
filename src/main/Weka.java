@@ -17,8 +17,12 @@ public class Weka {
 	public static void main(String[] args){
 		
 		int numDatasets = -1;
-		if(args.length == 1){
+		if(args.length >= 1){
 			numDatasets = Integer.parseInt(args[0]);
+		}
+		String label = "lsa";
+		if(args.length >= 2){
+			label = args[1];
 		}
 		
 		Printer.printBigHeader("Weka-classifier");
@@ -32,7 +36,7 @@ public class Weka {
 			labels = labels.subList(0, numDatasets);
 		}
 
-		testWeka(labels, "ri");
+		testWeka(labels, label);
 	}
 	
 	private static void testWeka(List<String> labels, String afterLabel){
@@ -64,7 +68,7 @@ public class Weka {
 		
 		
 		System.out.println("FULL RESULTS:");
-		List<Result> results = adaboost.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
+		List<Result> results = smo.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
 		Printer.printMultipleResults("SMO", results, null, true);
 		System.out.println("COMPACT RESULTS:");
 		Printer.printMultipleResults("SMO", results, null, false);
