@@ -288,7 +288,7 @@ public class DatasetXml {
 			IDictionary dict = new Dictionary(wordnetDir);
 			return (T) TextWithSynsets.fromXml(textTag, dict);
 		}else if(textClass.equals(TextWithSspace.class)){
-			String sspaceDir = Environment.resources() + "/sspace"; //TODO hårdkodade filer här
+			String sspaceDir = Environment.resources() + "/sspace"; //TODO hardcoded paths
 			File sspaceFile = new File(sspaceDir + "/space-lsa.sspace");
 			File wordFrequenciesFile = new File(sspaceDir + "/wordfrequencies.ser");
 			return (T) TextWithSspace.fromXml(textTag, SSpaceWrapper.instance(sspaceFile, wordFrequenciesFile));
