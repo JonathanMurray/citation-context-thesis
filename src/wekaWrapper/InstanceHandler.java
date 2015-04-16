@@ -29,15 +29,15 @@ public class InstanceHandler {
 		
 		List<String> numeric = Arrays.asList(new String[]{
 				FeatureName.SENTENCE_NUMBER.toString(),
-				FeatureName.CONTAINS_ACRONYM_SCORE.toString(),
-				FeatureName.CONTAINS_LEXICAL_HOOK_SCORE.toString(),
+				FeatureName.ACRONYM.toString(),
+				FeatureName.LEXICAL_HOOK.toString(),
 				
 				//enhanced features
-				FeatureName.DISTANCE_PREV_EXPLICIT.toString(),
-				FeatureName.DISTANCE_NEXT_EXPLICIT.toString(),
-				FeatureName.SIMILAR_TO_EXPLICIT.toString(),
-				FeatureName.SIMILAR_TO_CITED_TITLE.toString(),
-				FeatureName.SIMILAR_TO_CITED_CONTENT.toString(),
+				FeatureName.CITE_PREV_DISTANCE.toString(),
+				FeatureName.CITE_NEXT_DISTANCE.toString(),
+				FeatureName.CITE_SIMILARITY.toString(),
+				FeatureName.TITLE_SIMILARITY.toString(),
+				FeatureName.CONTENT_SIMILARITY.toString(),
 				
 				FeatureName.SEMANTIC_SIMILAR_TO_EXPLICIT.toString(),
 				
@@ -152,16 +152,17 @@ public class InstanceHandler {
 		List<String> rawWords = sentence.text.rawWords;
 		String[] prevWords = previous != null? previous.text.rawWords.toArray(new String[0]) : new String[0];
 		if(!onlyText){
-			features.put(FeatureName.CONTAINS_DET_WORK.toString(), texts.containsDetWork(rawWords));
-			features.put(FeatureName.STARTS_3_PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
-			features.put(FeatureName.STARTS_CONNECTOR.toString(), texts.startsWithConnector(rawWords));
-			features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
-			features.put(FeatureName.AFTER_HEADING.toString(), previous != null ? texts.startsWithSectionHeader( previous.text.rawWords) : false);
+			features.put(FeatureName.CITE_PREV.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
+			features.put(FeatureName.AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
+			features.put(FeatureName.OTHER_CITE.toString(), texts.containsOtherReferencesButNotThis(sentence.text.raw, rawWords, dataset.citedMainAuthor));
+			features.put(FeatureName.ACRONYM.toString(), texts.containsAcronymScore(rawWords, dataset.getAcronyms()));
+			features.put(FeatureName.LEXICAL_HOOK.toString(), texts.containsHookScore(sentence.text.raw, dataset.getLexicalHooks()));
+			features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(rawWords));
+			features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
+			features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(rawWords));
+			features.put(FeatureName.HEADING_PREV.toString(), previous != null ? texts.startsWithSectionHeader( previous.text.rawWords) : false);
 			features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(rawWords));
-			features.put(FeatureName.BEFORE_HEADING.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
-			features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
-			features.put(FeatureName.CONTAINS_ACRONYM_SCORE.toString(), texts.containsAcronymScore(rawWords, dataset.getAcronyms()));
-			features.put(FeatureName.CONTAINS_LEXICAL_HOOK_SCORE.toString(), texts.containsHookScore(sentence.text.raw, dataset.getLexicalHooks()));
+			features.put(FeatureName.HEADING_NEXT.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
 		}
 		features.put(FeatureName.SENTENCE_NUMBER.toString(), sentenceNumber);
 		features.put(FeatureName.TEXT.toString(), "'" + sentence.text.raw.replaceAll("'", "") + "'");
@@ -183,20 +184,19 @@ public class InstanceHandler {
 		
 		List<String> rawWords = sentence.text.rawWords;
 		String[] prevWords = previous != null? previous.text.rawWords.toArray(new String[0]) : new String[0];
-		features.put(FeatureName.CONTAINS_DET_WORK.toString(), texts.containsDetWork(rawWords));
-		features.put(FeatureName.STARTS_3_PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
-		features.put(FeatureName.STARTS_CONNECTOR.toString(), texts.startsWithConnector(rawWords));
-		features.put(FeatureName.AFTER_EXPLICIT.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
-		features.put(FeatureName.AFTER_HEADING.toString(), previous != null ? texts.startsWithSectionHeader( previous.text.rawWords) : false);
+		features.put(FeatureName.CITE_PREV.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
+		features.put(FeatureName.AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
+		features.put(FeatureName.OTHER_CITE.toString(), texts.containsOtherReferencesButNotThis(sentence.text.raw, rawWords, dataset.citedMainAuthor));
+		features.put(FeatureName.ACRONYM.toString(), texts.containsAcronymScore(rawWords, dataset.getAcronyms()));
+		features.put(FeatureName.LEXICAL_HOOK.toString(), texts.containsHookScore(sentence.text.raw, dataset.getLexicalHooks()));
+		features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(rawWords));
+		features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
+		features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(rawWords));
+		features.put(FeatureName.HEADING_PREV.toString(), previous != null ? texts.startsWithSectionHeader( previous.text.rawWords) : false);
 		features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(rawWords));
-		features.put(FeatureName.BEFORE_HEADING.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
-		features.put(FeatureName.CONTAINS_AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
-		features.put(FeatureName.CONTAINS_ONLY_OTHER_AUTHOR.toString(), texts.containsOtherReferencesButNotThis(sentence.text.raw, rawWords, dataset.citedMainAuthor));
-		features.put(FeatureName.CONTAINS_ACRONYM_SCORE.toString(), texts.containsAcronymScore(rawWords, dataset.getAcronyms()));
-		features.put(FeatureName.CONTAINS_LEXICAL_HOOK_SCORE.toString(), texts.containsHookScore(sentence.text.raw, dataset.getLexicalHooks()));
-		
-		features.put(FeatureName.SENTENCE_NUMBER.toString(), sentenceIndex);
+		features.put(FeatureName.HEADING_NEXT.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
 		features.put(FeatureName.TEXT.toString(), "'" + sentence.text.raw.replaceAll("'", "") + "'");
+		features.put(FeatureName.SENTENCE_NUMBER.toString(), sentenceIndex);
 		
 		Integer distPrevExpl = 4;
 		Integer distNextExpl = 4;
@@ -212,11 +212,12 @@ public class InstanceHandler {
 			}
 		}
 		
-		features.put(FeatureName.DISTANCE_PREV_EXPLICIT.toString(), distPrevExpl);
-		features.put(FeatureName.DISTANCE_NEXT_EXPLICIT.toString(), distNextExpl);
-		features.put(FeatureName.SIMILAR_TO_EXPLICIT.toString(), sentence.text.similarity(dataset.mergedExplicitCitations));
-		features.put(FeatureName.SIMILAR_TO_CITED_TITLE.toString(), sentence.text.similarity(dataset.citedTitle));
-		features.put(FeatureName.SIMILAR_TO_CITED_CONTENT.toString(), sentence.text.similarity(dataset.citedContent));
+		features.put(FeatureName.CITE_PREV_DISTANCE.toString(), distPrevExpl);
+		features.put(FeatureName.CITE_NEXT_DISTANCE.toString(), distNextExpl);
+		
+		features.put(FeatureName.TITLE_SIMILARITY.toString(), sentence.text.similarity(dataset.citedTitle));
+		features.put(FeatureName.CONTENT_SIMILARITY.toString(), sentence.text.similarity(dataset.citedContent));
+		features.put(FeatureName.CITE_SIMILARITY.toString(), sentence.text.similarity(dataset.mergedExplicitCitations));
 		features.put(FeatureName.STARTS_DET.toString(), Texts.instance().startsWithDet(rawWords));
 		features.put(FeatureName.CONTAINS_DET.toString(), Texts.instance().containsDet(rawWords));
 		
