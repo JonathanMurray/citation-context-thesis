@@ -27,6 +27,7 @@ public class SSpace {
 		
 		System.setErr(new PrintStream(new NullOutputStream())); //TODO
 		
+
 		
 		File txtDir = new File(Environment.resources() + "/corpus/lemmas-sentences");
 		File sspaceFile = new File(sspaceDir + "/space-lsa-1000.sspace");
@@ -39,6 +40,9 @@ public class SSpace {
 	
 	private static void createSpace(File txtDir, File sspaceFile, File wordFrequenciesFile) throws FileNotFoundException, IOException{
 		Printer.printBigHeader("Create Semantic Space");
+		System.out.println("from " + txtDir);
+		System.out.println("using word frequencies " + wordFrequenciesFile);
+		System.out.println("save to " + sspaceFile);
 		int vecLen = 1000;
 		int windowSize = 5;
 		SSpaceWrapper sspace = SSpaceWrapper.fromTextFiles(txtDir, vecLen, windowSize);

@@ -41,8 +41,11 @@ public class SSpaceWrapper {
 	
 	private static SSpaceWrapper instance;
 	
-	public static SSpaceWrapper instance(File sspaceFile, File wordFrequenciesFile){
+	public static SSpaceWrapper instance(){
 		if(instance == null){
+			String sspaceDir = Environment.resources() + "/sspace"; //TODO hardcoded paths
+			File sspaceFile = new File(sspaceDir + "/space-lsa-1000.sspace");
+			File wordFrequenciesFile = new File(sspaceDir + "/wordfrequencies.ser");
 			instance = SSpaceWrapper.load(sspaceFile, wordFrequenciesFile);
 		}
 		return instance;
