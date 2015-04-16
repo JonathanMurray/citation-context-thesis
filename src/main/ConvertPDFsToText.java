@@ -5,12 +5,29 @@ import java.io.File;
 import org.apache.pdfbox.ExtractText;
 
 import util.Environment;
+import util.Printer;
 
 public class ConvertPDFsToText {
 	
 	public static void main(String[] args) {
+		
+		String pdfDir = "pdfs";
+		String txtDir = "full-text";
+		
+		if(args.length == 2){
+			pdfDir = args[0];
+			txtDir = args[1];
+		}else if(args.length != 0){
+			System.out.println("Usage:");
+			System.out.println("0 parameters or");
+			System.out.println("2 parameters: 'pdf_dir' 'text_dir'");
+			return;
+		}
+		
+		Printer.printBigHeader("Convert PDFs to text");
+		
 		String corpusDir = Environment.resources() + "/corpus";
-		convertAllPDFsToText(new File(corpusDir, "pdfs"), new File(corpusDir, "full-text"));
+		convertAllPDFsToText(new File(corpusDir, pdfDir), new File(corpusDir, txtDir));
 	}
 	
 	public static void convertAllPDFsToText(File pdfDir, File txtDir){

@@ -2,9 +2,7 @@ package main;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
 import mrf.MRF_classifier;
 import mrf.MRF_params;
@@ -14,17 +12,31 @@ import wekaWrapper.InstanceHandler;
 import wekaWrapper.SentenceInstance;
 import dataset.Dataset;
 import dataset.DatasetXml;
-import dataset.TextWithNgrams;
+import dataset.Text;
 import dataset.TextWithSspace;
 
 
 public class CreateArff {
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ClassNotFoundException {
+		Class textClass = TextWithSspace.class;
+		String outAfterLabel = "lsa";
+		
+		if(args.length == 2){
+			textClass = Class.forName(args[0]);
+			outAfterLabel = args[1];
+		}else if(args.length != 0){
+			System.out.println("Usage: ");
+			System.out.println("0 arguments or");
+			System.out.println("2 arguments: 'text_class' 'output_label'");
+			return;
+		}
+		createArff(textClass, outAfterLabel);
+	}
+	
+	public static <T extends Text> void createArff(Class<T> textClass, String outAfterLabel){
 		Printer.printBigHeader("Create .arff-datasets");
-		
 		String resourcesDir = Environment.resources();
-		
 		String[] labels = new String[]{
 				"D07-1031", "J96-2004", "N06-1020", "P04-1015", "P05-1045", "W02-1011", "W06-1615",
 				"A92-1018", "J90-1003", "N03-1003", "P04-1035", "P07-1033", "W04-1013", "C98-2122", 
@@ -52,8 +64,6 @@ public class CreateArff {
 			List<Double> mrfProbabilities = mrfClassifier.classify(dataset).classificationProbabilities();
 			mrfProbabilities = null;
 			
-			String outAfterLabel = "lsa";
-			
 			ArrayList<SentenceInstance> balancedInstances =  InstanceHandler.createInstances(dataset, onlyText, true, mrfProbabilities);
 			InstanceHandler.writeToArffFile(balancedInstances, new File(Environment.resources(), 
 					"arff/" + dataset.datasetLabel + "-" + outAfterLabel + ".arff"));	
@@ -62,6 +72,5 @@ public class CreateArff {
 			InstanceHandler.writeToArffFile(fullInstances, new File(Environment.resources(), 
 					"arff/" + dataset.datasetLabel + "-" + outAfterLabel + "-full.arff"));	
 		}
-		
 	}
 }

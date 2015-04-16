@@ -21,19 +21,35 @@ import edu.mit.jwi.IDictionary;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 public class CreateDatasetsSaveXml {
-	public static void main(String[] args) {
-		
-		Printer.printBigHeader("Create XML-datasets");
-		
+	public static void main(String[] args) throws ClassNotFoundException {
+		Class textClass = TextWithSynsets.class;
 		int numDatasets = -1;
+		
 		if(args.length == 1){
-			numDatasets = Integer.parseInt(args[0]);
+			textClass = Class.forName(args[0]);
+		}else if(args.length == 2){
+			textClass = Class.forName(args[0]);
+			numDatasets = Integer.parseInt(args[1]);
+		}else if(args.length != 0){
+			System.out.println("Usage:");
+			System.out.println("0 args or");
+			System.out.println("1 arg: 'text_class' or");
+			System.out.println("2 args: 'text_class' 'num_datasets'");
+			return;
 		}
 		
+		Printer.printBigHeader("Create XML-datasets");
 		Lemmatizer.instance(); //Want the lemma debug prints to appear first
-//		withSkipgrams();
-//		withNgrams();
-		withSynsets(numDatasets);
+		
+		if(textClass == Text.class){
+			basic();
+		}else if(textClass == TextWithSkipgrams.class){
+			withSkipgrams();
+		}else if(textClass ==TextWithNgrams.class){
+			withNgrams();
+		}else if(textClass == TextWithSynsets.class){
+			withSynsets(numDatasets); //TODO numdatasets for others too
+		}
 	}
 	
 	private final static int BOUNDARY = 80;

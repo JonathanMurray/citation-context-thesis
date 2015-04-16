@@ -1,48 +1,33 @@
 package main;
 
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.apache.tika.sax.OfflineContentHandler;
+import org.apache.lucene.store.OutputStreamDataOutput;
+import org.apache.tika.io.NullOutputStream;
 
 import util.Environment;
 import util.Printer;
-import util.Timer;
 import dataset.NgramIdf;
 import dataset.SSpaceWrapper;
 import dataset.TextFactory;
 import dataset.TextParams;
 import dataset.TextWithSspace;
-import edu.ucla.sspace.clustering.Assignments;
-import edu.ucla.sspace.clustering.DirectClustering;
-import edu.ucla.sspace.common.SemanticSpace;
-import edu.ucla.sspace.common.SemanticSpaceIO;
-import edu.ucla.sspace.common.SemanticSpaceIO.SSpaceFormat;
-import edu.ucla.sspace.index.DefaultPermutationFunction;
-import edu.ucla.sspace.matrix.Matrices;
-import edu.ucla.sspace.matrix.Matrix;
-import edu.ucla.sspace.ri.RandomIndexing;
-import edu.ucla.sspace.vector.DenseVector;
-import edu.ucla.sspace.vector.DoubleVector;
-import edu.ucla.sspace.vector.Vector;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class SSpace {
 	
 	static String sspaceDir = Environment.resources() + "/sspace";
 	
 	public static void main(String[] args) throws IOException {
+		
+		System.setErr(new PrintStream(new NullOutputStream())); //TODO
+		
+		
 		File txtDir = new File(Environment.resources() + "/corpus/lemmas-sentences");
 		File sspaceFile = new File(sspaceDir + "/space-lsa-1000.sspace");
 		File wordFrequenciesFile = new File(sspaceDir + "/wordfrequencies.ser");
@@ -53,6 +38,7 @@ public class SSpace {
 	}
 	
 	private static void createSpace(File txtDir, File sspaceFile, File wordFrequenciesFile) throws FileNotFoundException, IOException{
+		Printer.printBigHeader("Create Semantic Space");
 		int vecLen = 1000;
 		int windowSize = 5;
 		SSpaceWrapper sspace = SSpaceWrapper.fromTextFiles(txtDir, vecLen, windowSize);

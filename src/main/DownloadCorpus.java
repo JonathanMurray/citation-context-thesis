@@ -13,6 +13,7 @@ import java.util.List;
 import org.apache.tika.io.IOUtils;
 
 import util.Environment;
+import util.Printer;
 import edu.uci.ics.crawler4j.crawler.exceptions.PageBiggerThanMaxSizeException;
 
 public class DownloadCorpus {
@@ -20,13 +21,10 @@ public class DownloadCorpus {
 	static String resources = Environment.resources();
 	
 	public static void main(String[] args) throws Exception{
-		List<String> prefixes = new ArrayList<String>();
-//		String[] prefixes = new String[]{
-//				"J79", "J80", "J81"
-//				"A92","D07","J93","N03","N06","P04","P07","W02","W05","C98",
-//				"J90","J96","N04","P02","P04","P05","P90","W04","W06", "P08"
-//		};
 		
+		Printer.printBigHeader("Download corpus (PDFs from ACL)");
+		
+		List<String> prefixes = new ArrayList<String>();
 		addPrefixes(prefixes, "J", 79, 14);
 		addPrefixes(prefixes, "P", 79, 14);
 		addPrefixes(prefixes, "E", 83, 14);

@@ -28,14 +28,30 @@ public class LemmatizeCorpus {
 	}));
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-		File in = new File(Environment.resources() + "/corpus/full-text");
-		File out = new File(Environment.resources() + "/corpus/lemmas-sentences");
-		lemmatize(in, out, true);
+		
+		String fullTextDir = "full-text";
+		String lemmaDir = "lemmas-sentences";
+		boolean splitSentences = true;
+		if(args.length == 3){
+			fullTextDir = args[0];
+			lemmaDir = args[1];
+			splitSentences = Boolean.parseBoolean(args[2]);
+		}else if(args.length != 0){
+			System.out.println("Usage:");
+			System.out.println("0 args or");
+			System.out.println("3 args: 'full_text_dir' 'lemma_dir' 'split_sentences'");
+			return;
+		}
+		
+		File in = new File(Environment.resources() + "/corpus/" + fullTextDir);
+		File out = new File(Environment.resources() + "/corpus/" + lemmaDir);
+		lemmatize(in, out, splitSentences);
 	}
 	
 	static void lemmatize(File inDir, File outDir, boolean splitSentences) throws FileNotFoundException, IOException{
 		
 		Printer.printBigHeader("Lemmatize corpus");
+		System.out.println();
 		System.out.println("from " + inDir.getName());
 		System.out.println("to " + outDir.getName());
 		System.out.println();

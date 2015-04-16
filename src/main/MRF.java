@@ -19,23 +19,36 @@ import dataset.TextWithSspace;
 
 public class MRF {
 
-	public static void main(String[] args) {
-		
+	public static void main(String[] args) throws ClassNotFoundException {
+		Class textClass = TextWithSspace.class;
+		String textClassLabel = "with-ngrams";
 		int numDatasets = -1;
-		if(args.length == 1){
-			numDatasets = Integer.parseInt(args[0]);
-		}
 		
+		if(args.length == 2){
+			textClass = Class.forName(args[0]);
+			textClassLabel = args[1];
+		}else if(args.length == 3){
+			textClass = Class.forName(args[0]);
+			textClassLabel = args[1];
+			numDatasets = Integer.parseInt(args[2]);
+		}else if(args.length != 0){
+			System.out.println("Usage:");
+			System.out.println("0 args or");
+			System.out.println("2 args: 'text_class' 'class_label' or");
+			System.out.println("3 args: 'text_class' 'class_label' 'num_datasets'");
+			return;
+		}
+
 		Printer.printBigHeader("MRF-classifier");
 
 		List<String> labels = Arrays.asList(new String[]{
 				"D07-1031", "J96-2004", "N06-1020", "P04-1015", "P05-1045", "W02-1011", "W06-1615",
-				"A92-1018", "J90-1003", "N03-1003", "P04-1035", "P07-1033", "W04-1013", "C98-2122", 
+				"A92-1018", "J90-1003", "N03-1003", "P040-1035", "P07-1033", "W04-1013", "C98-2122", 
 				"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"});
 		if(numDatasets > -1){
 			labels = labels.subList(0, numDatasets);
 		}
-		testMRF(TextWithSspace.class, "-with-ngrams", labels);
+		testMRF(textClass, textClassLabel, labels);
 	}
 	
 	private static <T extends Text> void testMRF(Class<T> textClass, String afterLabelInFileName, List<String> labels){
@@ -46,7 +59,7 @@ public class MRF {
 			final int MAX_CITERS = 0;
 			Dataset<T> dataset = DatasetXml.parseXmlFile(
 					textClass,
-					new File(resourcesDir, "xml-datasets/" + label + afterLabelInFileName + ".xml"), 
+					new File(resourcesDir, "xml-datasets/" + label + "-" + afterLabelInFileName + ".xml"), 
 					MAX_CITERS);
 //			dataset.findExtra(80, 2, 2);
 //			System.out.println(dataset.datasetLabel);
