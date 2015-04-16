@@ -288,7 +288,7 @@ public class DatasetXml {
 			IDictionary dict = new Dictionary(wordnetDir);
 			return (T) TextWithSynsets.fromXml(textTag, dict);
 		}else if(textClass.equals(TextWithSspace.class)){
-			return (T) TextWithSspace.fromXml(textTag, SSpaceWrapper.instance(sspaceFile, wordFrequenciesFile));
+			return (T) TextWithSspace.fromXml(textTag, SSpaceWrapper.instance());
 		}else{
 			throw new IllegalArgumentException("Unknown text-class: " + textClass);
 		}
