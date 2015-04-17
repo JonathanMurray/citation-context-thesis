@@ -113,6 +113,7 @@ public class SSpaceWrapper {
 
 	public void save(File sspaceFile, File wordFrequencyFile) {
 		try {
+			System.out.println("Saving sspace to " + sspaceFile);
 			SemanticSpaceIO.save(sspace, sspaceFile, SSpaceFormat.BINARY);
 			ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(wordFrequencyFile));
 			wordFrequencies.writeExternal(out);
