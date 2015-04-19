@@ -77,8 +77,10 @@ public class SSpaceWrapper {
 			TObjectIntHashMap<String> wordFrequencies = new TObjectIntHashMap<String>();
 			for (int i = 0; i < files.length; i++) {
 				File textFile = files[i];
-				if (i % 100 == 0) {
-					System.out.print(i + "   ");
+				if (i % 500 == 0) {
+					System.out.println();
+					System.out.print(i + "/" + files.length + "   ");
+					System.out.println();
 				}
 				
 				sspace.processDocument(new BufferedReader(new FileReader(textFile)));
