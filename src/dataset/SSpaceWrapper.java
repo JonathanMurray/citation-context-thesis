@@ -78,9 +78,7 @@ public class SSpaceWrapper {
 			for (int i = 0; i < files.length; i++) {
 				File textFile = files[i];
 				if (i % 500 == 0) {
-					System.out.println();
-					System.out.print(i + "/" + files.length + "   ");
-					System.out.println();
+					System.out.print(i + "/" + files.length + "  ");
 				}
 				
 				sspace.processDocument(new BufferedReader(new FileReader(textFile)));
