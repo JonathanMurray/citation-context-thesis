@@ -70,7 +70,7 @@ public class SSpaceWrapper {
 //			SemanticSpace sspace = new RandomIndexing(vecLen, windowSize, permutations, new DefaultPermutationFunction(), true,
 //					0, System.getProperties());
 			
-			int lsaDimensions = 500;
+			int lsaDimensions = 300;
 			LatentSemanticAnalysis sspace = new LatentSemanticAnalysis(lsaDimensions, true);
 			
 			File[] files = txtDir.listFiles();
@@ -90,6 +90,8 @@ public class SSpaceWrapper {
 				scanner.close();
 			}
 			System.out.println();
+			System.out.println("Done processing documents.");
+			System.out.println("processSpace() ... ");
 			sspace.processSpace(System.getProperties());
 
 			System.out.println("name: " + sspace.getSpaceName());
