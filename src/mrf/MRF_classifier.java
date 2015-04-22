@@ -30,7 +30,6 @@ public class MRF_classifier<T extends Text> {
 	
 	protected static Printer printer = new Printer(true);
 	private static final double DELTA = 0.02;
-//	private static final int MAX_RUNS = 10;
 	private static final int NO = 0;
 	private static final int YES = 1;
 	
