@@ -61,20 +61,32 @@ public class Ngrams {
 //		}
 //	}
 	
+	
+	
+	//TODO this version uses bigrams and trigrams too
+//	public double similarity(Ngrams other){
+//		if(ngramMaps.size() != other.ngramMaps.size()){
+//			throw new IllegalArgumentException("this: " + ngramMaps.size() + "-grams. Other: " + other.ngramMaps.size() + "-grams.");
+//		}
+//		double sum = 0; 
+//		for(int i = 0; i < ngramMaps.size(); i++){
+//			TObjectDoubleHashMap<String> mine = ngramMaps.get(i);
+//			TObjectDoubleHashMap<String> others = other.ngramMaps.get(i);
+//			sum += CosineSimilarity.calculateCosineSimilarity(mine, others);
+//		}
+//		return sum / (double)ngramMaps.size();
+//		//I suppose similarity might in general be higher when sticking to low n-grams. 
+//		//Shouldn't be a problem though since similarities should be normalized against each other
+//	}
+	
 	public double similarity(Ngrams other){
-		if(ngramMaps.size() != other.ngramMaps.size()){
-			throw new IllegalArgumentException("this: " + ngramMaps.size() + "-grams. Other: " + other.ngramMaps.size() + "-grams.");
-		}
-		double sum = 0; 
-		for(int i = 0; i < ngramMaps.size(); i++){
-			TObjectDoubleHashMap<String> mine = ngramMaps.get(i);
-			TObjectDoubleHashMap<String> others = other.ngramMaps.get(i);
-			sum += CosineSimilarity.calculateCosineSimilarity(mine, others);
-		}
-		return sum / (double)ngramMaps.size();
-		//I suppose similarity might in general be higher when sticking to low n-grams. 
-		//Shouldn't be a problem though since similarities should be normalized against each other
+		TObjectDoubleHashMap<String> myUnigrams = ngramMaps.get(0);
+		TObjectDoubleHashMap<String> othersUnigrams = other.ngramMaps.get(0);
+		return CosineSimilarity.calculateCosineSimilarity(myUnigrams, othersUnigrams);
 	}
+	
+	
+	
 	
 	public void add(Ngrams other, boolean onlyIncrementOne){
 		if(ngramMaps.size() != other.ngramMaps.size()){

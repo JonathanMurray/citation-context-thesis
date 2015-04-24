@@ -31,6 +31,9 @@ public class Texts {
 	private List<String> connectors;
 	private HashSet<String> stopwords;
 	
+	private List<String> mrfDeterminers;
+	private List<String> mrfWorkNouns;
+	
 	public static final String NUMBER_TAG = "<NUMBER>";
 	public final static Pattern HEADER = Pattern.compile("\\d+\\.\\d+.*");
 	private final static Pattern CONTAINS_YEAR = Pattern.compile(".*\\d\\d\\d?\\d?.*");
@@ -60,6 +63,9 @@ public class Texts {
 		thirdPersonPronouns = readLines(dir + "/thirdPersonPronouns.txt");
 		connectors = readLines(dir + "/connectors.txt");
 		stopwords = readLinesToSet(dir + "/stopwords.txt");
+		
+		mrfWorkNouns = readLines(dir + "/mrfWorkNouns.txt");
+		mrfDeterminers = readLines(dir + "/mrfDeterminerWords.txt");
 	}
 	
 	public List<String> removeStopwords(List<String> words){
@@ -173,6 +179,17 @@ public class Texts {
 		for(int i = 1; i < words.size(); i++){
 			if(looseContains(workNouns, words.get(i))){
 				if(looseContains(determiners, words.get(i-1))){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean mrfContainsDetWork(List<String> words){
+		for(int i = 1; i < words.size(); i++){
+			if(looseContains(mrfWorkNouns, words.get(i))){
+				if(looseContains(mrfDeterminers, words.get(i-1))){
 					return true;
 				}
 			}

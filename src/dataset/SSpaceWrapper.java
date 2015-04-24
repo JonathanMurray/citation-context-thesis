@@ -64,29 +64,41 @@ public class SSpaceWrapper {
 			// int vecLen = 500;
 			// int windowSize = 6;
 			boolean permutations = true;
-			Printer.printBigHeader("Creating S-Space {veclen: " + vecLen + ", windowsize: " + windowSize + ", permutations: "
-					+ permutations);
+//			Printer.printBigHeader("Creating S-Space {veclen: " + vecLen + ", windowsize: " + windowSize + ", permutations: "
+//					+ permutations);
 			System.out.println("from dir " + txtDir);
 //			SemanticSpace sspace = new RandomIndexing(vecLen, windowSize, permutations, new DefaultPermutationFunction(), true,
 //					0, System.getProperties());
 			
-			int lsaDimensions = 300;
+			int lsaDimensions = 50;
+			Printer.printBigHeader("Creating S-space {lsa-dimensions: " + lsaDimensions + "}");
 			LatentSemanticAnalysis sspace = new LatentSemanticAnalysis(lsaDimensions, true);
 			
 			File[] files = txtDir.listFiles();
 			TObjectIntHashMap<String> wordFrequencies = new TObjectIntHashMap<String>();
+			
 			for (int i = 0; i < files.length; i++) {
 				File textFile = files[i];
-				if (i % 500 == 0) {
-					System.out.print(i + "/" + files.length + "  ");
+				if (i % 1 == 0) {
+					System.out.print(i + "/" + files.length + "  " + textFile.getName() + "  ");
+				}
+				try{
+					BufferedReader docReader = new BufferedReader(new FileReader(textFile));
+					sspace.processDocument(docReader);
+					docReader.close();
+				}catch(Exception e){
+					e.printStackTrace();
+					System.out.println("threw exception " + i);
 				}
 				
-				sspace.processDocument(new BufferedReader(new FileReader(textFile)));
-				Scanner scanner = new Scanner(new BufferedReader(new FileReader(textFile)));
+				System.out.println("processed " + i);
+				BufferedReader docReader = new BufferedReader(new FileReader(textFile));
+				Scanner scanner = new Scanner(docReader);
 				while (scanner.hasNext()) {
 					String lemma = scanner.next();
 					wordFrequencies.adjustOrPutValue(lemma, 1, 1);
 				}
+				docReader.close();
 				scanner.close();
 			}
 			System.out.println();

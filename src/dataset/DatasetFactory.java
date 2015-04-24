@@ -44,7 +44,8 @@ public class DatasetFactory {
 	}
 	
 	public static <T extends Text> Dataset<T> fromFiles(DatasetParams<T> params, File htmlFile, File citedContentTextFile){
-		String text = Texts.readTextFile(citedContentTextFile, 20);
+		final int CITED_CONTENT_MAX_LINES = -1;
+		String text = Texts.readTextFile(citedContentTextFile, CITED_CONTENT_MAX_LINES);
 		Dataset<T> dataset = fromHtmlFile(params, htmlFile, text);
 		return dataset;
 	}

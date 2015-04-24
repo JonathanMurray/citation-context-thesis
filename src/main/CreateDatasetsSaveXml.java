@@ -22,7 +22,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) throws ClassNotFoundException {
-		Class textClass = TextWithSynsets.class;
+		Class textClass = TextWithNgrams.class;
 		int numDatasets = -1;
 		
 		if(args.length == 1){
@@ -56,6 +56,13 @@ public class CreateDatasetsSaveXml {
 	private final static int NUM_HOOKS = 2;
 	private final static int NUM_ACRONYMS = 2;
 	
+	private final static File HTML_DIR = new File(Environment.resources() + "/my-citation-context-corpus");
+	private final static File XML_DIR = new File(Environment.resources() + "/my-xml-datasets"); 
+	
+//	private final static File XML_DIR = new File(Environment.resources() + "/xml-datasets"); 		
+//	private final static File HTML_DIR = new File(Environment.resources() + "/teufel-citation-context-corpus");
+	
+	
 	private static String[] LABELS = new String[]{
 			"D07-1031", "J96-2004", "N06-1020", "P04-1015", "P05-1045", "W02-1011", "W06-1615",
 			"A92-1018", "J90-1003", "N03-1003", "P04-1035", "P07-1033", "W04-1013", "C98-2122", 
@@ -65,9 +72,9 @@ public class CreateDatasetsSaveXml {
 		File resourcesDir = new File(Environment.resources());
 		ArrayList<Dataset<Text>> datasets = DatasetFactory.fromHtmlDir(
 				DatasetParams.enhanced(TextParams.basic(), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
-				new File(resourcesDir, "teufel-citation-context-corpus"));
+				HTML_DIR);
 		for(Dataset<Text> dataset : datasets){
-			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + ".xml"));
+			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + ".xml"));
 		}
 	}
 	
@@ -76,9 +83,9 @@ public class CreateDatasetsSaveXml {
 		NgramIdf ngramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"), NgramIdf.DEFAULT_NGRAM_MIN_COUNT);
 		ArrayList<Dataset<TextWithNgrams>> datasets = DatasetFactory.fromHtmlDir(
 				DatasetParams.enhanced(TextParams.withNgrams(ngramIdf), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
-				new File(resourcesDir, "teufel-citation-context-corpus"));
+				HTML_DIR);
 		for(Dataset<TextWithNgrams> dataset : datasets){
-			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-ngrams.xml"));
+			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-ngrams.xml"));
 		}
 	}
 	
@@ -99,7 +106,7 @@ public class CreateDatasetsSaveXml {
 					, 0);
 			Dataset<TextWithSynsets> dataset = DatasetFactory.fromOtherRaw(textParams, other);
 			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
-			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-synsets.xml"));
+			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-synsets.xml"));
 		}
 	}
 	
@@ -123,7 +130,7 @@ public class CreateDatasetsSaveXml {
 			datasets.add(dataset);
 		}
 		for(Dataset<TextWithSkipgrams> dataset : datasets){
-			DatasetXml.writeToXml(dataset, new File(resourcesDir, "xml-datasets/" + dataset.datasetLabel + "-with-skipgrams.xml"));
+			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-skipgrams.xml"));
 		}
 	}
 }

@@ -25,9 +25,7 @@ public class SSpace {
 	
 	public static void main(String[] args) throws IOException {
 		
-		System.setErr(new PrintStream(new NullOutputStream())); //TODO
-		
-
+//		System.setErr(new PrintStream(new NullOutputStream())); //TODO
 		
 		File txtDir = new File(Environment.resources() + "/corpus/lemmas-sentences");
 		File sspaceFile = new File(sspaceDir + "/space-lsa-1000.sspace");
