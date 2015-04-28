@@ -20,7 +20,7 @@ public class Weka {
 		if(args.length >= 1){
 			numDatasets = Integer.parseInt(args[0]);
 		}
-		String label = "-orig-features";
+		String label = "";
 		if(args.length >= 2){
 			label = args[1];
 		}
@@ -60,9 +60,9 @@ public class Weka {
 		
 		
 		//TODO Run infogain on full dataset (on server?)
-		HashMap<String,Double> infogains = smo.evaluateAttributes(WekaClassifier.mergeDatasets(wekaFullDatasets, -1));
-		System.out.println("INFO-GAIN:");
-		System.out.println(Printer.valueSortedMap(infogains, 15));
+//		HashMap<String,Double> infogains = smo.evaluateAttributes(WekaClassifier.mergeDatasets(wekaFullDatasets, -1));
+//		System.out.println("INFO-GAIN:");
+//		System.out.println(Printer.valueSortedMap(infogains, 50));
 		
 //		smo.ROC(wekaBalancedDatasets.get(0));
 		
