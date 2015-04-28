@@ -40,6 +40,7 @@ public class MRF_classifier<T extends Text> {
 	private double minSimilarity;
 	private double maxSimilarity;
 	
+	
 	private List<TIntDoubleHashMap> relatednessMemoization;
 	protected List<double[]> selfBeliefs;
 	protected List<Map<Integer,double[]>> allReceivedMessages;
@@ -99,6 +100,7 @@ public class MRF_classifier<T extends Text> {
 	private void setup(int citerIndex, Dataset<T> dataset){
 		this.data = dataset;
 		this.sentences = dataset.citers.get(citerIndex).sentences;
+		
 		
 		int numSentences = sentences.size();
 		
@@ -219,6 +221,8 @@ public class MRF_classifier<T extends Text> {
 		return similarities;
 	}
 	
+
+	
 	private double selfBelief(
 			Sentence<T> sentence, 
 			String authorLastName, 
@@ -241,7 +245,7 @@ public class MRF_classifier<T extends Text> {
 		
 		double hookScore = Texts.instance().containsHookScore(sentence.text.raw, lexicalHooks);
 		double acronymScore = Texts.instance().containsAcronymScore(rawWords, acronyms);
-		score += 1.5 * Math.max(hookScore, acronymScore);
+		score += 1 * Math.max(hookScore, acronymScore);
 		
 		if(Double.isNaN(score)){
 			throw new RuntimeException("score == NaN");

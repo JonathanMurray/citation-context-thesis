@@ -47,18 +47,22 @@ public class InstanceHandler {
 		NonThrowingFileWriter writer = new NonThrowingFileWriter(arffFile);
 		writer.write("@RELATION sentence\n");
 		instances.get(0).features.keySet().stream().sorted().forEach(feature -> {
-			writer.write("@ATTRIBUTE " + feature + " ");
-			if(feature.contains("UNIGRAM") || feature.contains("BIGRAM") || feature.contains("TRIGRAM")
-					|| numeric.contains(feature)){
-				writer.write("NUMERIC\n");
-			}else if(feature.equals(FeatureName.TEXT.toString())){
-				writer.write("STRING\n");
-			}else if(feature.contains(FeatureName.SEMANTIC_VECTOR.toString())){
-				writer.write("NUMERIC\n");
-			}else{
-				writer.write("{true, false}\n");
+			if(!feature.equals(FeatureName.TEXT.toString())){//Must come last
+				writer.write("@ATTRIBUTE " + feature + " ");
+				if(feature.contains("UNIGRAM") || feature.contains("BIGRAM") || feature.contains("TRIGRAM")
+						|| numeric.contains(feature)){
+					writer.write("NUMERIC\n");
+				}else if(feature.equals(FeatureName.TEXT.toString())){
+					writer.write("STRING\n");
+				}else if(feature.contains(FeatureName.SEMANTIC_VECTOR.toString())){
+					writer.write("NUMERIC\n");
+				}else{
+					writer.write("{true, false}\n");
+				}
 			}
+			
 		});
+		writer.write("@ATTRIBUTE " + FeatureName.TEXT.toString() + " STRING\n");
 		writer.write("@ATTRIBUTE class {" + 
 				SentenceType.IMPLICIT_REFERENCE + "," + 
 				SentenceType.NOT_REFERENCE + "}\n");
@@ -67,8 +71,11 @@ public class InstanceHandler {
 			instance.features.entrySet().stream()
 				.sorted((e1,e2)->e1.getKey().compareTo(e2.getKey()))
 				.forEach(e -> {
-					writer.write(e.getValue() + ",");
+					if(!e.getKey().equals(FeatureName.TEXT.toString())){ //Text is last
+						writer.write(e.getValue() + ",");
+					}
 			});
+			writer.write(instance.features.get(FeatureName.TEXT.toString()) + ",");
 			writer.write(instance.instanceClass + "\n");
 		});
 		writer.close();
@@ -220,20 +227,20 @@ public class InstanceHandler {
 		features.put(FeatureName.CITE_SIMILARITY.toString(), sentence.text.similarity(dataset.mergedExplicitCitations));
 		features.put(FeatureName.STARTS_DET.toString(), Texts.instance().startsWithDet(rawWords));
 		features.put(FeatureName.CONTAINS_DET.toString(), Texts.instance().containsDet(rawWords));
-		
-		if(sentence.text instanceof TextWithSspace){
-			double[] vector = ((TextWithSspace)sentence.text).vector;
-			for(int i = 0; i < vector.length; i++){
-				features.put(FeatureName.SEMANTIC_VECTOR.toString() + "_" + i, vector[i]);
-			}
-			double semanticSimToExplicit = ((TextWithSspace)sentence.text).vectorSim((TextWithSspace)dataset.mergedExplicitCitations);
-			features.put(FeatureName.SEMANTIC_SIMILAR_TO_EXPLICIT.toString(), semanticSimToExplicit);
-		}
-		
-		if(mrfClassificationProbabilities != null){
-			double prob = mrfClassificationProbabilities.get(sentenceIndex);
-			features.put(FeatureName.MRF_PROBABILITY.toString(), prob);
-		}
+//		
+//		if(sentence.text instanceof TextWithSspace){
+//			double[] vector = ((TextWithSspace)sentence.text).vector;
+//			for(int i = 0; i < vector.length; i++){
+//				features.put(FeatureName.SEMANTIC_VECTOR.toString() + "_" + i, vector[i]);
+//			}
+//			double semanticSimToExplicit = ((TextWithSspace)sentence.text).vectorSim((TextWithSspace)dataset.mergedExplicitCitations);
+//			features.put(FeatureName.SEMANTIC_SIMILAR_TO_EXPLICIT.toString(), semanticSimToExplicit);
+//		}
+//		
+//		if(mrfClassificationProbabilities != null){
+//			double prob = mrfClassificationProbabilities.get(sentenceIndex);
+//			features.put(FeatureName.MRF_PROBABILITY.toString(), prob);
+//		}
 
 		return features;
 	}

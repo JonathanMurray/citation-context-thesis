@@ -15,7 +15,9 @@ public class TextWithSspace extends TextWithNgrams{
 	public TextWithSspace(String raw, List<String> rawWords, List<String> lemmas, Ngrams ngramsTfIdf, SSpaceWrapper sspace) {
 		super(raw, rawWords, lemmas, ngramsTfIdf);
 //		this.sspace = sspace;
-		this.vector = sspace.getVectorForDocument(lemmas);
+//		this.vector = sspace.getVectorForDocument(lemmas);
+		//TODO
+		this.vector = sspace.getVectorForDocumentLSASpecial(lemmas);
 //		System.out.println(Arrays.toString(vector));
 //		System.out.println();
 //		System.out.println();
@@ -34,9 +36,9 @@ public class TextWithSspace extends TextWithNgrams{
 
 	public double similarity(Object o){
 		TextWithSspace other = (TextWithSspace)o;
-		double ngramSim = ngramsTfIdf.similarity(other.ngramsTfIdf);
-		return ngramSim; //TODO
-//		return vectorSim(other); //TODO
+//		double ngramSim = ngramsTfIdf.similarity(other.ngramsTfIdf, 1);
+//		return ngramSim; //TODO
+		return vectorSim(other); //TODO
 //		return (ngramSim + semSim) / 2;
 	}
 	

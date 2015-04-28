@@ -44,7 +44,7 @@ public class SSpaceWrapper {
 	public static SSpaceWrapper instance(){
 		if(instance == null){
 			String sspaceDir = Environment.resources() + "/sspace"; //TODO hardcoded paths
-			File sspaceFile = new File(sspaceDir + "/space-lsa-1000.sspace");
+			File sspaceFile = new File(sspaceDir + "/space-lsa-500.sspace");
 			File wordFrequenciesFile = new File(sspaceDir + "/wordfrequencies.ser");
 			instance = SSpaceWrapper.load(sspaceFile, wordFrequenciesFile);
 		}
@@ -59,25 +59,25 @@ public class SSpaceWrapper {
 		computeMeanVector();
 	}
 
-	public static SSpaceWrapper fromTextFiles(File txtDir, int vecLen, int windowSize) {
+	public static SSpaceWrapper fromTextFiles(File txtDir) {
 		try {
 			// int vecLen = 500;
 			// int windowSize = 6;
-			boolean permutations = true;
+//			boolean permutations = true;
 //			Printer.printBigHeader("Creating S-Space {veclen: " + vecLen + ", windowsize: " + windowSize + ", permutations: "
 //					+ permutations);
 			System.out.println("from dir " + txtDir);
 //			SemanticSpace sspace = new RandomIndexing(vecLen, windowSize, permutations, new DefaultPermutationFunction(), true,
 //					0, System.getProperties());
 			
-			int lsaDimensions = 50;
+			int lsaDimensions = 500;
 			Printer.printBigHeader("Creating S-space {lsa-dimensions: " + lsaDimensions + "}");
 			LatentSemanticAnalysis sspace = new LatentSemanticAnalysis(lsaDimensions, true);
 			
 			File[] files = txtDir.listFiles();
 			TObjectIntHashMap<String> wordFrequencies = new TObjectIntHashMap<String>();
 			
-			for (int i = 0; i < files.length; i++) {
+			for (int i = 0; i < files.length/4; i++) {
 				File textFile = files[i];
 				if (i % 1 == 0) {
 					System.out.print(i + "/" + files.length + "  " + textFile.getName() + "  ");
@@ -211,6 +211,32 @@ public class SSpaceWrapper {
 		System.out.println("mean vec magn: " + magnitude(meanVector));
 		System.out.println("[x]  (" + numVectors + " vectors)");
 	}
+	
+	public double[] getVectorForDocumentLSASpecial(List<String> words){
+		double[] docVector = new double[sspace.getVectorLength()];
+		double numVecsInDoc = 0;
+		for (String word : words) {
+			Vector vec = sspace.getVector(word);
+			if (vec != null) {
+				for (int i = 0; i < sspace.getVectorLength(); i++) {
+					double termVectorVal = (double) vec.getValue(i).doubleValue();
+					docVector[i] += termVectorVal;
+				}
+//				System.out.println("Normalized word vec. Magnitude : " + magnitude(normalizedWordVec));
+//				System.out.println("Normalized word vec minus mean. Magnitude : " + magnitude(normalizedWordVecMinusMean));
+				numVecsInDoc += 1;
+			}
+		}
+
+//		if(numVecsInDoc > 0){
+//			for (int i = 0; i < sspace.getVectorLength(); i++) {
+//				docVector[i] /= numVecsInDoc;
+//			}	
+//		}
+		
+//		System.out.println("vector for document. Magnitude : " + magnitude(docVector));
+		return docVector;
+	}
 
 	public double[] getVectorForDocument(List<String> words) {
 		double[] docVector = new double[sspace.getVectorLength()];
@@ -221,13 +247,13 @@ public class SSpaceWrapper {
 //				System.out.println("word: " + word);
 //				System.out.println("word vector in dcument. Magnitude : " + vec.magnitude());
 				double[] normalizedWordVec = new double[sspace.getVectorLength()];
-				double[] normalizedWordVecMinusMean = new double[sspace.getVectorLength()];
+//				double[] normalizedWordVecMinusMean = new double[sspace.getVectorLength()];
 				for (int i = 0; i < sspace.getVectorLength(); i++) {
 					double termVectorVal = (double) vec.getValue(i).doubleValue() / vec.magnitude();
 					double termMinusMean = termVectorVal - meanVector[i];
 					docVector[i] += termMinusMean;
 					normalizedWordVec[i] = termVectorVal;
-					normalizedWordVecMinusMean[i] = termMinusMean;
+//					normalizedWordVecMinusMean[i] = termMinusMean;
 				}
 //				System.out.println("Normalized word vec. Magnitude : " + magnitude(normalizedWordVec));
 //				System.out.println("Normalized word vec minus mean. Magnitude : " + magnitude(normalizedWordVecMinusMean));

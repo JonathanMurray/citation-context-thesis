@@ -139,7 +139,7 @@ public class TextWithSynsets extends TextWithNgrams{
 	@Override
 	public double similarity(Object o){
 		TextWithSynsets other = (TextWithSynsets)o;
-		double ngramSimilarity =  ngramsTfIdf.similarity(other.ngramsTfIdf);
+		double ngramSimilarity =  ngramsTfIdf.similarity(other.ngramsTfIdf, 3);
 		double synsetSimilarity = 0;
 		int numScores = 0;
 		scoreBuffer.reset();
@@ -157,11 +157,12 @@ public class TextWithSynsets extends TextWithNgrams{
 		//TODO only count highest 50% of scores
 		if(numScores > 0){
 			scoreBuffer.sort();
-			int mid = scoreBuffer.size()/2;
-			for(int i = mid; i < scoreBuffer.size(); i++){
+//			int start = scoreBuffer.size()/2;
+			int start = 0;
+			for(int i = start; i < scoreBuffer.size(); i++){
 				synsetSimilarity += scoreBuffer.get(i);
 			}
-			synsetSimilarity /= (scoreBuffer.size() - mid);
+			synsetSimilarity /= (scoreBuffer.size() - start);
 //			synsetSimilarity /= numScores;
 		}
 		
@@ -179,11 +180,13 @@ public class TextWithSynsets extends TextWithNgrams{
 //			System.out.println("\n\n\n");
 //		}
 		
-		final double synsetWeight = 0.2; //TODO ad-hoc. Common value for synsetsim is around 0.4, ngrams give 0 very often, and sometimes > 0.1
-		double weightedSynset = synsetWeight*synsetSimilarity;
-		double weightedNgram = (1-synsetWeight)*ngramSimilarity;
-//		System.out.println(Printer.toString(weightedSynset) + "  ---  " + weightedNgram);
-		return weightedSynset + weightedNgram;
+		return synsetSimilarity;
+//		
+//		final double synsetWeight = 0.2; //TODO ad-hoc. Common value for synsetsim is around 0.4, ngrams give 0 very often, and sometimes > 0.1
+//		double weightedSynset = synsetWeight*synsetSimilarity;
+//		double weightedNgram = (1-synsetWeight)*ngramSimilarity;
+////		System.out.println(Printer.toString(weightedSynset) + "  ---  " + weightedNgram);
+//		return weightedSynset + weightedNgram;
 	}
 	
 }

@@ -28,7 +28,7 @@ public class SSpace {
 //		System.setErr(new PrintStream(new NullOutputStream())); //TODO
 		
 		File txtDir = new File(Environment.resources() + "/corpus/lemmas-sentences");
-		File sspaceFile = new File(sspaceDir + "/space-lsa-1000.sspace");
+		File sspaceFile = new File(sspaceDir + "/space-lsa-500.sspace");
 		File wordFrequenciesFile = new File(sspaceDir + "/wordfrequencies.ser");
 		createSpace(txtDir, sspaceFile, wordFrequenciesFile);
 //		testSimilarity(sspaceFile, wordFrequenciesFile);
@@ -41,9 +41,9 @@ public class SSpace {
 		System.out.println("from " + txtDir);
 		System.out.println("using word frequencies " + wordFrequenciesFile);
 		System.out.println("save to " + sspaceFile);
-		int vecLen = 1000;
-		int windowSize = 5;
-		SSpaceWrapper sspace = SSpaceWrapper.fromTextFiles(txtDir, vecLen, windowSize);
+//		int vecLen = 500;
+//		int windowSize = 5;
+		SSpaceWrapper sspace = SSpaceWrapper.fromTextFiles(txtDir);
 		sspace.save(sspaceFile, wordFrequenciesFile);
 	}
 	
@@ -60,7 +60,7 @@ public class SSpace {
 	private static void testWeights(File sspaceFile, File wordFrequenciesFile) throws IOException{
 		SSpaceWrapper sspace = SSpaceWrapper.load(sspaceFile, wordFrequenciesFile);
 		NgramIdf idf = SSpaceWrapper.loadNgramIdf();
-		TextParams<TextWithSspace> params = TextParams.withRI(idf, sspace);
+		TextParams<TextWithSspace> params = TextParams.withSSpace(idf, sspace);
 		Scanner sc = new Scanner(System.in);
 		while(true){
 			System.out.print("Sentence:  ");
@@ -85,7 +85,7 @@ public class SSpace {
 	private static void testSimilarity(File sspaceFile, File wordFrequenciesFile) throws IOException{
 		SSpaceWrapper sspace = SSpaceWrapper.load(sspaceFile, wordFrequenciesFile);
 		NgramIdf idf = SSpaceWrapper.loadNgramIdf();
-		TextParams<TextWithSspace> params = TextParams.withRI(idf, sspace);
+		TextParams<TextWithSspace> params = TextParams.withSSpace(idf, sspace);
 		String[] sentences = new String[]{
 				"This paper investigates why the HMMs estimated by Expectation-Maximization (EM) produce such poor results as Part-of-Speech (POS) taggers.",
 				"We find that the HMMs estimated by EM generally assign a roughly equal number of word tokens to each hidden state, while the empirical distribution of tokens to POS tags is highly skewed",
@@ -110,7 +110,7 @@ public class SSpace {
 	private static void testSimilarityInteractive(File sspaceFile, File wordFrequenciesFile) throws IOException{
 		SSpaceWrapper sspace = SSpaceWrapper.load(sspaceFile, wordFrequenciesFile);
 		NgramIdf idf = SSpaceWrapper.loadNgramIdf();
-		TextParams<TextWithSspace> params = TextParams.withRI(idf, sspace);
+		TextParams<TextWithSspace> params = TextParams.withSSpace(idf, sspace);
 		Scanner sc = new Scanner(System.in);
 		while(true){
 			System.out.print("Sentence A:  ");

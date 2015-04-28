@@ -20,7 +20,7 @@ public class CreateArff {
 	
 	public static void main(String[] args) throws ClassNotFoundException {
 		Class textClass = TextWithSspace.class;
-		String outAfterLabel = "lsa";
+		String outAfterLabel = "-my-features";
 		
 		if(args.length == 2){
 			textClass = Class.forName(args[0]);
@@ -61,16 +61,16 @@ public class CreateArff {
 			System.out.println("(" + dataset.citedMainAuthor + ")");
 			
 			//TODO
-			List<Double> mrfProbabilities = mrfClassifier.classify(dataset).classificationProbabilities();
-			mrfProbabilities = null;
+//			List<Double> mrfProbabilities = mrfClassifier.classify(dataset).classificationProbabilities();
+			List<Double> mrfProbabilities = null;
 			
 			ArrayList<SentenceInstance> balancedInstances =  InstanceHandler.createInstances(dataset, onlyText, true, mrfProbabilities);
 			InstanceHandler.writeToArffFile(balancedInstances, new File(Environment.resources(), 
-					"arff/" + dataset.datasetLabel + "-" + outAfterLabel + ".arff"));	
+					"arff/" + dataset.datasetLabel + outAfterLabel + ".arff"));	
 			
 			ArrayList<SentenceInstance> fullInstances =  InstanceHandler.createInstances(dataset, onlyText, false, mrfProbabilities);
 			InstanceHandler.writeToArffFile(fullInstances, new File(Environment.resources(), 
-					"arff/" + dataset.datasetLabel + "-" + outAfterLabel + "-full.arff"));	
+					"arff/" + dataset.datasetLabel + outAfterLabel + "-full.arff"));	
 		}
 	}
 }

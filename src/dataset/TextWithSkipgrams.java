@@ -15,6 +15,7 @@ public class TextWithSkipgrams extends TextWithNgrams{
 			Ngrams ngramsTfIdf, Ngrams skipgramsTfIdf) {
 		super(raw, rawWords, lemmas, ngramsTfIdf);
 		this.skipgramsTfIdf = skipgramsTfIdf;
+//		System.out.println(this); //TODO
 	}
 	
 	@Override
@@ -34,8 +35,13 @@ public class TextWithSkipgrams extends TextWithNgrams{
 	@Override
 	public double similarity(Object o){
 		TextWithSkipgrams other = (TextWithSkipgrams)o;
-		double ngramSimiliarity = ngramsTfIdf.similarity(other.ngramsTfIdf);
-		double skipgramSimilarity = skipgramsTfIdf.similarity(other.skipgramsTfIdf);
+		double ngramSimiliarity = ngramsTfIdf.similarity(other.ngramsTfIdf, 1);
+		double skipgramSimilarity = skipgramsTfIdf.similarity(other.skipgramsTfIdf, 3);
 		return (ngramSimiliarity + skipgramSimilarity) / 2;
+//		return ngramSimiliarity; //TODO
+	}
+	
+	public String toString(){
+		return "skipgrams: " + skipgramsTfIdf;
 	}
 }

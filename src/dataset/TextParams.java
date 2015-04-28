@@ -27,7 +27,7 @@ public class TextParams<T extends Text>{
 		return p;
 	}
 	
-	public static TextParams<TextWithSspace> withRI(NgramIdf ngramIdf, SSpaceWrapper sspace){
+	public static TextParams<TextWithSspace> withSSpace(NgramIdf ngramIdf, SSpaceWrapper sspace){
 		TextParams<TextWithSspace> p = new TextParams<TextWithSspace>(TextWithSspace.class);
 		p.ngramIdf = ngramIdf;
 		p.sspace = sspace;

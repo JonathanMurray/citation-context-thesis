@@ -147,9 +147,10 @@ public class Printer {
 			System.out.println("Macro avg. F: " + f.format(result.macroAvgFMeasure(1)));
 			System.out.println();
 		}else{
-			System.out.print(result.label() + "\tneg F: " + f.format(result.negativeFMeasure(1)));
-			System.out.print("    pos F: " + f.format(result.positiveFMeasure(1)));
-			System.out.print("    pos F3: " + f.format(result.positiveFMeasure(3)));
+			System.out.print("\t" + result.label() + " & " + f.format(result.negativeFMeasure(1)));
+			System.out.print(" & " + f.format(result.positiveFMeasure(1)));
+			System.out.print(" & " + f.format(result.positiveFMeasure(3)));
+			System.out.print(" \\\\ \\hline");
 			if(dataset != null){
 				System.out.print("  (" + dataset.citedMainAuthor + ")");
 				if(dataset != null && dataset.hasExtra){

@@ -12,17 +12,19 @@ import dataset.DatasetFactory;
 import dataset.DatasetParams;
 import dataset.DatasetXml;
 import dataset.NgramIdf;
+import dataset.SSpaceWrapper;
 import dataset.Text;
 import dataset.TextParams;
 import dataset.TextWithSkipgrams;
 import dataset.TextWithNgrams;
+import dataset.TextWithSspace;
 import dataset.TextWithSynsets;
 import edu.mit.jwi.IDictionary;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) throws ClassNotFoundException {
-		Class textClass = TextWithNgrams.class;
+		Class textClass = TextWithSynsets.class;
 		int numDatasets = -1;
 		
 		if(args.length == 1){
@@ -38,7 +40,7 @@ public class CreateDatasetsSaveXml {
 			return;
 		}
 		
-		Printer.printBigHeader("Create XML-datasets");
+		Printer.printBigHeader("Create XML-datasets (" + textClass + ")");
 		Lemmatizer.instance(); //Want the lemma debug prints to appear first
 		
 		if(textClass == Text.class){
@@ -49,6 +51,8 @@ public class CreateDatasetsSaveXml {
 			withNgrams();
 		}else if(textClass == TextWithSynsets.class){
 			withSynsets(numDatasets); //TODO numdatasets for others too
+		}else if(textClass == TextWithSspace.class){
+			withSspace();
 		}
 	}
 	
@@ -56,11 +60,11 @@ public class CreateDatasetsSaveXml {
 	private final static int NUM_HOOKS = 2;
 	private final static int NUM_ACRONYMS = 2;
 	
-	private final static File HTML_DIR = new File(Environment.resources() + "/my-citation-context-corpus");
-	private final static File XML_DIR = new File(Environment.resources() + "/my-xml-datasets"); 
+//	private final static File HTML_DIR = new File(Environment.resources() + "/my-citation-context-corpus");
+//	private final static File XML_DIR = new File(Environment.resources() + "/my-xml-datasets"); 
 	
-//	private final static File XML_DIR = new File(Environment.resources() + "/xml-datasets"); 		
-//	private final static File HTML_DIR = new File(Environment.resources() + "/teufel-citation-context-corpus");
+	private final static File XML_DIR = new File(Environment.resources() + "/xml-datasets"); 		
+	private final static File HTML_DIR = new File(Environment.resources() + "/teufel-citation-context-corpus");
 	
 	
 	private static String[] LABELS = new String[]{
@@ -86,6 +90,18 @@ public class CreateDatasetsSaveXml {
 				HTML_DIR);
 		for(Dataset<TextWithNgrams> dataset : datasets){
 			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-ngrams.xml"));
+		}
+	}
+	
+	private static void withSspace(){
+		File resourcesDir = new File(Environment.resources());
+		NgramIdf ngramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"), NgramIdf.DEFAULT_NGRAM_MIN_COUNT);
+		SSpaceWrapper sspace = SSpaceWrapper.load(new File(resourcesDir, "sspace/space-lsa-500.sspace"), new File(resourcesDir, "sspace/wordfrequencies.ser"));
+		ArrayList<Dataset<TextWithSspace>> datasets = DatasetFactory.fromHtmlDir(
+				DatasetParams.enhanced(TextParams.withSSpace(ngramIdf, sspace), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
+				HTML_DIR);
+		for(Dataset<TextWithSspace> dataset : datasets){
+			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-sspace.xml"));
 		}
 	}
 	

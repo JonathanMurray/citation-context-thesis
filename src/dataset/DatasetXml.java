@@ -281,6 +281,8 @@ public class DatasetXml {
 			return (T) Text.fromXml(textTag);
 		}else if(textClass.equals(TextWithNgrams.class)){
 			return (T) TextWithNgrams.fromXml(textTag);
+		}else if(textClass.equals(TextWithSkipgrams.class)){
+			return (T) TextWithSkipgrams.fromXml(textTag);
 		}else if(textClass.equals(TextWithConcepts.class)){
 			return (T) TextWithConcepts.fromXml(textTag);
 		}else if(textClass.equals(TextWithSynsets.class)){

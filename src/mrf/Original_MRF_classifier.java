@@ -28,7 +28,7 @@ import dataset.Texts;
 
 public class Original_MRF_classifier<T extends Text> {
 	
-	protected static Printer printer = new Printer(false);
+	protected static Printer printer = new Printer(true);
 	private static final double DELTA = 0.02;
 	private static final int NO = 0;
 	private static final int YES = 1;
@@ -39,9 +39,16 @@ public class Original_MRF_classifier<T extends Text> {
 	TDoubleIntHashMap EXPL_BELIEF_CHANGES = new TDoubleIntHashMap();
 	TDoubleIntHashMap IMPL_BELIEF_CHANGES = new TDoubleIntHashMap();
 	TDoubleIntHashMap NO_CITE_BELIEF_CHANGES = new TDoubleIntHashMap();
+	TDoubleIntHashMap IMPL_START_BELIEFS = new TDoubleIntHashMap();
+	TDoubleIntHashMap EXPL_START_BELIEFS = new TDoubleIntHashMap();
+	TDoubleIntHashMap NO_CITE_START_BELIEFS = new TDoubleIntHashMap();
 	
 	double minSimilarity;
 	double maxSimilarity;
+	
+
+	private double minNeighbourSim;
+	private double maxNeighbourSim;
 	
 	protected final MRF_params params;
 	protected Dataset<T> data;
@@ -84,6 +91,12 @@ public class Original_MRF_classifier<T extends Text> {
 			ResultImpl res = classifyOneCiter(i, dataset);
 			sumResult.add(res);
 		}
+		
+		System.out.println("Expl start beliefs: " + EXPL_START_BELIEFS);
+		System.out.println("Impl start beliefs: " + IMPL_START_BELIEFS);
+		System.out.println("no_cite start beliefs: " + NO_CITE_START_BELIEFS);
+		
+		
 		System.out.println();
 		System.out.println("False neg: " + DEBUG_FALSE_NEG);
 		System.out.println("False neg after expl: " + DEBUG_FALSE_NEG_AFTER_EXPL);
@@ -113,8 +126,10 @@ public class Original_MRF_classifier<T extends Text> {
 	}
 	
 	private void setup(int citerIndex, Dataset<T> dataset){
-		this.data = dataset;
-		this.sentences = dataset.citers.get(citerIndex).sentences;
+		data = dataset;
+		sentences = dataset.citers.get(citerIndex).sentences;
+		
+		setupMinMaxNeighbourSim();
 		
 		int numSentences = sentences.size();
 		
@@ -170,8 +185,54 @@ public class Original_MRF_classifier<T extends Text> {
 //				System.out.println("belief: " + normalized);	
 //			}
 			
+			double roundedBelief = Math.round(normalized*20.0)/20.0;
+			
+			if(sentence.type == SentenceType.EXPLICIT_REFERENCE){
+				EXPL_START_BELIEFS.adjustOrPutValue(roundedBelief, 1, 1);
+			}else if(sentence.type == SentenceType.IMPLICIT_REFERENCE){
+				IMPL_START_BELIEFS.adjustOrPutValue(roundedBelief, 1, 1);
+			}else if(sentence.type == SentenceType.NOT_REFERENCE){
+				NO_CITE_START_BELIEFS.adjustOrPutValue(roundedBelief, 1, 1);
+			}
+			
 			selfBeliefs.add(new double[]{1 - normalized, normalized});
 		}
+	}
+	
+	private void setupMinMaxNeighbourSim(){
+		int numSentences = sentences.size();
+		Sentence<T> maxFrom = null;
+		Sentence<T> maxTo = null;
+		minNeighbourSim = Double.MAX_VALUE;
+		maxNeighbourSim = Double.MIN_VALUE;
+		for(int from = 0; from < numSentences; from++){
+			int leftmostNeighbour = Math.max(0, from - params.neighbourhood);
+			int rightmostNeighbour = Math.min(numSentences - 1, from + params.neighbourhood);
+			for(int to = leftmostNeighbour; to <= rightmostNeighbour; to++){
+				if(to != from){
+					Sentence<T> sTo = sentences.get(to);
+					Sentence<T> sFrom = sentences.get(from);
+					double sim = sTo.text.similarity(sFrom.text);
+					if(sim < minNeighbourSim){
+						minNeighbourSim = sim;
+					}
+					if(sim > maxNeighbourSim){
+						maxNeighbourSim = sim;
+						maxFrom = sFrom;
+						maxTo = sTo;
+					}
+				}
+			}
+		}
+//		System.out.println("min neighbour sim : " + minNeighbourSim);
+		System.out.println("max neighbour sim : " + maxNeighbourSim);
+//		try{
+//			System.out.println("max from: " + maxFrom != null ? maxFrom.text.raw : null);
+//			System.out.println("max to: " + maxTo != null? maxTo.text.raw : null);	
+//		}catch(NullPointerException e){
+//			
+//		}
+		
 	}
 	
 	private TDoubleArrayList getSimilarities(T citedContent, T citedTitle, T mergedExplicitCitations){
@@ -239,6 +300,10 @@ public class Original_MRF_classifier<T extends Text> {
 //		}
 		
 		
+		
+		double hookScore = Texts.instance().containsHookScore(sentence.text.raw, lexicalHooks);
+		double acronymScore = Texts.instance().containsAcronymScore(rawWords, acronyms);
+		score += 1 * Math.max(hookScore, acronymScore);
 		
 		
 		if(Double.isNaN(score)){
@@ -516,8 +581,9 @@ public class Original_MRF_classifier<T extends Text> {
 			return new double[]{0.5,0.5};
 		}
 		
-		double similarity = t1.similarity(t2);
-		double probSame = 1.0 / (1 + Math.exp( - similarity)); //interval : [0.5 , 1]
+		double relatedness = relatedness(s1,s2);
+//		double relatedness = t1.similarity(t2);
+		double probSame = 1.0 / (1 + Math.exp( - relatedness)); //interval : [0.5 , 1]
 		if(probSame > 1.01){
 			System.err.println("ERROR: compatibility for " + s1 + ", " + s2 + " == " + probSame);//TODO
 		}
@@ -526,46 +592,53 @@ public class Original_MRF_classifier<T extends Text> {
 		return new double[]{1 - probSame, probSame};
 	}
 	
-//	private double relatedness(int s1, int s2){
-//		
+	private double relatedness(int s1, int s2){
+		
 //		if(relatednessMemoization.get(s1).get(s2) != 0){
 //			return relatednessMemoization.get(s1).get(s2);
 //		}
 //		if(relatednessMemoization.get(s2).get(s1) != 0){
 //			return relatednessMemoization.get(s2).get(s1);
 //		}
+		
+		T t1 = sentences.get(s1).text;
+		T t2 = sentences.get(s2).text;
+		
+		double similarity = t1.similarity(t2);
+		
+		
+		//TODO normalized neighbour sim
+		return 0.5 * (similarity-minNeighbourSim) / (maxNeighbourSim-minNeighbourSim);
+		
+		
+//		double relatedness = (t1.similarity(t2) - minNeighbourSimilarity) / (maxNeighbourSimilarity - minNeighbourSimilarity);
+//		double relatedness = 0;
+//		if(s2 == s1 + 1){
+//			relatedness = relatednessToPrevious(t2);
+//		}else if(s1 == s2 + 1){
+//			relatedness = relatednessToPrevious(t1);
+//		}
 //		
-//		T t1 = sentences.get(s1).text;
-//		T t2 = sentences.get(s2).text;
-//		
-////		double relatedness = (t1.similarity(t2) - minNeighbourSimilarity) / (maxNeighbourSimilarity - minNeighbourSimilarity);
-////		double relatedness = 0;
-////		if(s2 == s1 + 1){
-////			relatedness = relatednessToPrevious(t2);
-////		}else if(s1 == s2 + 1){
-////			relatedness = relatednessToPrevious(t1);
-////		}
-//		double relatedness = t1.similarity(t2);
 ////		double similarity = (unnormalizedSimilarity - minSimilarity)/(maxSimilarity-minSimilarity);
-////		relatedness = Math.max(relatedness, similarity);
-//		relatednessMemoization.get(s1).put(s2, relatedness);
+//		relatedness = Math.max(relatedness, similarity);
+////		relatednessMemoization.get(s1).put(s2, relatedness);
 //		return relatedness;
-//	}
+	}
 	
-//	private double relatednessToPrevious(T text){
-//		
-//		if(Texts.instance().startsWithConnector(text.rawWords)){
-//			return 0.9;
-//		}
-//		
-//		if(Texts.instance().containsDetWork(text.rawWords)){
-//			return 0.8;
-//		}
-//		
-//		if(Texts.instance().startsWith3rdPersonPronoun(text.rawWords)){
-//			return 0.8;
-//		}
-//		
+	private double relatednessToPrevious(T text){
+	
+		if(Texts.instance().startsWithConnector(text.rawWords)){
+			return 1;
+		}
+		
+		if(Texts.instance().containsDetWork(text.rawWords)){
+			return 1;
+		}
+		
+		if(Texts.instance().startsWith3rdPersonPronoun(text.rawWords)){
+			return 1;
+		}
+		
 //		if(Texts.instance().startsWithDet(text.rawWords)){
 //			return 0.7;
 //		}
@@ -573,8 +646,8 @@ public class Original_MRF_classifier<T extends Text> {
 //		if(Texts.instance().containsDet(text.rawWords) || text.rawWords.get(0).equals("It")){
 //			return 0.6;
 //		}
-//		
-//		return 0.4; //the fact they are next to each other
-//	}
+		
+		return 0;
+	}
 	
 }

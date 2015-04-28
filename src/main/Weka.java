@@ -20,7 +20,7 @@ public class Weka {
 		if(args.length >= 1){
 			numDatasets = Integer.parseInt(args[0]);
 		}
-		String label = "lsa";
+		String label = "-orig-features";
 		if(args.length >= 2){
 			label = args[1];
 		}
@@ -52,28 +52,29 @@ public class Weka {
 		List<Instances> wekaBalancedDatasets = new ArrayList<Instances>();
 		List<Instances> wekaFullDatasets = new ArrayList<Instances>();
 		for(String label : labels){
-			Instances balancedDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + "-" + afterLabel + ".arff"));
+			Instances balancedDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + afterLabel + ".arff"));
 			wekaBalancedDatasets.add(balancedDataset);
-			Instances fullDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + "-" + afterLabel + "-full.arff"));
+			Instances fullDataset = WekaClassifier.fromFiles(new File(resourcesDir, "arff/" + label + afterLabel + "-full.arff"));
 			wekaFullDatasets.add(fullDataset);
 		}
 		
 		
 		//TODO Run infogain on full dataset (on server?)
-//		HashMap<String,Double> infogains = smo.evaluateAttributes(WekaClassifier.mergeDatasets(wekaBalancedDatasets, -1));
-//		System.out.println("INFO-GAIN:");
-//		System.out.println(Printer.valueSortedMap(infogains, 15));
+		HashMap<String,Double> infogains = smo.evaluateAttributes(WekaClassifier.mergeDatasets(wekaFullDatasets, -1));
+		System.out.println("INFO-GAIN:");
+		System.out.println(Printer.valueSortedMap(infogains, 15));
 		
 //		smo.ROC(wekaBalancedDatasets.get(0));
 		
 		
-		System.out.println("FULL RESULTS:");
-		List<Result> results = smo.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
-		Printer.printMultipleResults("SMO", results, null, true);
-		System.out.println("COMPACT RESULTS:");
-		Printer.printMultipleResults("SMO", results, null, false);
+//		System.out.println("FULL RESULTS:");
+//		List<Result> results = smo.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
+//		Printer.printMultipleResults("SMO", results, null, true);
+//		System.out.println("COMPACT RESULTS:");
+//		Printer.printMultipleResults("SMO", results, null, false);
 		
-//		Result result = wekaSMO.crossValidateMerged("Merged full datasets", wekaFullDatasets, 4);
-//		Printer.printResult(result, null, true, null);
+		System.out.println("RESULT FOR MERGED X-VALIDATION:");
+		Result result = smo.crossValidateMerged("Merged full datasets", wekaFullDatasets, 4);
+		Printer.printResult(result, null, true, null);
 	}
 }
