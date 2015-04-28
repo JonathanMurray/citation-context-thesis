@@ -20,7 +20,7 @@ public class Weka {
 		if(args.length >= 1){
 			numDatasets = Integer.parseInt(args[0]);
 		}
-		String label = "";
+		String label = "-ngrams-mrf-05";
 		if(args.length >= 2){
 			label = args[1];
 		}
@@ -68,14 +68,14 @@ public class Weka {
 //		smo.ROC(wekaBalancedDatasets.get(0));
 		
 		
-//		System.out.println("FULL RESULTS:");
-//		List<Result> results = smo.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
-//		Printer.printMultipleResults("SMO", results, null, true);
-//		System.out.println("COMPACT RESULTS:");
-//		Printer.printMultipleResults("SMO", results, null, false);
+		System.out.println("FULL RESULTS:");
+		List<Result> results = smo.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);
+		Printer.printMultipleResults("SMO", results, null, true);
+		System.out.println("COMPACT RESULTS:");
+		Printer.printMultipleResults("SMO", results, null, false);
 		
-		System.out.println("RESULT FOR MERGED X-VALIDATION:");
-		Result result = smo.crossValidateMerged("Merged full datasets", wekaFullDatasets, 4);
-		Printer.printResult(result, null, true, null);
+//		System.out.println("RESULT FOR MERGED X-VALIDATION:");
+//		Result result = smo.crossValidateMerged("Merged full datasets", wekaFullDatasets, 4);
+//		Printer.printResult(result, null, true, null);
 	}
 }

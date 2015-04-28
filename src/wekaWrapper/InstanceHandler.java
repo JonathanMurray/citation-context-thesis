@@ -111,6 +111,7 @@ public class InstanceHandler {
 			boolean onlyText, boolean balanceData, List<Double> mrfClassificationProbabilities){
 		
 		ArrayList<SentenceInstance> instances = new ArrayList<SentenceInstance>();
+		int totalSentenceIndex = 0;
 		for(CitingPaper<T> citer : dataset.citers){
 			for(int i = 0; i < citer.sentences.size(); i++){
 				Sentence<T> previous = i > 0 ? citer.sentences.get(i-1) : null;
@@ -120,12 +121,13 @@ public class InstanceHandler {
 				if(onlyText){
 					features = extractFeatures(previous, sentence, next, dataset, onlyText, i);
 				}else{
-					features = extractFeaturesEnhanced(citer.sentences, i, dataset, mrfClassificationProbabilities);
+					features = extractFeaturesEnhanced(citer.sentences, i, dataset, mrfClassificationProbabilities, totalSentenceIndex);
 				}
 				if(sentence.type == SentenceType.EXPLICIT_REFERENCE){ //TODO
 					continue; //Excluded
 				}
 				instances.add(new SentenceInstance(features, sentence.type));
+				totalSentenceIndex ++;
 			}
 		}
 		if(balanceData){
@@ -176,7 +178,7 @@ public class InstanceHandler {
 		return features;
 	}
 	
-	private static <T extends Text> Map<String, Comparable<?>> extractFeaturesEnhanced(List<Sentence<T>> sentences, int sentenceIndex, Dataset<T> dataset, List<Double> mrfClassificationProbabilities){
+	private static <T extends Text> Map<String, Comparable<?>> extractFeaturesEnhanced(List<Sentence<T>> sentences, int sentenceIndex, Dataset<T> dataset, List<Double> mrfClassificationProbabilities, int totalSentenceIndex){
 		Texts texts = Texts.instance();
 		Map<String, Comparable<?>> features = new HashMap<String, Comparable<?>>();
 		Sentence<T> sentence = sentences.get(sentenceIndex);
@@ -191,42 +193,42 @@ public class InstanceHandler {
 		
 		List<String> rawWords = sentence.text.rawWords;
 		String[] prevWords = previous != null? previous.text.rawWords.toArray(new String[0]) : new String[0];
-		features.put(FeatureName.CITE_PREV.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
-		features.put(FeatureName.AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
-		features.put(FeatureName.OTHER_CITE.toString(), texts.containsOtherReferencesButNotThis(sentence.text.raw, rawWords, dataset.citedMainAuthor));
-		features.put(FeatureName.ACRONYM.toString(), texts.containsAcronymScore(rawWords, dataset.getAcronyms()));
-		features.put(FeatureName.LEXICAL_HOOK.toString(), texts.containsHookScore(sentence.text.raw, dataset.getLexicalHooks()));
-		features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(rawWords));
-		features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
-		features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(rawWords));
-		features.put(FeatureName.HEADING_PREV.toString(), previous != null ? texts.startsWithSectionHeader( previous.text.rawWords) : false);
-		features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(rawWords));
-		features.put(FeatureName.HEADING_NEXT.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
+//		features.put(FeatureName.CITE_PREV.toString(), texts.containsExplicitCitation(Arrays.asList(prevWords), dataset.citedMainAuthor));
+//		features.put(FeatureName.AUTHOR.toString(), texts.containsMainAuthor(rawWords, dataset.citedMainAuthor));
+//		features.put(FeatureName.OTHER_CITE.toString(), texts.containsOtherReferencesButNotThis(sentence.text.raw, rawWords, dataset.citedMainAuthor));
+//		features.put(FeatureName.ACRONYM.toString(), texts.containsAcronymScore(rawWords, dataset.getAcronyms()));
+//		features.put(FeatureName.LEXICAL_HOOK.toString(), texts.containsHookScore(sentence.text.raw, dataset.getLexicalHooks()));
+//		features.put(FeatureName.DET_WORK.toString(), texts.containsDetWork(rawWords));
+//		features.put(FeatureName.PRONOUN.toString(), texts.startsWith3rdPersonPronoun(rawWords));
+//		features.put(FeatureName.CONNECTOR.toString(), texts.startsWithConnector(rawWords));
+//		features.put(FeatureName.HEADING_PREV.toString(), previous != null ? texts.startsWithSectionHeader( previous.text.rawWords) : false);
+//		features.put(FeatureName.HEADING.toString(), texts.startsWithSectionHeader(rawWords));
+//		features.put(FeatureName.HEADING_NEXT.toString(), next != null? texts.startsWithSectionHeader(next.text.rawWords) : false);
 		features.put(FeatureName.TEXT.toString(), "'" + sentence.text.raw.replaceAll("'", "") + "'");
 		features.put(FeatureName.SENTENCE_NUMBER.toString(), sentenceIndex);
 		
-		Integer distPrevExpl = 4;
-		Integer distNextExpl = 4;
+//		Integer distPrevExpl = 4;
+//		Integer distNextExpl = 4;	
+//		for(int i = 3; i >= 0; i--){
+//			int prevInd = sentenceIndex - i;
+//			int nextInd = sentenceIndex + i;
+//			if(prevInd >= 0 && sentences.get(prevInd).type == SentenceType.EXPLICIT_REFERENCE){
+//				distPrevExpl = i;
+//			}
+//			if(nextInd < sentences.size() - 1 && sentences.get(nextInd).type == SentenceType.EXPLICIT_REFERENCE){
+//				distNextExpl = i;
+//			}
+//		}
+//		features.put(FeatureName.CITE_PREV_DISTANCE.toString(), distPrevExpl);
 		
-		for(int i = 3; i >= 0; i--){
-			int prevInd = sentenceIndex - i;
-			int nextInd = sentenceIndex + i;
-			if(prevInd >= 0 && sentences.get(prevInd).type == SentenceType.EXPLICIT_REFERENCE){
-				distPrevExpl = i;
-			}
-			if(nextInd < sentences.size() - 1 && sentences.get(nextInd).type == SentenceType.EXPLICIT_REFERENCE){
-				distNextExpl = i;
-			}
-		}
-		
-		features.put(FeatureName.CITE_PREV_DISTANCE.toString(), distPrevExpl);
-		features.put(FeatureName.CITE_NEXT_DISTANCE.toString(), distNextExpl);
-		
-		features.put(FeatureName.TITLE_SIMILARITY.toString(), sentence.text.similarity(dataset.citedTitle));
-		features.put(FeatureName.CONTENT_SIMILARITY.toString(), sentence.text.similarity(dataset.citedContent));
-		features.put(FeatureName.CITE_SIMILARITY.toString(), sentence.text.similarity(dataset.mergedExplicitCitations));
-		features.put(FeatureName.STARTS_DET.toString(), Texts.instance().startsWithDet(rawWords));
-		features.put(FeatureName.CONTAINS_DET.toString(), Texts.instance().containsDet(rawWords));
+		//TODO
+//		features.put(FeatureName.CITE_NEXT_DISTANCE.toString(), distNextExpl);
+//		
+//		features.put(FeatureName.TITLE_SIMILARITY.toString(), sentence.text.similarity(dataset.citedTitle));
+//		features.put(FeatureName.CONTENT_SIMILARITY.toString(), sentence.text.similarity(dataset.citedContent));
+//		features.put(FeatureName.CITE_SIMILARITY.toString(), sentence.text.similarity(dataset.mergedExplicitCitations));
+//		features.put(FeatureName.STARTS_DET.toString(), Texts.instance().startsWithDet(rawWords));
+//		features.put(FeatureName.CONTAINS_DET.toString(), Texts.instance().containsDet(rawWords));
 //		
 //		if(sentence.text instanceof TextWithSspace){
 //			double[] vector = ((TextWithSspace)sentence.text).vector;
@@ -237,10 +239,12 @@ public class InstanceHandler {
 //			features.put(FeatureName.SEMANTIC_SIMILAR_TO_EXPLICIT.toString(), semanticSimToExplicit);
 //		}
 //		
-//		if(mrfClassificationProbabilities != null){
-//			double prob = mrfClassificationProbabilities.get(sentenceIndex);
-//			features.put(FeatureName.MRF_PROBABILITY.toString(), prob);
-//		}
+		if(mrfClassificationProbabilities != null){
+			double prob = mrfClassificationProbabilities.get(totalSentenceIndex);
+			features.put(FeatureName.MRF_PROBABILITY.toString(), prob);
+		}
+		
+		
 
 		return features;
 	}

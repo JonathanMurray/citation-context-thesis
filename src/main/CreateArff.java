@@ -13,6 +13,7 @@ import wekaWrapper.SentenceInstance;
 import dataset.Dataset;
 import dataset.DatasetXml;
 import dataset.Text;
+import dataset.TextWithNgrams;
 import dataset.TextWithSspace;
 
 
@@ -20,7 +21,7 @@ public class CreateArff {
 	
 	public static void main(String[] args) throws ClassNotFoundException {
 		Class textClass = TextWithSspace.class;
-		String outAfterLabel = "-my-features";
+		String outAfterLabel = "-ngrams-mrf-05";
 		
 		if(args.length == 2){
 			textClass = Class.forName(args[0]);
@@ -46,14 +47,14 @@ public class CreateArff {
 		
 		final boolean onlyText = false; //TODO
 		
-		MRF_classifier<TextWithSspace> mrfClassifier = 
-				new MRF_classifier<TextWithSspace>(new MRF_params(3, 0.4, 10));
+		MRF_classifier<TextWithNgrams> mrfClassifier = 
+				new MRF_classifier<TextWithNgrams>(new MRF_params(4, 0.5, 100));
 		
 		for(int i = 0; i < labels.length; i++){
 			String label = labels[i];
 			final int MAX_CITERS = 0; //0 means unlimited
-			Dataset<TextWithSspace> dataset = DatasetXml.parseXmlFile(
-					TextWithSspace.class,
+			Dataset<TextWithNgrams> dataset = DatasetXml.parseXmlFile(
+					TextWithNgrams.class,
 				new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml"), 
 				MAX_CITERS);
 			Printer.printBigProgressHeader(i, labels.length);
@@ -61,8 +62,8 @@ public class CreateArff {
 			System.out.println("(" + dataset.citedMainAuthor + ")");
 			
 			//TODO
-//			List<Double> mrfProbabilities = mrfClassifier.classify(dataset).classificationProbabilities();
-			List<Double> mrfProbabilities = null;
+			List<Double> mrfProbabilities = mrfClassifier.classify(dataset).classificationProbabilities();
+//			List<Double> mrfProbabilities = null;
 			
 			ArrayList<SentenceInstance> balancedInstances =  InstanceHandler.createInstances(dataset, onlyText, true, mrfProbabilities);
 			InstanceHandler.writeToArffFile(balancedInstances, new File(Environment.resources(), 
