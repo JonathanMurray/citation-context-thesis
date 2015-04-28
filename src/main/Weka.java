@@ -40,6 +40,7 @@ public class Weka {
 	}
 	
 	private static void testWeka(List<String> labels, String afterLabel){
+		System.out.println("after label: " + afterLabel);
 		WekaClassifier smo = WekaClassifier.SMO();
 		WekaClassifier nb = WekaClassifier.NaiveBayes();
 		WekaClassifier j48 = WekaClassifier.J48();
