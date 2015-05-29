@@ -16,14 +16,15 @@ import util.Printer;
 import util.Timer;
 import weka.classifiers.evaluation.NominalPrediction;
 import weka.classifiers.evaluation.Prediction;
+import dataset.CitingPaper;
 import dataset.Dataset;
 import dataset.LexicalHook;
-import dataset.Result;
 import dataset.ResultImpl;
 import dataset.Sentence;
 import dataset.SentenceType;
 import dataset.Text;
 import dataset.Texts;
+import dataset.UniqueSentenceKey;
 
 
 public class MRF_classifier<T extends Text> {
@@ -94,14 +95,13 @@ public class MRF_classifier<T extends Text> {
 			}
 			run++;
 		}
-		return getResults(dataset.datasetLabel, params.beliefThreshold, t.getMillis());
+		CitingPaper<T> citer = dataset.citers.get(citerIndex);
+		return getResults(citer.title, dataset.datasetLabel, params.beliefThreshold, t.getMillis());
 	}
 	
 	private void setup(int citerIndex, Dataset<T> dataset){
 		this.data = dataset;
 		this.sentences = dataset.citers.get(citerIndex).sentences;
-		
-		
 		int numSentences = sentences.size();
 		
 		relatednessMemoization = new ArrayList<TIntDoubleHashMap>();
@@ -268,7 +268,7 @@ public class MRF_classifier<T extends Text> {
 		}
 	}
 	
-	private ResultImpl getResults(String label, double beliefThreshold, long passedMillis){
+	private ResultImpl getResults(String citerTitle, String label, double beliefThreshold, long passedMillis){
 		int truePos = 0;
 		int falsePos = 0;
 		int trueNeg = 0;
@@ -276,13 +276,13 @@ public class MRF_classifier<T extends Text> {
 		
 		ArrayList<Integer> fpIndices = new ArrayList<Integer>();
 		ArrayList<Integer> fnIndices = new ArrayList<Integer>();
-		ArrayList<Double> classificationProbabilities = new ArrayList<Double>();
+		HashMap<UniqueSentenceKey<T>, Double> classificationProbabilities = new HashMap<UniqueSentenceKey<T>, Double>();
 		ArrayList<Prediction> predictions = new ArrayList<Prediction>();
 		
 		for(int i = 0; i < sentences.size(); i++){
 			Sentence<T> sentence = sentences.get(i);
 			double[] belief = finalBelief(i);
-			classificationProbabilities.add(belief[1]);
+			classificationProbabilities.put(new UniqueSentenceKey<T>(citerTitle, sentence.sentenceIndex), belief[1]);
 			
 			if(sentence.type == SentenceType.EXPLICIT_REFERENCE){
 //				System.out.println();
@@ -378,7 +378,7 @@ public class MRF_classifier<T extends Text> {
 			}
 		}
 		
-		return new ResultImpl(label, truePos, falsePos, trueNeg, falseNeg, classificationProbabilities, passedMillis, predictions);	
+		return new ResultImpl<T>(label, truePos, falsePos, trueNeg, falseNeg, classificationProbabilities, passedMillis, predictions);	
 	}
 	
 	private double[] finalBelief(int sentence){

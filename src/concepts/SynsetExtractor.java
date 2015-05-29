@@ -506,8 +506,8 @@ public class SynsetExtractor {
 
 	List<SynsetWithPaths> pickBest(List<SynsetWithPaths> paths){
 		int num = (int)Math.pow(paths.size(), 0.3);
-		final int min = 2;
-		final int max = 6;
+		final int min = 1;
+		final int max = 3;
 		num = Math.min(max, Math.min(paths.size(), Math.max(min, num)));
 		List<SynsetWithPaths> extracted = new ArrayList<SynsetWithPaths>();
 		while(extracted.size() < num){

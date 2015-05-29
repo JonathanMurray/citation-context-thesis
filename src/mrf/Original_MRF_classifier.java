@@ -17,6 +17,7 @@ import util.Printer;
 import util.Timer;
 import weka.classifiers.evaluation.NominalPrediction;
 import weka.classifiers.evaluation.Prediction;
+import dataset.CitingPaper;
 import dataset.Dataset;
 import dataset.LexicalHook;
 import dataset.ResultImpl;
@@ -24,11 +25,12 @@ import dataset.Sentence;
 import dataset.SentenceType;
 import dataset.Text;
 import dataset.Texts;
+import dataset.UniqueSentenceKey;
 
 
 public class Original_MRF_classifier<T extends Text> {
 	
-	protected static Printer printer = new Printer(true);
+	protected static Printer printer = new Printer(false);
 	private static final double DELTA = 0.02;
 	private static final int NO = 0;
 	private static final int YES = 1;
@@ -62,14 +64,18 @@ public class Original_MRF_classifier<T extends Text> {
 	protected List<Map<Integer,double[]>> allReceivedMessages;
 	
 	public Original_MRF_classifier(MRF_params params){
+		System.out.println("MRF  " + params);
 		this.params = params;
 	}
 	
-	public List<ResultImpl> classify(Collection<Dataset<T>> datasets){
+	public ArrayList<ResultImpl> classify(Collection<Dataset<T>> datasets){
 		System.out.println("Classifying multiple datasets ...");
-		List<ResultImpl> results = new ArrayList<ResultImpl>();
+		ArrayList<ResultImpl> results = new ArrayList<ResultImpl>();
+		int i = 0;
 		for(Dataset<T> dataset : datasets){
+			Printer.printBigProgressHeader(i, datasets.size());
 			results.add(classify(dataset));
+			i++;
 		}
 		System.out.println("expl: " + EXPL_BELIEF_CHANGES);
 		System.out.println("impl: " + IMPL_BELIEF_CHANGES);
@@ -92,9 +98,9 @@ public class Original_MRF_classifier<T extends Text> {
 			sumResult.add(res);
 		}
 		
-		System.out.println("Expl start beliefs: " + EXPL_START_BELIEFS);
-		System.out.println("Impl start beliefs: " + IMPL_START_BELIEFS);
-		System.out.println("no_cite start beliefs: " + NO_CITE_START_BELIEFS);
+//		System.out.println("Expl start beliefs: " + EXPL_START_BELIEFS);
+//		System.out.println("Impl start beliefs: " + IMPL_START_BELIEFS);
+//		System.out.println("no_cite start beliefs: " + NO_CITE_START_BELIEFS);
 		
 		
 		System.out.println();
@@ -122,7 +128,8 @@ public class Original_MRF_classifier<T extends Text> {
 			
 			run++;
 		}
-		return getResults(dataset.datasetLabel, params.beliefThreshold, t.getMillis());
+		CitingPaper<T> citer = dataset.citers.get(citerIndex);
+		return getResults(citer.title, dataset.datasetLabel, params.beliefThreshold, t.getMillis());
 	}
 	
 	private void setup(int citerIndex, Dataset<T> dataset){
@@ -225,7 +232,7 @@ public class Original_MRF_classifier<T extends Text> {
 			}
 		}
 //		System.out.println("min neighbour sim : " + minNeighbourSim);
-		System.out.println("max neighbour sim : " + maxNeighbourSim);
+//		System.out.println("max neighbour sim : " + maxNeighbourSim);
 //		try{
 //			System.out.println("max from: " + maxFrom != null ? maxFrom.text.raw : null);
 //			System.out.println("max to: " + maxTo != null? maxTo.text.raw : null);	
@@ -327,7 +334,7 @@ public class Original_MRF_classifier<T extends Text> {
 		}
 	}
 	
-	private ResultImpl getResults(String label, double beliefThreshold, long passedMillis){
+	private ResultImpl getResults(String citerTitle, String label, double beliefThreshold, long passedMillis){
 		int truePos = 0;
 		int falsePos = 0;
 		int trueNeg = 0;
@@ -335,13 +342,13 @@ public class Original_MRF_classifier<T extends Text> {
 		
 		ArrayList<Integer> fpIndices = new ArrayList<Integer>();
 		ArrayList<Integer> fnIndices = new ArrayList<Integer>();
-		ArrayList<Double> classificationProbabilities = new ArrayList<Double>();
+		HashMap<UniqueSentenceKey, Double> classificationProbabilities = new HashMap<UniqueSentenceKey, Double>();
 		ArrayList<Prediction> predictions = new ArrayList<Prediction>();
 		
 		for(int i = 0; i < sentences.size(); i++){
 			Sentence<T> sentence = sentences.get(i);
 			double[] belief = finalBelief(i);
-			classificationProbabilities.add(belief[1]);
+			classificationProbabilities.put(new UniqueSentenceKey<T>(citerTitle, sentence.sentenceIndex), belief[1]);
 			
 			double beliefChange = belief[1] - selfBeliefs.get(i)[1];
 			double roundedChange = (double)(Math.round(beliefChange * 20.0)) / 20.0;
@@ -594,35 +601,45 @@ public class Original_MRF_classifier<T extends Text> {
 	
 	private double relatedness(int s1, int s2){
 		
-//		if(relatednessMemoization.get(s1).get(s2) != 0){
-//			return relatednessMemoization.get(s1).get(s2);
-//		}
-//		if(relatednessMemoization.get(s2).get(s1) != 0){
-//			return relatednessMemoization.get(s2).get(s1);
-//		}
+		if(relatednessMemoization.get(s1).get(s2) != 0){
+			return relatednessMemoization.get(s1).get(s2);
+		}
+		if(relatednessMemoization.get(s2).get(s1) != 0){
+			return relatednessMemoization.get(s2).get(s1);
+		}
 		
 		T t1 = sentences.get(s1).text;
 		T t2 = sentences.get(s2).text;
 		
 		double similarity = t1.similarity(t2);
 		
+//		return similarity;
+		
 		
 		//TODO normalized neighbour sim
-		return 0.5 * (similarity-minNeighbourSim) / (maxNeighbourSim-minNeighbourSim);
+		double FACTOR = 0.5; //avg. max belief for n-grams
+		similarity = FACTOR * (similarity-minNeighbourSim) / (maxNeighbourSim-minNeighbourSim); 
+//		relatednessMemoization.get(s1).put(s2, normalizedSim);
+		
+		if(similarity > 1){
+			similarity = 1;
+		}
+//		return similarity;
 		
 		
 //		double relatedness = (t1.similarity(t2) - minNeighbourSimilarity) / (maxNeighbourSimilarity - minNeighbourSimilarity);
-//		double relatedness = 0;
-//		if(s2 == s1 + 1){
-//			relatedness = relatednessToPrevious(t2);
-//		}else if(s1 == s2 + 1){
-//			relatedness = relatednessToPrevious(t1);
-//		}
+		
+		double relatedness = 0;
+		if(s2 == s1 + 1){
+			relatedness = relatednessToPrevious(t2);
+		}else if(s1 == s2 + 1){
+			relatedness = relatednessToPrevious(t1);
+		}
 //		
 ////		double similarity = (unnormalizedSimilarity - minSimilarity)/(maxSimilarity-minSimilarity);
-//		relatedness = Math.max(relatedness, similarity);
+		relatedness = Math.max(relatedness, similarity);
 ////		relatednessMemoization.get(s1).put(s2, relatedness);
-//		return relatedness;
+		return relatedness;
 	}
 	
 	private double relatednessToPrevious(T text){

@@ -78,7 +78,11 @@ public abstract class Result {
 	}
 	
 	protected double fMeasure(double precision, double recall, double beta){
-		return (1+Math.pow(beta, 2)) * (precision*recall)/(Math.pow(beta, 2)*precision + recall);
+		double f = (1+Math.pow(beta, 2)) * (precision*recall)/(Math.pow(beta, 2)*precision + recall);
+		if(Double.isNaN(f)){
+			return 0;
+		}
+		return f;
 	}
 	
 	

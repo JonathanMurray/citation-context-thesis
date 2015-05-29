@@ -1,5 +1,7 @@
 package mrf;
 
+import weka.classifiers.evaluation.ThresholdCurve;
+
 public class MRF_params {
 	
 	private static int DEFAULT_NEIGHBOURHOOD = 3;
@@ -21,4 +23,7 @@ public class MRF_params {
 		this(DEFAULT_NEIGHBOURHOOD, DEFAULT_BELIEF_THRESHOLD, DEFAULT_MAX_RUNS);
 	}
 	
+	public String toString(){
+		return "{neighbourhood: " + neighbourhood + ", threshold: " + beliefThreshold + ", maxRuns: " + maxRuns + "}";
+	}
 }

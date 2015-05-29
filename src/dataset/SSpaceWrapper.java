@@ -246,13 +246,13 @@ public class SSpaceWrapper {
 			if (vec != null) {
 //				System.out.println("word: " + word);
 //				System.out.println("word vector in dcument. Magnitude : " + vec.magnitude());
-				double[] normalizedWordVec = new double[sspace.getVectorLength()];
+//				double[] normalizedWordVec = new double[sspace.getVectorLength()];
 //				double[] normalizedWordVecMinusMean = new double[sspace.getVectorLength()];
 				for (int i = 0; i < sspace.getVectorLength(); i++) {
-					double termVectorVal = (double) vec.getValue(i).doubleValue() / vec.magnitude();
+					double termVectorVal = vec.getValue(i).doubleValue() / vec.magnitude();
 					double termMinusMean = termVectorVal - meanVector[i];
 					docVector[i] += termMinusMean;
-					normalizedWordVec[i] = termVectorVal;
+//					normalizedWordVec[i] = termVectorVal;
 //					normalizedWordVecMinusMean[i] = termMinusMean;
 				}
 //				System.out.println("Normalized word vec. Magnitude : " + magnitude(normalizedWordVec));
@@ -266,6 +266,8 @@ public class SSpaceWrapper {
 				docVector[i] /= numVecsInDoc;
 			}	
 		}
+		
+		
 		
 //		System.out.println("vector for document. Magnitude : " + magnitude(docVector));
 		return docVector;

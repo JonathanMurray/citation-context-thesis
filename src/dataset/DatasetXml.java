@@ -262,17 +262,19 @@ public class DatasetXml {
 	public static <T extends Text> CitingPaper<T> citer(Class<T> textClass, Element citerTag){
 		List<Sentence<T>> sentences = new ArrayList<Sentence<T>>();
 		String title = citerTag.attr(ATTR_TITLE);
+		int sentenceIndex = 0;
 		for(Element sentenceTag : citerTag.select(TAG_SENTENCES).first().children()){
-			Sentence<T> sentence = sentence(textClass, sentenceTag);
+			Sentence<T> sentence = sentence(textClass, sentenceTag, sentenceIndex);
 			sentences.add(sentence);
+			sentenceIndex ++;
 		}
 		return new CitingPaper<T>(title, sentences);
 	}
 	
-	public static <T extends Text> Sentence<T> sentence(Class<T> textClass, Element sentenceTag){
+	public static <T extends Text> Sentence<T> sentence(Class<T> textClass, Element sentenceTag, int sentenceIndex){
 		String type = sentenceTag.attr(ATTR_SENTENCE_TYPE);
 		Element textTag = sentenceTag.select(TAG_TEXT).first();
-		return new Sentence<T>(SentenceType.valueOf(type), text(textClass, textTag));
+		return new Sentence<T>(SentenceType.valueOf(type), text(textClass, textTag), sentenceIndex);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -283,8 +285,8 @@ public class DatasetXml {
 			return (T) TextWithNgrams.fromXml(textTag);
 		}else if(textClass.equals(TextWithSkipgrams.class)){
 			return (T) TextWithSkipgrams.fromXml(textTag);
-		}else if(textClass.equals(TextWithConcepts.class)){
-			return (T) TextWithConcepts.fromXml(textTag);
+		}else if(textClass.equals(TextWithWiki.class)){
+			return (T) TextWithWiki.fromXml(textTag);
 		}else if(textClass.equals(TextWithSynsets.class)){
 			File wordnetDir = new File(Environment.resources(), "wordnet-dict");
 			IDictionary dict = new Dictionary(wordnetDir);

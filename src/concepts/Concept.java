@@ -24,12 +24,13 @@ public class Concept{
 		while(it.hasNext()){
 			int index = it.next();
 			if(((Concept)other).indices.contains(index)){
-				sum += 1;
+//				sum += 1;
+				return 1;
 			}
 		}
-		if(sum > 0){
-			return sum / sqrtSize / other.sqrtSize;
-		}
+//		if(sum > 0){
+//			return sum / sqrtSize / other.sqrtSize;
+//		}
 		return 0;
 	}
 

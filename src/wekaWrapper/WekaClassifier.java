@@ -209,14 +209,14 @@ public class WekaClassifier {
 	public static Instances mergeDatasets(List<Instances> datasets, int exceptIndex){
 		Instances merged = null;
 		printer.print("merging datasets ... ");
-		for(int trainIndex = 0; trainIndex < datasets.size(); trainIndex++){
-			if(trainIndex == exceptIndex){
+		for(int index = 0; index < datasets.size(); index++){
+			if(index == exceptIndex){
 				continue;
 			}
 			if(merged == null){
-				merged = datasets.get(trainIndex);
+				merged = datasets.get(index);
 			}else{
-				merged = merge(merged, datasets.get(trainIndex));
+				merged = merge(merged, datasets.get(index));
 			}
 		}
 		if(merged == null){

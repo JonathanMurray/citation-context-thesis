@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 
 import concepts.SynsetExtractor;
+import concepts.WikiGraph;
+import concepts.WikiGraphFactory;
 import util.Environment;
 import util.Lemmatizer;
 import util.Printer;
@@ -15,6 +17,7 @@ import dataset.NgramIdf;
 import dataset.SSpaceWrapper;
 import dataset.Text;
 import dataset.TextParams;
+import dataset.TextWithWiki;
 import dataset.TextWithSkipgrams;
 import dataset.TextWithNgrams;
 import dataset.TextWithSspace;
@@ -24,7 +27,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) throws ClassNotFoundException {
-		Class textClass = TextWithSynsets.class;
+		Class textClass = TextWithWiki.class;
 		int numDatasets = -1;
 		
 		if(args.length == 1){
@@ -53,6 +56,8 @@ public class CreateDatasetsSaveXml {
 			withSynsets(numDatasets); //TODO numdatasets for others too
 		}else if(textClass == TextWithSspace.class){
 			withSspace();
+		}else if(textClass == TextWithWiki.class){
+			withWiki();
 		}
 	}
 	
@@ -122,7 +127,7 @@ public class CreateDatasetsSaveXml {
 					, 0);
 			Dataset<TextWithSynsets> dataset = DatasetFactory.fromOtherRaw(textParams, other);
 			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
-			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-synsets.xml"));
+			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-synsets-small.xml"));
 		}
 	}
 	
@@ -147,6 +152,29 @@ public class CreateDatasetsSaveXml {
 		}
 		for(Dataset<TextWithSkipgrams> dataset : datasets){
 			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-skipgrams.xml"));
+		}
+	}
+	
+	private static void withWiki(){
+		File resourcesDir = new File(Environment.resources());
+		File serDir = new File(resourcesDir, "ser");
+		ArrayList<Dataset<TextWithWiki>> datasets = new ArrayList<Dataset<TextWithWiki>>();
+		WikiGraph wikiGraph = WikiGraphFactory.loadWikiGraph(new File(serDir, "linksSingleWords.ser"), new File(serDir, "toIndexSingleWords.ser"), false);
+		NgramIdf ngramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"), NgramIdf.DEFAULT_NGRAM_MIN_COUNT);
+		for(int i = 0; i < LABELS.length; i++){
+			String label = LABELS[i];
+			Printer.printBigProgressHeader(i, LABELS.length);
+			Dataset<Text> other = DatasetXml.parseXmlFile(
+					Text.class, 
+					new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml")
+					, 0);
+			
+			Dataset<TextWithWiki> dataset = DatasetFactory.fromOtherRaw(TextParams.withWikiConcepts(ngramIdf, wikiGraph), other);
+			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
+			datasets.add(dataset);
+		}
+		for(Dataset<TextWithWiki> dataset : datasets){
+			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-wiki-concepts.xml"));
 		}
 	}
 }

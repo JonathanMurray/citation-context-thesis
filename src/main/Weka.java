@@ -20,7 +20,7 @@ public class Weka {
 		if(args.length >= 1){
 			numDatasets = Integer.parseInt(args[0]);
 		}
-		String label = "-ngrams-mrf-05";
+		String label = "-my-features-mrf-test";
 		if(args.length >= 2){
 			label = args[1];
 		}

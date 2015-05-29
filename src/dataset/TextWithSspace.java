@@ -14,10 +14,11 @@ public class TextWithSspace extends TextWithNgrams{
 	
 	public TextWithSspace(String raw, List<String> rawWords, List<String> lemmas, Ngrams ngramsTfIdf, SSpaceWrapper sspace) {
 		super(raw, rawWords, lemmas, ngramsTfIdf);
-//		this.sspace = sspace;
-//		this.vector = sspace.getVectorForDocument(lemmas);
-		//TODO
-		this.vector = sspace.getVectorForDocumentLSASpecial(lemmas);
+
+		//		this.sspace = sspace;
+		this.vector = sspace.getVectorForDocument(lemmas);
+//		this.vector = sspace.getVectorForDocumentLSASpecial(lemmas);
+		
 //		System.out.println(Arrays.toString(vector));
 //		System.out.println();
 //		System.out.println();
@@ -25,11 +26,15 @@ public class TextWithSspace extends TextWithNgrams{
 	}
 	
 	public double vectorSim(TextWithSspace other){
+//		double sim = Similarity.euclideanDistance(vector, other.vector);
+//		double sim = Similarity.linSimilarity(vector, other.vector);
 		double sim = Similarity.cosineSimilarity(vector, other.vector);
 		if(Double.isNaN(sim)){
-			System.out.println("this: " + Arrays.toString(vector));
-			System.out.println("\nother: " + Arrays.toString(other.vector));
-			throw new RuntimeException("sim is NaN");
+//			System.out.println("this: " + Arrays.toString(vector));
+//			System.out.println("\nother: " + Arrays.toString(other.vector));
+//			throw new RuntimeException("sim is NaN");
+//			System.out.println("sim is NaN");
+			sim = 0;
 		}
 		return sim;
 	}

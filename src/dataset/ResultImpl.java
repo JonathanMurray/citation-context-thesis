@@ -1,27 +1,28 @@
 package dataset;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import weka.classifiers.evaluation.Prediction;
 
 
 
-public class ResultImpl extends Result{
+public class ResultImpl<T extends Text> extends Result{
 	private String label;
 	private int truePositives;
 	private int falsePositives;
 	private int trueNegatives;
 	private int falseNegatives;
 	private long passedMillis;
-	private List<Double> classificationProbabilities;
+	private HashMap<UniqueSentenceKey<T>, Double> classificationProbabilities;
 	private ArrayList<Prediction> predictions;
 	
 	public ResultImpl(String label){
-		this(label, 0,0,0,0,new ArrayList<Double>(), 0, new ArrayList<Prediction>());
+		this(label, 0,0,0,0,new HashMap<UniqueSentenceKey<T>, Double>(), 0, new ArrayList<Prediction>());
 	}
 	
-	public ResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, List<Double> classificationProbabilities, 
+	public ResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, HashMap<UniqueSentenceKey<T>, Double> classificationProbabilities, 
 			long passedMillis, ArrayList<Prediction> predicitions){
 		this.label = label;
 		this.truePositives = truePositives;
@@ -33,7 +34,7 @@ public class ResultImpl extends Result{
 		this.predictions = predicitions;
 	}
 	
-	public List<Double> classificationProbabilities(){
+	public HashMap<UniqueSentenceKey<T>, Double> classificationProbabilities(){
 		return classificationProbabilities;
 	}
 	
@@ -50,7 +51,7 @@ public class ResultImpl extends Result{
 		trueNegatives += other.trueNegatives;
 		falseNegatives += other.falseNegatives;
 		passedMillis += other.passedMillis;
-		classificationProbabilities.addAll(other.classificationProbabilities);
+		classificationProbabilities.putAll(other.classificationProbabilities);
 		predictions.addAll(other.predictions);
 	}
 	

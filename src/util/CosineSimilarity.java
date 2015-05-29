@@ -6,14 +6,14 @@ import java.util.Iterator;
 
 public class CosineSimilarity {
 	
-	public static double calculateCosineSimilarity(TObjectDoubleHashMap<String> a, TObjectDoubleHashMap<String> b){
+	public static <T> double calculateCosineSimilarity(TObjectDoubleHashMap<T> a, TObjectDoubleHashMap<T> b){
 		if(a.size() < 1 || b.size() < 1){
 			return 0;
 		}
 		double sum = 0;
-		Iterator<String> aIt = a.keySet().iterator();
+		Iterator<T> aIt = a.keySet().iterator();
 		while(aIt.hasNext()){
-			String key = aIt.next();
+			T key = aIt.next();
 			if(b.containsKey(key)){
 				sum += a.get(key) * b.get(key);
 			}
@@ -21,9 +21,9 @@ public class CosineSimilarity {
 		return sum / (calculateNorm(a) * calculateNorm(b));
 	}
 	
-	public static double calculateNorm(TObjectDoubleHashMap<String> feature){
+	public static <T> double calculateNorm(TObjectDoubleHashMap<T> feature){
 		double norm = 0;
-		Iterator<String> it = feature.keySet().iterator();
+		Iterator<T> it = feature.keySet().iterator();
 		while(it.hasNext()){
 			norm += Math.pow(feature.get(it.next()), 2);
 		}

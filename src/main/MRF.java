@@ -18,12 +18,13 @@ import dataset.TextWithNgrams;
 import dataset.TextWithSkipgrams;
 import dataset.TextWithSspace;
 import dataset.TextWithSynsets;
+import dataset.TextWithWiki;
 
 public class MRF {
 
 	public static void main(String[] args) throws ClassNotFoundException {
-		Class textClass = TextWithSynsets.class;
-		String textClassLabel = "with-synsets";
+		Class textClass = TextWithWiki.class;
+		String textClassLabel = "with-wiki-concepts";
 		int numDatasets = -1;
 		
 		if(args.length == 2){
@@ -79,12 +80,21 @@ public class MRF {
 		}
 		
 		final int neighbourhood = 4;
-		final double beliefThreshold = 0.5;
+		final double beliefThreshold = 0.4;
 		final int maxRuns = 100;
 		MRF_params params = new MRF_params(neighbourhood, beliefThreshold, maxRuns);
 		
 //		List<ResultImpl> results = new MRF_classifier<T>(params).classify(datasets);
-		List<ResultImpl> results = new Original_MRF_classifier<T>(params).classify(datasets);
+		
+		List<ArrayList<ResultImpl>> thresholdResults = new ArrayList<ArrayList<ResultImpl>>();
+		for(double threshold = 0.1; threshold <= 0.9; threshold += 0.1){
+			params = new MRF_params(neighbourhood, threshold, maxRuns);
+			ArrayList<ResultImpl> results = new Original_MRF_classifier<T>(params).classify(datasets);
+			thresholdResults.add(results);
+		}
+		for(List<ResultImpl> results : thresholdResults){
+			Printer.printMultipleResults("MRF-wiki", results, datasets, false);
+		}
 		
 		
 		
@@ -94,9 +104,8 @@ public class MRF {
 //		int classIndex = 1;
 //		WekaClassifier.plotROC_curve(mergedResults.predictions(), classIndex);
 		
-		System.out.println("FULL RESULTS:");
-		Printer.printMultipleResults("MRF-wiki", results, datasets, true);
-		System.out.println("COMPACT RESULTS:");
-		Printer.printMultipleResults("MRF-wiki", results, datasets, false);
+//		System.out.println("FULL RESULTS:");
+//		Printer.printMultipleResults("MRF-wiki", results, datasets, true);
+		
 	}
 }

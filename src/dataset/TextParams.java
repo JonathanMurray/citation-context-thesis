@@ -50,13 +50,13 @@ public class TextParams<T extends Text>{
 		return p;
 	}
 	
-//	public static TextParams<TextWithConcepts> withWikiConcepts(NgramIdf wordIdf, WikiGraph wikiGraph){
-//		TextParams<TextWithConcepts> p = new TextParams<TextWithConcepts>(TextWithConcepts.class);
-//		p.ngramIdf = wordIdf;
-//		p.wikiGraph = wikiGraph;
-//		return p;
-//	}
-//	
+	public static TextParams<TextWithWiki> withWikiConcepts(NgramIdf wordIdf, WikiGraph wikiGraph){
+		TextParams<TextWithWiki> p = new TextParams<TextWithWiki>(TextWithWiki.class);
+		p.ngramIdf = wordIdf;
+		p.wikiGraph = wikiGraph;
+		return p;
+	}
+	
 //	public static TextParams<TextWithWordnet> withWordnet(WordNet wordnet){
 //		TextParams<TextWithWordnet> p = new TextParams<TextWithWordnet>(TextWithWordnet.class);
 //		p.wordnet = wordnet;

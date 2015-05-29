@@ -2,19 +2,22 @@ package dataset;
 
 
 public class Sentence<T extends Text> {
-	public String sentiment;
+//	public String sentiment;
 	public SentenceType type;
 	public T text;
+	public int sentenceIndex; //In a specific paper (starts from 0)
 	
-	public Sentence(String sentiment, T text){
+	public Sentence(String sentiment, T text, int sentenceIndex){
 		this.text = text;
-		this.sentiment = sentiment;
+//		this.sentiment = sentiment;
 		this.type = typeFromSentiment(sentiment);
+		this.sentenceIndex = sentenceIndex;
 	}
 	
-	public Sentence(SentenceType type, T text){
+	public Sentence(SentenceType type, T text, int sentenceIndex){
 		this.text = text;
 		this.type = type;
+		this.sentenceIndex = sentenceIndex;
 	}
 	
 	public static SentenceType typeFromSentiment(String sentiment){

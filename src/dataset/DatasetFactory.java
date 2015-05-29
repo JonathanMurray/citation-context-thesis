@@ -82,11 +82,12 @@ public class DatasetFactory {
 			printer.progress();
 			List<Sentence<T>> sentences = new ArrayList<Sentence<T>>();
 			String citerTitle = citer.childNode(1).attr("title");
+			int sentenceIndex = 0;
 			for(int i = 3; i < citer.childNodeSize(); i+= 2){
 				Node line = citer.childNode(i);
 				String sentiment = getTypeFromClassAttr(line.attr("class"));
 				String rawText = line.attr("title").split("\t")[1].trim().replaceAll(" +", " ");
-				Sentence<T> sentence = new Sentence<T>(sentiment, TextFactory.createText(params.textParams, rawText));
+				Sentence<T> sentence = new Sentence<T>(sentiment, TextFactory.createText(params.textParams, rawText), sentenceIndex);
 				if(isStartOfReferencesSection(sentence.text.raw)){
 					printer.println("'" + citerTitle + "' reached start of references at " + i + " / " + citer.childNodeSize());
 					break;
@@ -95,6 +96,7 @@ public class DatasetFactory {
 				if(sentence.type == SentenceType.EXPLICIT_REFERENCE){
 					mergedExplicitCitations.append(rawText + "\n");
 				}
+				sentenceIndex ++;
 			}
 			citers.add(new CitingPaper<T>(citerTitle, sentences));
 		}
@@ -126,7 +128,7 @@ public class DatasetFactory {
 				for(Sentence<T2> sentence2 : citer2.sentences){
 					T text = TextFactory.createText(params, sentence2.text.raw);
 //					System.out.print(".");
-					Sentence<T> sentence = new Sentence<T>(sentence2.type, text);
+					Sentence<T> sentence = new Sentence<T>(sentence2.type, text, sentence2.sentenceIndex);
 					sentences.add(sentence);
 				}
 				return new CitingPaper<T>(citer2.title, sentences);

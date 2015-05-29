@@ -4,13 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.jsoup.nodes.Element;
 
 import util.Environment;
-import util.Printer;
 import concepts.SynsetExtractor;
 import edu.cmu.lti.jawjaw.pobj.POS;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
@@ -28,6 +28,7 @@ import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.WordID;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 public class TextWithSynsets extends TextWithNgrams{
 	
@@ -41,8 +42,8 @@ public class TextWithSynsets extends TextWithNgrams{
 		Concept c1 = new Concept("02710044-n");
 		Concept c2 = new Concept("10023039-n");
 		
-		Relatedness r= path.calcRelatednessOfSynset(c1, c2);
-		System.out.println(r.getScore());
+//		Relatedness r= path.calcRelatednessOfSynset(c1, c2);
+//		System.out.println(r.getScore());
 		
 //		System.out.println(c1);
 //		System.out.println(s);
@@ -68,14 +69,14 @@ public class TextWithSynsets extends TextWithNgrams{
 	private static final String XML_TEXT_CLASS = "text-with-synsets";
 	
 	private static final ILexicalDatabase db = new NictWordNet();
-    private static final RelatednessCalculator lin = new Lin(db);
-    private static final RelatednessCalculator wup = new WuPalmer(db);
-    private static final RelatednessCalculator path = new Path(db);
+    static{
+    	SynsetSimilarity.setup(db);
+    }
     
 
 	private TDoubleArrayList scoreBuffer = new TDoubleArrayList();
 	private List<ISynset> synsets;
-	private List<Concept> concepts;
+	private List<MyConcept> concepts;
 	
 	
 	
@@ -87,7 +88,7 @@ public class TextWithSynsets extends TextWithNgrams{
 	}
 	
 	private void setupConcepts(){
-		concepts = new ArrayList<Concept>();
+		concepts = new ArrayList<MyConcept>();
 		for(ISynset s : synsets){
 			String synsetString = s.toString();
 			String conceptString = synsetString.substring(11, 20);
@@ -95,7 +96,7 @@ public class TextWithSynsets extends TextWithNgrams{
 			conceptString += pos;
 //			System.out.println("\n\n\n\n" + synsetString);
 //			System.out.println("\n" + pos);
-			concepts.add(new Concept(conceptString, POS.valueOf("" + pos)));
+			concepts.add(new MyConcept(conceptString, POS.valueOf("" + pos)));
 		}
 	}
 	
@@ -139,13 +140,13 @@ public class TextWithSynsets extends TextWithNgrams{
 	@Override
 	public double similarity(Object o){
 		TextWithSynsets other = (TextWithSynsets)o;
-		double ngramSimilarity =  ngramsTfIdf.similarity(other.ngramsTfIdf, 3);
+//		double ngramSimilarity =  ngramsTfIdf.similarity(other.ngramsTfIdf, 3);
 		double synsetSimilarity = 0;
 		int numScores = 0;
 		scoreBuffer.reset();
-		for(Concept concept : concepts){
-			for(Concept otherConcept : other.concepts){
-				double score = wup.calcRelatednessOfSynset(concept, otherConcept).getScore();
+		for(MyConcept concept : concepts){
+			for(MyConcept otherConcept : other.concepts){
+				double score = SynsetSimilarity.INSTANCE.sim(concept, otherConcept);
 				if(score != -1){ 
 //					synsetSimilarity += score; //TODO different calculators have different min/max-scores. We want [0-1] 
 					numScores ++;
@@ -156,13 +157,13 @@ public class TextWithSynsets extends TextWithNgrams{
 		
 		//TODO only count highest 50% of scores
 		if(numScores > 0){
-			scoreBuffer.sort();
+//			scoreBuffer.sort();
 //			int start = scoreBuffer.size()/2;
 			int start = 0;
 			for(int i = start; i < scoreBuffer.size(); i++){
 				synsetSimilarity += scoreBuffer.get(i);
 			}
-			synsetSimilarity /= (scoreBuffer.size() - start);
+			synsetSimilarity /= ((double)scoreBuffer.size() - start);
 //			synsetSimilarity /= numScores;
 		}
 		
@@ -187,6 +188,85 @@ public class TextWithSynsets extends TextWithNgrams{
 //		double weightedNgram = (1-synsetWeight)*ngramSimilarity;
 ////		System.out.println(Printer.toString(weightedSynset) + "  ---  " + weightedNgram);
 //		return weightedSynset + weightedNgram;
+	}
+	
+	private static class SynsetSimilarity{
+		HashMap<MyConcept, TObjectDoubleHashMap<MyConcept>> cached = new HashMap<MyConcept, TObjectDoubleHashMap<MyConcept>>();
+
+		private RelatednessCalculator lin = new Lin(db);
+	    private RelatednessCalculator wup = new WuPalmer(db);
+	    private RelatednessCalculator path = new Path(db);
+	    
+		static SynsetSimilarity INSTANCE;
+		
+		private static void setup(ILexicalDatabase db){
+			INSTANCE = new SynsetSimilarity();
+			INSTANCE.lin = new Lin(db);
+			INSTANCE.wup = new WuPalmer(db);
+			INSTANCE.path = new Path(db);
+		}
+		
+		static int hits = 0;
+			
+		double sim(MyConcept a, MyConcept b){
+			if(cached.containsKey(a)){
+				if(cached.get(a).containsKey(b)){
+					return cached.get(a).get(b);
+				}else{
+					double sim = simNoCache(a, b);
+					cached.get(a).put(b, sim);
+//					hits++;
+//					if(hits % 100 == 0){
+//						System.out.println(hits + " hits!");
+//					}
+					return sim;
+				}
+			}else if(cached.containsKey(b)){
+				if(cached.get(b).containsKey(a)){
+					return cached.get(b).get(a);
+				}else{
+					double sim = simNoCache(a, b);
+					cached.get(b).put(a, sim);
+//					hits++;
+//					if(hits % 100 == 0){
+//						System.out.println(hits + " hits!");
+//					}
+					return sim;
+				}
+			}else{
+				TObjectDoubleHashMap<MyConcept> aMap = new TObjectDoubleHashMap<MyConcept>();
+				cached.put(a, aMap);
+				if(cached.size() % 500 == 0){
+					System.out.println("Synsets cache size: " + cached.size());
+				}
+				
+				double sim = simNoCache(a, b);
+				aMap.put(b, sim);
+				return sim;
+			}
+		}
+		
+		private double simNoCache(Concept a, Concept b){
+			return path.calcRelatednessOfSynset(a, b).getScore();
+		}
+		
+				
+	}
+	
+	private static class MyConcept extends Concept{
+		public MyConcept(String str, POS pos) {
+			super(str, pos);
+		}
+
+		@Override
+		public int hashCode(){
+			return (super.getSynset() + super.getPos().toString()).hashCode();
+		}
+		
+		public boolean equals(Object other){
+			return other instanceof MyConcept && hashCode() == other.hashCode();
+		}
+		
 	}
 	
 }

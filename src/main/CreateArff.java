@@ -2,10 +2,12 @@ package main;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import mrf.MRF_classifier;
 import mrf.MRF_params;
+import mrf.Original_MRF_classifier;
 import util.Environment;
 import util.Printer;
 import wekaWrapper.InstanceHandler;
@@ -15,13 +17,14 @@ import dataset.DatasetXml;
 import dataset.Text;
 import dataset.TextWithNgrams;
 import dataset.TextWithSspace;
+import dataset.UniqueSentenceKey;
 
 
 public class CreateArff {
 	
 	public static void main(String[] args) throws ClassNotFoundException {
 		Class textClass = TextWithSspace.class;
-		String outAfterLabel = "-ngrams-mrf-05";
+		String outAfterLabel = "-my-features-mrf-test";
 		
 		if(args.length == 2){
 			textClass = Class.forName(args[0]);
@@ -47,8 +50,8 @@ public class CreateArff {
 		
 		final boolean onlyText = false; //TODO
 		
-		MRF_classifier<TextWithNgrams> mrfClassifier = 
-				new MRF_classifier<TextWithNgrams>(new MRF_params(4, 0.5, 100));
+		Original_MRF_classifier<TextWithNgrams> mrfClassifier = 
+				new Original_MRF_classifier<TextWithNgrams>(new MRF_params(4, 0.5, 100));
 		
 		for(int i = 0; i < labels.length; i++){
 			String label = labels[i];
@@ -62,7 +65,7 @@ public class CreateArff {
 			System.out.println("(" + dataset.citedMainAuthor + ")");
 			
 			//TODO
-			List<Double> mrfProbabilities = mrfClassifier.classify(dataset).classificationProbabilities();
+			HashMap<UniqueSentenceKey<TextWithNgrams>, Double> mrfProbabilities =  mrfClassifier.classify(dataset).classificationProbabilities();
 //			List<Double> mrfProbabilities = null;
 			
 			ArrayList<SentenceInstance> balancedInstances =  InstanceHandler.createInstances(dataset, onlyText, true, mrfProbabilities);

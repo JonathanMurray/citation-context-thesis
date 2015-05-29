@@ -36,6 +36,6 @@ public class TextWithNgrams extends Text{
 	@Override
 	public double similarity(Object o){
 		TextWithNgrams other = (TextWithNgrams)o;
-		return ngramsTfIdf.similarity(other.ngramsTfIdf, 2);
+		return ngramsTfIdf.similarity(other.ngramsTfIdf, 1,1);
 	}
 }

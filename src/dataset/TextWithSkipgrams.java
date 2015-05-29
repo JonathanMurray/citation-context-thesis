@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.jsoup.nodes.Element;
 
+import util.Printer;
+
 public class TextWithSkipgrams extends TextWithNgrams{
 	
 	protected static final String XML_TEXT_CLASS = "text-with-skipgrams";
@@ -35,10 +37,11 @@ public class TextWithSkipgrams extends TextWithNgrams{
 	@Override
 	public double similarity(Object o){
 		TextWithSkipgrams other = (TextWithSkipgrams)o;
-		double ngramSimiliarity = ngramsTfIdf.similarity(other.ngramsTfIdf, 1);
-		double skipgramSimilarity = skipgramsTfIdf.similarity(other.skipgramsTfIdf, 3);
-		return (ngramSimiliarity + skipgramSimilarity) / 2;
-//		return ngramSimiliarity; //TODO
+		double ngramSimiliarity = ngramsTfIdf.similarity(other.ngramsTfIdf, 1,1);
+		double skipgramSimilarity = skipgramsTfIdf.similarity(other.skipgramsTfIdf, 2,2);
+//		System.out.println(Printer.toString(ngramSimiliarity) + "   ;    " + skipgramSimilarity); //TODO
+//		return ngramSimiliarity + skipgramSimilarity;
+		return ngramsTfIdf.similarity(other.ngramsTfIdf, 1, 1) + ngramsTfIdf.similarity(other.ngramsTfIdf, 2,2);
 	}
 	
 	public String toString(){

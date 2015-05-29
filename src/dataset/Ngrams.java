@@ -64,18 +64,18 @@ public class Ngrams {
 	
 	
 	//TODO this version uses bigrams and trigrams too
-	public double similarity(Ngrams other, int maxLevels){
+	public double similarity(Ngrams other, int minN, int maxN){
 		if(ngramMaps.size() != other.ngramMaps.size()){
 			throw new IllegalArgumentException("this: " + ngramMaps.size() + "-grams. Other: " + other.ngramMaps.size() + "-grams.");
 		}
 		double sum = 0; 
-		int num = Math.min(maxLevels, ngramMaps.size());
-		for(int i = 0; i < num; i++){
+		int max = Math.min(maxN, ngramMaps.size());
+		for(int i = minN-1; i < max; i++){
 			TObjectDoubleHashMap<String> mine = ngramMaps.get(i);
 			TObjectDoubleHashMap<String> others = other.ngramMaps.get(i);
 			sum += CosineSimilarity.calculateCosineSimilarity(mine, others);
 		}
-		return sum / (double)num;
+		return sum / ((double)max-minN+1);
 		//I suppose similarity might in general be higher when sticking to low n-grams. 
 		//Shouldn't be a problem though since similarities should be normalized against each other
 	}
