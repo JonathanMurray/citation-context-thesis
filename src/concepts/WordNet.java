@@ -24,7 +24,7 @@ import com.ibm.icu.text.DecimalFormat;
 import com.ibm.icu.text.NumberFormat;
 
 import dataset.NgramExtractor;
-import dataset.Texts;
+import dataset.TextUtil;
 import edu.cmu.lti.jawjaw.pobj.Synset;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
@@ -66,7 +66,12 @@ import edu.stanford.nlp.util.CoreMap;
 import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
-public class WordNet implements ConceptGraph{
+/**
+ * Not used in the thesis. Contains code for comparing sentences with WordNet synsets.
+ * @author jonathan
+ *
+ */
+public class WordNet{
 
 	private static Printer printer = new Printer(true);
 	

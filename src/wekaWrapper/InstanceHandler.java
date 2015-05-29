@@ -16,8 +16,8 @@ import dataset.Sentence;
 import dataset.SentenceType;
 import dataset.Text;
 import dataset.TextWithSspace;
-import dataset.Texts;
-import dataset.UniqueSentenceKey;
+import dataset.TextUtil;
+import dataset.SentenceKey;
 
 
 public class InstanceHandler {
@@ -109,7 +109,7 @@ public class InstanceHandler {
 	 * @return
 	 */
 	public static <T extends Text> ArrayList<SentenceInstance> createInstances(Dataset<T> dataset, 
-			boolean onlyText, boolean balanceData, HashMap<UniqueSentenceKey<T>, Double> mrfClassificationProbabilities){
+			boolean onlyText, boolean balanceData, HashMap<SentenceKey<T>, Double> mrfClassificationProbabilities){
 		
 		ArrayList<SentenceInstance> instances = new ArrayList<SentenceInstance>();
 		for(CitingPaper<T> citer : dataset.citers){
@@ -156,7 +156,7 @@ public class InstanceHandler {
 	}
 	
 	private static <T extends Text> Map<String, Comparable<?>> extractFeatures(Sentence<T> previous, Sentence<T> sentence, Sentence<T> next, Dataset<T> dataset, boolean onlyText, int sentenceNumber){
-		Texts texts = Texts.instance();
+		TextUtil texts = TextUtil.instance();
 		Map<String, Comparable<?>> features = new HashMap<String, Comparable<?>>();
 		List<String> rawWords = sentence.text.rawWords;
 		String[] prevWords = previous != null? previous.text.rawWords.toArray(new String[0]) : new String[0];
@@ -178,8 +178,8 @@ public class InstanceHandler {
 		return features;
 	}
 	
-	private static <T extends Text> Map<String, Comparable<?>> extractFeaturesEnhanced(List<Sentence<T>> sentences, int sentenceIndex, Dataset<T> dataset, HashMap<UniqueSentenceKey<T>, Double> mrfClassificationProbabilities, String citerTitle){
-		Texts texts = Texts.instance();
+	private static <T extends Text> Map<String, Comparable<?>> extractFeaturesEnhanced(List<Sentence<T>> sentences, int sentenceIndex, Dataset<T> dataset, HashMap<SentenceKey<T>, Double> mrfClassificationProbabilities, String citerTitle){
+		TextUtil texts = TextUtil.instance();
 		Map<String, Comparable<?>> features = new HashMap<String, Comparable<?>>();
 		Sentence<T> sentence = sentences.get(sentenceIndex);
 		Sentence<T> previous = null;
@@ -226,8 +226,8 @@ public class InstanceHandler {
 		features.put(FeatureName.TITLE_SIMILARITY.toString(), sentence.text.similarity(dataset.citedTitle));
 		features.put(FeatureName.CONTENT_SIMILARITY.toString(), sentence.text.similarity(dataset.citedContent));
 		features.put(FeatureName.CITE_SIMILARITY.toString(), sentence.text.similarity(dataset.mergedExplicitCitations));
-		features.put(FeatureName.STARTS_DET.toString(), Texts.instance().startsWithDet(rawWords));
-		features.put(FeatureName.CONTAINS_DET.toString(), Texts.instance().containsDet(rawWords));
+		features.put(FeatureName.STARTS_DET.toString(), TextUtil.instance().startsWithDet(rawWords));
+		features.put(FeatureName.CONTAINS_DET.toString(), TextUtil.instance().containsDet(rawWords));
 //		
 //		if(sentence.text instanceof TextWithSspace){
 //			double[] vector = ((TextWithSspace)sentence.text).vector;
@@ -241,7 +241,7 @@ public class InstanceHandler {
 		if(mrfClassificationProbabilities != null){
 //			System.out.println(mrfClassificationProbabilities); //TODO
 //			System.out.println(new UniqueSentenceKey<T>(citerTitle, sentence.sentenceIndex));
-			double prob = mrfClassificationProbabilities.get(new UniqueSentenceKey<T>(citerTitle, sentence.sentenceIndex));
+			double prob = mrfClassificationProbabilities.get(new SentenceKey<T>(citerTitle, sentence.sentenceIndex));
 			features.put(FeatureName.MRF_PROBABILITY.toString(), prob);
 		}
 		

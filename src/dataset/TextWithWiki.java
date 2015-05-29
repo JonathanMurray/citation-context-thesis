@@ -11,8 +11,14 @@ import java.util.List;
 import org.jsoup.nodes.Element;
 
 import util.CosineSimilarity;
-import concepts.Concept;
+import concepts.WikiConcept;
 
+/**
+ * Represents a piece of text as well as a set of Wikipedia-concepts,
+ * that can be compared to other sentences with cosine similarity
+ * @author jonathan
+ *
+ */
 public class TextWithWiki extends TextWithNgrams{
 	
 	protected static final String XML_TEXT_CLASS = "text-with-concepts";
@@ -22,11 +28,11 @@ public class TextWithWiki extends TextWithNgrams{
 //	public final double logNumConcepts;
 
 	public TextWithWiki(String raw, List<String> rawWords, List<String> lemmatizedWords, 
-			Ngrams ngrams, List<Concept> concepts) {
+			Ngrams ngrams, List<WikiConcept> concepts) {
 		super(raw, rawWords, lemmatizedWords, ngrams);
 //		this.concepts = concepts;
 		conceptMap = new TObjectDoubleHashMap<Integer>();
-		for(Concept c : concepts){
+		for(WikiConcept c : concepts){
 			TIntIterator it = c.indices.iterator();
 			while(it.hasNext()){
 				int index = it.next();
@@ -62,14 +68,14 @@ public class TextWithWiki extends TextWithNgrams{
 	
 	public static TextWithWiki fromXml(Element textTag){
 		TextWithNgrams textWithNgrams = TextWithNgrams.fromXml(textTag);
-		ArrayList<Concept> concepts = new ArrayList<Concept>();
+		ArrayList<WikiConcept> concepts = new ArrayList<WikiConcept>();
 		for(Element conceptTag : textTag.select("concepts").select("concept")){
 			TIntHashSet indices = new TIntHashSet();
 			String indicesString = conceptTag.text();
-			Texts.split(indicesString)
+			TextUtil.split(indicesString)
 				.map(indexString -> Integer.parseInt(indexString))
 				.forEach(index -> indices.add(index));
-			concepts.add(new Concept(indices));
+			concepts.add(new WikiConcept(indices));
 		}
 		return new TextWithWiki(textWithNgrams.raw, textWithNgrams.rawWords, textWithNgrams.lemmas, 
 				textWithNgrams.ngramsTfIdf, concepts);

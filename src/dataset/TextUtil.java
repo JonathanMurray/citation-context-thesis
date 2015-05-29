@@ -23,7 +23,7 @@ import util.Environment;
 import util.Stemmer;
 
 
-public class Texts {
+public class TextUtil {
 	
 	private List<String> determiners;
 	private List<String> workNouns;
@@ -38,16 +38,16 @@ public class Texts {
 	public final static Pattern HEADER = Pattern.compile("\\d+\\.\\d+.*");
 	private final static Pattern CONTAINS_YEAR = Pattern.compile(".*\\d\\d\\d?\\d?.*");
 	
-	private static Texts instance;
+	private static TextUtil instance;
 	
-	public static Texts instance(){
+	public static TextUtil instance(){
 		if(instance == null){
-			instance = new Texts();
+			instance = new TextUtil();
 		}
 		return instance;
 	}
 	
-	private Texts(){
+	private TextUtil(){
 		try {
 			setup();
 		} catch (IOException e) {

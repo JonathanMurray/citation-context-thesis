@@ -1,6 +1,12 @@
 package util;
 
-
+/**
+ * Handles environment variables that should be set on the computer running the
+ * programs. The point of this that a different directory structure can be used
+ * on different stations, without changing the code.
+ * @author jonathan
+ *
+ */
 public class Environment {
 	public static String exjobbHome(){
 		return System.getenv("EXJOBB_HOME");

@@ -7,6 +7,12 @@ import java.util.stream.Collectors;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 
+/**
+ * Represents a piece of text. This class is extended with more advanced 
+ * representations of text. 
+ * @author jonathan
+ *
+ */
 public class Text {
 	
 	protected static final String XML_TEXT_CLASS = "text";
@@ -46,9 +52,9 @@ public class Text {
 	
 	public static Text fromXml(Element textTag){
 		String raw = textTag.select("raw").text();
-		ArrayList<String> rawWords = Texts.split(raw).collect(Collectors.toCollection(ArrayList::new));
+		ArrayList<String> rawWords = TextUtil.split(raw).collect(Collectors.toCollection(ArrayList::new));
 		String lemmasString = textTag.select("lemmas").text();
-		List<String> lemmas = Texts.split(lemmasString).collect(Collectors.toCollection(ArrayList::new));
+		List<String> lemmas = TextUtil.split(lemmasString).collect(Collectors.toCollection(ArrayList::new));
 		return new Text(raw, rawWords, lemmas);
 	}
 	

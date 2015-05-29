@@ -1,5 +1,10 @@
 package wekaWrapper;
 
+/**
+ * Most features used in the WEKA-classification.
+ * @author jonathan
+ *
+ */
 public enum FeatureName{
 	DET_WORK,//Sentence contains a determiner followed by a work noun
 	PRONOUN,//Sentence starts with a 3rd person pronoun

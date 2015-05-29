@@ -4,14 +4,17 @@ import java.util.ArrayList;
 
 import weka.classifiers.evaluation.Prediction;
 
-
+/**
+ * Represents a classification result (both from the ML-approach and graphical
+ * approach).
+ * @author jonathan
+ *
+ */
 public abstract class Result {
-	
 	
 	public abstract long getPassedMillis();
 	public abstract double[][] confusionMatrix();
 	public abstract ArrayList<Prediction> predictions();
-	
 	public abstract String label();
 	
 	public double posPrecision(){

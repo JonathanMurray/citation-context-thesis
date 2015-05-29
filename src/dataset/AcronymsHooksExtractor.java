@@ -19,11 +19,11 @@ import java.util.stream.Collectors;
  * 
  * Special care is taken to avoid extracting author names and such as lexical hooks.
  */
-public class DatasetExtrasExtractor<T extends Text>{
+public class AcronymsHooksExtractor<T extends Text>{
 	
 	private Dataset<T> dataset;
 	
-	public DatasetExtrasExtractor(Dataset<T> dataset){
+	public AcronymsHooksExtractor(Dataset<T> dataset){
 		this.dataset = dataset;
 	}
 	
@@ -86,7 +86,7 @@ public class DatasetExtrasExtractor<T extends Text>{
 					String match = m.group();
 					String cleanMatch = clean(match, trailingS, makeUppercase);
 					if(dataset.cleanCitedMainAuthor.contains(cleanMatch) || dataset.citedMainAuthor.contains(cleanMatch)
-							|| Texts.instance().isStopword(cleanMatch.toLowerCase())){
+							|| TextUtil.instance().isStopword(cleanMatch.toLowerCase())){
 						continue;
 					}
 					if(!matchIsProbablyOtherAuthor(match, sentence.text.raw)){
@@ -165,7 +165,7 @@ public class DatasetExtrasExtractor<T extends Text>{
 		}
 		String rest = text.substring(after, text.length());
 		
-		ArrayList<String> restWords = Texts.split(rest).collect(Collectors.toCollection(ArrayList::new));
+		ArrayList<String> restWords = TextUtil.split(rest).collect(Collectors.toCollection(ArrayList::new));
 		if(!restWords.isEmpty()){
 			if(restWords.get(0).equals("et") || restWords.get(0).equals("and") || restWords.get(0).matches("\\A(19|20)?\\d\\d\\z")){
 				return true;

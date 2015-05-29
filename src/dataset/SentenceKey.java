@@ -1,9 +1,9 @@
 package dataset;
 
-public class UniqueSentenceKey<T extends Text> {
+public class SentenceKey<T extends Text> {
 	public String citerTitle;
 	public int sentenceIndex;
-	public UniqueSentenceKey(String citerTitle, int sentenceIndex) {
+	public SentenceKey(String citerTitle, int sentenceIndex) {
 		this.citerTitle = citerTitle;
 		this.sentenceIndex = sentenceIndex;
 	}
@@ -19,10 +19,10 @@ public class UniqueSentenceKey<T extends Text> {
 	
 	@Override
 	public boolean equals(Object other){
-		if(!(other instanceof UniqueSentenceKey<?>)){
+		if(!(other instanceof SentenceKey<?>)){
 			return false;
 		}
-		UniqueSentenceKey<T> o = ((UniqueSentenceKey<T>)other);
+		SentenceKey<T> o = ((SentenceKey<T>)other);
 		return citerTitle.equals(o.citerTitle) && sentenceIndex == o.sentenceIndex;
 	}
 }

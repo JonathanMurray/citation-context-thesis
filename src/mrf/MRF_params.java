@@ -1,7 +1,10 @@
 package mrf;
 
-import weka.classifiers.evaluation.ThresholdCurve;
-
+/**
+ * parameters for the graphical classification algorithm.
+ * @author jonathan
+ *
+ */
 public class MRF_params {
 	
 	private static int DEFAULT_NEIGHBOURHOOD = 3;

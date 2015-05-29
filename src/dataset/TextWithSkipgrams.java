@@ -6,6 +6,11 @@ import org.jsoup.nodes.Element;
 
 import util.Printer;
 
+/**
+ * Represents a piece of text with tf-idf scores for skip-grams
+ * @author jonathan
+ *
+ */
 public class TextWithSkipgrams extends TextWithNgrams{
 	
 	protected static final String XML_TEXT_CLASS = "text-with-skipgrams";
@@ -39,9 +44,7 @@ public class TextWithSkipgrams extends TextWithNgrams{
 		TextWithSkipgrams other = (TextWithSkipgrams)o;
 		double ngramSimiliarity = ngramsTfIdf.similarity(other.ngramsTfIdf, 1,1);
 		double skipgramSimilarity = skipgramsTfIdf.similarity(other.skipgramsTfIdf, 2,2);
-//		System.out.println(Printer.toString(ngramSimiliarity) + "   ;    " + skipgramSimilarity); //TODO
-//		return ngramSimiliarity + skipgramSimilarity;
-		return ngramsTfIdf.similarity(other.ngramsTfIdf, 1, 1) + ngramsTfIdf.similarity(other.ngramsTfIdf, 2,2);
+		return ngramSimiliarity + skipgramSimilarity; //TODO unigrams + skip-bigrams
 	}
 	
 	public String toString(){

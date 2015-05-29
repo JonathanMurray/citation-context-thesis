@@ -13,6 +13,11 @@ import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
 
+/**
+ * Not used in the thesis
+ * @author jonathan
+ *
+ */
 public class TextWithWordnet extends Text{
 	
 	public static final String XML_TEXT_CLASS = "text-with-wordnet";

@@ -8,9 +8,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import dataset.Texts;
+import dataset.TextUtil;
 
-public abstract class WikiGraph implements ConceptGraph{
+/**
+ * Represents a Wikipedia dump, that contains links between articles.
+ * Maps sentences to bags of concepts that can be used for semantic comparison of different sentences
+ * @author jonathan
+ *
+ */
+public abstract class WikiGraph{
 	
 	public static final boolean DEFAULT_ALLOW_STOPWORDS_AS_CONCEPTS = false;
 	private boolean allowStopwordsAsConcepts;
@@ -27,12 +33,12 @@ public abstract class WikiGraph implements ConceptGraph{
 		allowStopwordsAsConcepts = allow;
 	}
 
-	public List<Concept> sentenceToConcepts(Collection<String> words){
-		List<Concept> concepts = new ArrayList<Concept>();
+	public List<WikiConcept> sentenceToConcepts(Collection<String> words){
+		List<WikiConcept> concepts = new ArrayList<WikiConcept>();
 		for(String word : words){
 			String wordLowerCase = word.toLowerCase();
 			try{
-				if(allowStopwordsAsConcepts || !Texts.instance().isStopword(wordLowerCase)){
+				if(allowStopwordsAsConcepts || !TextUtil.instance().isStopword(wordLowerCase)){
 					int phraseIndex = getPhraseIndex(wordLowerCase);
 					concepts.add(phraseToConcept(phraseIndex));	
 				}
@@ -43,7 +49,7 @@ public abstract class WikiGraph implements ConceptGraph{
 		return concepts;
 	}
 	
-	public Concept phraseToConcept(int index){
+	public WikiConcept phraseToConcept(int index){
 		TIntHashSet related = new TIntHashSet();
 		related.add(index);
 		try{
@@ -54,7 +60,7 @@ public abstract class WikiGraph implements ConceptGraph{
 			//No links from phrase found
 		}
 		
-		return new Concept(related); 
+		return new WikiConcept(related); 
 	}
 	
 	protected abstract int getPhraseIndex(String phrase) throws NoSuchElementException;

@@ -14,6 +14,12 @@ import dataset.DatasetParams;
 import dataset.Text;
 import dataset.TextParams;
 
+/**
+ * Download PDF-files corresponding to the referenced papers in 
+ * Athar and Teufel's dataset.
+ * @author jonathan
+ *
+ */
 public class DownloadPDFs {
 	public static void downloadPDFsForHTML_Files(File htmlDir) throws IOException{
 		Printer.printBigHeader("Download PDFs for HTML-files");

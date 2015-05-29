@@ -10,6 +10,12 @@ import org.jsoup.nodes.Document;
 import util.NonThrowingFileWriter;
 import util.Printer;
 
+/**
+ * Represents idf (inverse document frequency) values for n-grams or skip-grams.
+ * These are needed to compute tf-idf scores for n-grams or skip-grams.
+ * @author jonathan
+ *
+ */
 public class NgramIdf {
 	
 	public final static int DEFAULT_NGRAM_MIN_COUNT = 5;

@@ -1,12 +1,17 @@
 package dataset;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.jsoup.nodes.Element;
 
 import edu.ucla.sspace.common.Similarity;
 
+/**
+ * Represents a piece of text with a corresponding vector from S-Space
+ * that can be used for semantic comparison
+ * @author jonathan
+ *
+ */
 public class TextWithSspace extends TextWithNgrams{
 	
 //	private SSpaceWrapper sspace;
@@ -18,11 +23,6 @@ public class TextWithSspace extends TextWithNgrams{
 		//		this.sspace = sspace;
 		this.vector = sspace.getVectorForDocument(lemmas);
 //		this.vector = sspace.getVectorForDocumentLSASpecial(lemmas);
-		
-//		System.out.println(Arrays.toString(vector));
-//		System.out.println();
-//		System.out.println();
-		
 	}
 	
 	public double vectorSim(TextWithSspace other){
@@ -41,10 +41,7 @@ public class TextWithSspace extends TextWithNgrams{
 
 	public double similarity(Object o){
 		TextWithSspace other = (TextWithSspace)o;
-//		double ngramSim = ngramsTfIdf.similarity(other.ngramsTfIdf, 1);
-//		return ngramSim; //TODO
-		return vectorSim(other); //TODO
-//		return (ngramSim + semSim) / 2;
+		return vectorSim(other);
 	}
 	
 	@Override

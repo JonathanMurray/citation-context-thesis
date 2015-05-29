@@ -16,6 +16,11 @@ import util.Environment;
 import util.Printer;
 import edu.uci.ics.crawler4j.crawler.exceptions.PageBiggerThanMaxSizeException;
 
+/**
+ * Download a large corpus of research papers from AAN.
+ * @author jonathan
+ *
+ */
 public class DownloadCorpus {
 	
 	static String resources = Environment.resources();

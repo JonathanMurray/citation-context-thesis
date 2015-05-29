@@ -153,7 +153,7 @@ public class Printer {
 			System.out.print(" \\\\ \\hline");
 			if(dataset != null){
 				System.out.print("  (" + dataset.citedMainAuthor + ")");
-				if(dataset != null && dataset.hasExtra){
+				if(dataset != null && dataset.hasAcronymsHooks){
 					System.out.print("    " + dataset.getLexicalHooks() + " " + dataset.getAcronyms() + " ");
 				}
 			}

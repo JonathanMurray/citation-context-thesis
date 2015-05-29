@@ -12,6 +12,11 @@ import weka.core.Instances;
 import wekaWrapper.WekaClassifier;
 import dataset.Result;
 
+/**
+ * Run the WEKA-classification and print the results.
+ * @author jonathan
+ *
+ */
 public class Weka {
 	
 	public static void main(String[] args){
@@ -60,7 +65,6 @@ public class Weka {
 		}
 		
 		
-		//TODO Run infogain on full dataset (on server?)
 //		HashMap<String,Double> infogains = smo.evaluateAttributes(WekaClassifier.mergeDatasets(wekaFullDatasets, -1));
 //		System.out.println("INFO-GAIN:");
 //		System.out.println(Printer.valueSortedMap(infogains, 50));

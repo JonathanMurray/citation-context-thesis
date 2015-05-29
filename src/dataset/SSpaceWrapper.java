@@ -32,6 +32,12 @@ import edu.ucla.sspace.vector.DoubleVector;
 import edu.ucla.sspace.vector.Vector;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
+/**
+ * Handles the distributed vector bases similarity measures of the thesis.
+ * The S-Space package is used.
+ * @author jonathan
+ *
+ */
 public class SSpaceWrapper {
 
 	private SemanticSpace sspace;

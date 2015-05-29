@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import mrf.MRF_params;
-import mrf.Original_MRF_classifier;
+import mrf.MRF_classifier;
 import util.Environment;
 import util.Printer;
 import wekaWrapper.WekaClassifier;
@@ -20,6 +20,11 @@ import dataset.TextWithSspace;
 import dataset.TextWithSynsets;
 import dataset.TextWithWiki;
 
+/**
+ * Run the graphical classification algorithm and print the results.
+ * @author jonathan
+ *
+ */
 public class MRF {
 
 	public static void main(String[] args) throws ClassNotFoundException {
@@ -89,7 +94,7 @@ public class MRF {
 		List<ArrayList<ResultImpl>> thresholdResults = new ArrayList<ArrayList<ResultImpl>>();
 		for(double threshold = 0.1; threshold <= 0.9; threshold += 0.1){
 			params = new MRF_params(neighbourhood, threshold, maxRuns);
-			ArrayList<ResultImpl> results = new Original_MRF_classifier<T>(params).classify(datasets);
+			ArrayList<ResultImpl> results = new MRF_classifier<T>(params).classify(datasets);
 			thresholdResults.add(results);
 		}
 		for(List<ResultImpl> results : thresholdResults){

@@ -6,8 +6,12 @@ import java.util.List;
 
 import weka.classifiers.evaluation.Prediction;
 
-
-
+/**
+ * Implementation of the abstract Result class
+ * @author jonathan
+ *
+ * @param <T>
+ */
 public class ResultImpl<T extends Text> extends Result{
 	private String label;
 	private int truePositives;
@@ -15,14 +19,14 @@ public class ResultImpl<T extends Text> extends Result{
 	private int trueNegatives;
 	private int falseNegatives;
 	private long passedMillis;
-	private HashMap<UniqueSentenceKey<T>, Double> classificationProbabilities;
+	private HashMap<SentenceKey<T>, Double> classificationProbabilities;
 	private ArrayList<Prediction> predictions;
 	
 	public ResultImpl(String label){
-		this(label, 0,0,0,0,new HashMap<UniqueSentenceKey<T>, Double>(), 0, new ArrayList<Prediction>());
+		this(label, 0,0,0,0,new HashMap<SentenceKey<T>, Double>(), 0, new ArrayList<Prediction>());
 	}
 	
-	public ResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, HashMap<UniqueSentenceKey<T>, Double> classificationProbabilities, 
+	public ResultImpl(String label, int truePositives, int falsePositives, int trueNegatives, int falseNegatives, HashMap<SentenceKey<T>, Double> classificationProbabilities, 
 			long passedMillis, ArrayList<Prediction> predicitions){
 		this.label = label;
 		this.truePositives = truePositives;
@@ -34,7 +38,7 @@ public class ResultImpl<T extends Text> extends Result{
 		this.predictions = predicitions;
 	}
 	
-	public HashMap<UniqueSentenceKey<T>, Double> classificationProbabilities(){
+	public HashMap<SentenceKey<T>, Double> classificationProbabilities(){
 		return classificationProbabilities;
 	}
 	

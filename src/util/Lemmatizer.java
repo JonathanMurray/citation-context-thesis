@@ -12,6 +12,11 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 
+/**
+ * Wraps StanfordCoreNLP to perform lemmatization.
+ * @author jonathan
+ *
+ */
 public class Lemmatizer {
 	
 	static Printer printer = new Printer(true);

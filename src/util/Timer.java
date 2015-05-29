@@ -2,6 +2,11 @@ package util;
 
 import com.ibm.icu.text.DecimalFormat;
 
+/**
+ * Used for timing tasks.
+ * @author jonathan
+ *
+ */
 public class Timer {
 	private long startTime;
 	private long endTime;

@@ -30,6 +30,11 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
+/**
+ * Represents a piece of text with a set of WordNet synsets extracted from the text
+ * @author jonathan
+ *
+ */
 public class TextWithSynsets extends TextWithNgrams{
 	
 	public static void main(String[] args) {

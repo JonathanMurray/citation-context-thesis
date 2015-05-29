@@ -5,10 +5,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import util.Lemmatizer;
-import concepts.Concept;
+import concepts.WikiConcept;
 import concepts.SynsetExtractor;
 import edu.mit.jwi.item.ISynset;
 
+/**
+ * Handles the construction of Text-objects
+ * @author jonathan
+ *
+ */
 public class TextFactory {
 	
 	private final static int MAX_NGRAM_N = 3;
@@ -17,7 +22,7 @@ public class TextFactory {
 	public static <T extends Text> T createText(TextParams<T> params, String raw){
 		
 		List<String> lemmas = Lemmatizer.instance().lemmatize(raw);
-		ArrayList<String> rawWords = Texts.split(raw).collect(Collectors.toCollection(ArrayList::new));
+		ArrayList<String> rawWords = TextUtil.split(raw).collect(Collectors.toCollection(ArrayList::new));
 		
 		
 		
@@ -46,7 +51,7 @@ public class TextFactory {
 		}
 		
 		else if(params.textClass.equals(TextWithWiki.class)){
-			List<Concept> concepts = params.wikiGraph.sentenceToConcepts(lemmas);
+			List<WikiConcept> concepts = params.wikiGraph.sentenceToConcepts(lemmas);
 			List<String> lowercaseLemmas = new ArrayList<String>();
 			for(String lemma : lemmas){
 				lowercaseLemmas.add(lemma.toLowerCase());

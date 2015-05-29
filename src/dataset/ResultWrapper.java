@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.Prediction;
 
+/**
+ * Implementation of Result that wraps a result from the WEKA-library
+ * @author jonathan
+ *
+ */
 public class ResultWrapper extends Result{
 	
 	private String label;

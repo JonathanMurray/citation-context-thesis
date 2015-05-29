@@ -7,6 +7,11 @@ import java.io.FileWriter;
 import java.io.Flushable;
 import java.io.IOException;
 
+/**
+ * Utility version of BufferedWriter that doesn't throw IOExceptions.
+ * @author jonathan
+ *
+ */
 public class NonThrowingFileWriter implements Closeable, Flushable{
 	
 	private BufferedWriter writer;

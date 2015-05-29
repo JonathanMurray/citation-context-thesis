@@ -126,7 +126,7 @@ public class CreateDatasetsSaveXml {
 					new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml")
 					, 0);
 			Dataset<TextWithSynsets> dataset = DatasetFactory.fromOtherRaw(textParams, other);
-			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
+			dataset.findAcronymsHooks(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
 			DatasetXml.writeToXml(dataset, new File(XML_DIR, dataset.datasetLabel + "-with-synsets-small.xml"));
 		}
 	}
@@ -147,7 +147,7 @@ public class CreateDatasetsSaveXml {
 					new File(resourcesDir, "xml-datasets/" + label + "-with-ngrams.xml")
 					, 0);
 			Dataset<TextWithSkipgrams> dataset = DatasetFactory.fromOtherRaw(TextParams.withSkipgrams(ngramIdf, skipgramIdf), other);
-			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
+			dataset.findAcronymsHooks(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
 			datasets.add(dataset);
 		}
 		for(Dataset<TextWithSkipgrams> dataset : datasets){
@@ -170,7 +170,7 @@ public class CreateDatasetsSaveXml {
 					, 0);
 			
 			Dataset<TextWithWiki> dataset = DatasetFactory.fromOtherRaw(TextParams.withWikiConcepts(ngramIdf, wikiGraph), other);
-			dataset.findExtra(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
+			dataset.findAcronymsHooks(BOUNDARY, NUM_HOOKS, NUM_ACRONYMS);
 			datasets.add(dataset);
 		}
 		for(Dataset<TextWithWiki> dataset : datasets){

@@ -46,22 +46,6 @@ public class Ngrams {
 		return 0;
 	}
 	
-//	public double getSkipgram(int n, String skipgram){
-//		assertInRange(n, 2, skipgramMaps.size() + 1);
-//		TObjectDoubleHashMap<String> map = skipgramMaps.get(n - 1);
-//		if(map.containsKey(skipgram) && map.get(skipgram) >= MIN_COUNT){
-//			return map.get(skipgram);
-//		}
-//		return 0;
-//	}
-	
-//	private void assertInRange(int i, int min, int max){
-//		if(i < min || i > max){
-//			throw new IllegalArgumentException(i + " is not within range [" + min + ", " + max + "]");
-//		}
-//	}
-	
-	
 	
 	//TODO this version uses bigrams and trigrams too
 	public double similarity(Ngrams other, int minN, int maxN){

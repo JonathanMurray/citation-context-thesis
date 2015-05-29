@@ -13,8 +13,13 @@ import java.util.stream.Stream;
 
 import util.Printer;
 
+/**
+ * Handles extracting n-grams and skip-grams, as well as tf-idf scores of 
+ * these grams. 
+ * @author jonathan
+ *
+ */
 public class NgramExtractor {
-	
 
 	private static final Pattern NUM_OR_CHAR = Pattern.compile("\\d+|.");
 	
@@ -118,7 +123,7 @@ public class NgramExtractor {
 	
 	private static void maybeAddNgram(TObjectDoubleHashMap<String> ngramCounts, List<String> ngramWords, boolean skipStopwords){
 		if(skipStopwords){
-			if(ngramWords.stream().anyMatch(w -> Texts.instance().isStopword(w))){ //TODO number-tag
+			if(ngramWords.stream().anyMatch(w -> TextUtil.instance().isStopword(w))){ //TODO number-tag
 				return;
 			}
 		}
@@ -160,57 +165,4 @@ public class NgramExtractor {
 		TObjectDoubleHashMap<String> counts = skipgrams(1, 0, 2, Arrays.asList(new String[]{"Peter", "lies" ,"above", "his", "bed", "sleeping"}));
 		System.out.println(counts);
 	}
-	
-
-//	private static ArrayList<int[]> ngramIndices(int n, int len){
-//		ArrayList<int[]> indices = new ArrayList<int[]>();
-//		for(int word0 = 0; word0 <= len - n; word0++){
-//			int[] ngram = new int[n];
-//			int inNgram = 0;
-//			for(int word = word0; word < word0 + n; word++){
-//				ngram[inNgram] = word;
-//				inNgram++;
-//			}
-//			indices.add(ngram);
-//		}
-//		return indices;
-//	}
-	
-//	private static ArrayList<int[]> allSkipgramIndices(int n, int maxNumSkip, int len){
-//		ArrayList<int[]> allIndices = new ArrayList<int[]>();
-//		for(int numSkip = 1; numSkip <= maxNumSkip; numSkip++){
-//			allIndices.addAll(skipgramIndices(n, numSkip, len));
-//		}
-//		return allIndices;
-//	}
-//	
-//	private static ArrayList<int[]> skipgramIndices(int n, int numSkip, int len){
-//		Printer p = new Printer(false);
-//		ArrayList<int[]> indices = new ArrayList<int[]>();
-//		TIntArrayList skips = new TIntArrayList(numSkip);
-//		for(int word0 = 0; word0 <= len - n - numSkip; word0++){
-//			p.println("w0: " + word0);
-//			for(int skip0 = word0 + 1; skip0 < word0 + n; skip0++){
-//				p.println(" s0: " + skip0);
-//				skips.clear(numSkip);
-//				for(int skip = skip0; skip < skip0 + numSkip; skip++){
-//					skips.add(skip);
-//				}
-//				p.println("  skips: " + skips);
-//				int[] ngram = new int[n];
-//				int inNgram = 0;
-//				for(int word = word0; word < word0 + n + numSkip; word++){
-//					p.println("   w: " + word + " (in-ngram: " + inNgram + ")");
-//					if(!skips.contains(word)){
-//						ngram[inNgram] = word;
-//						inNgram++;
-//					}
-//				}
-//				indices.add(ngram);
-//				p.println("ADDED: " + Arrays.toString(ngram));
-//			}
-//		}
-//		return indices;
-//	}
-	
 }

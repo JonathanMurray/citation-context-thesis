@@ -13,6 +13,12 @@ import dataset.DatasetXml;
 import dataset.SentenceType;
 import dataset.Text;
 
+/**
+ * Measure the gaps between citations in the dataset. This simply
+ * serves as an analysis of the dataset
+ * @author jonathan
+ *
+ */
 public class ContextGap {
 	public static void main(String[] args) throws ClassNotFoundException {
 		List<String> labels = Arrays.asList(new String[]{

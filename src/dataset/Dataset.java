@@ -9,6 +9,14 @@ import java.util.stream.Stream;
 import util.Printer;
 import util.Timer;
 
+/**
+ * Represents one instance of the dataset, which means there is one reference that is studied
+ * (out of the total 20) and several citers whose sentences are classified. The acronyms and 
+ * lexical hooks correspond the reference.
+ * @author jonathan
+ *
+ * @param <T>
+ */
 public class Dataset<T extends Text> {
 	public final String datasetLabel;
 	public final String citedMainAuthor;
@@ -18,7 +26,7 @@ public class Dataset<T extends Text> {
 	public T mergedExplicitCitations;
 	public final List<CitingPaper<T>> citers;
 	
-	public boolean hasExtra;
+	public boolean hasAcronymsHooks;
 	private List<String> acronyms;
 	private List<LexicalHook> lexicalHooks;
 	
@@ -53,7 +61,7 @@ public class Dataset<T extends Text> {
 	}
 	
 	private void assertHasExtra(){
-		if(!hasExtra){
+		if(!hasAcronymsHooks){
 			throw new UnsupportedOperationException("This dataset is constructed with no acronyms and lexical hooks.");
 		}
 	}
@@ -71,24 +79,24 @@ public class Dataset<T extends Text> {
 	 * @param numLexicalHooks
 	 * @return
 	 */
-	public Dataset<T> findExtra(int boundary, int numLexicalHooks, int numAcronyms){
+	public Dataset<T> findAcronymsHooks(int boundary, int numLexicalHooks, int numAcronyms){
 		Printer printer = new Printer(true);
 		Timer t = new Timer();
 		printer.print("Finding extras for " + datasetLabel + " ... ");
-		DatasetExtrasExtractor<T> extractor = new DatasetExtrasExtractor<T>(this);
+		AcronymsHooksExtractor<T> extractor = new AcronymsHooksExtractor<T>(this);
 		printer.print("acronyms .. ");
 		acronyms = extractor.findAcronyms(boundary, numAcronyms);
 		printer.print("~ hooks .. ");
 		lexicalHooks = extractor.findLexicalHooks(boundary, numLexicalHooks);
-		hasExtra = true;
+		hasAcronymsHooks = true;
 		printer.println("[x]  (" + t.getSecString() + ")");
 		return this;
 	}
 	
-	public void addExtra(List<String> acronyms, List<LexicalHook> lexicalHooks){
+	public void addAcronymsHooks(List<String> acronyms, List<LexicalHook> lexicalHooks){
 		this.acronyms = acronyms;
 		this.lexicalHooks = lexicalHooks;
-		hasExtra = true;
+		hasAcronymsHooks = true;
 	}
 	
 	Stream<Sentence<T>> explicitReferences(){
@@ -122,7 +130,7 @@ public class Dataset<T extends Text> {
 	public String toString(){
 		StringBuilder s = new StringBuilder();
 		s.append(datasetLabel + "\n");
-		if(hasExtra){
+		if(hasAcronymsHooks){
 			s.append("acronyms: " + acronyms + "\n");
 			s.append("lexical hooks: " + lexicalHooks + "\n");
 		}

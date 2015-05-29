@@ -24,7 +24,7 @@ import util.Printer;
 import com.ibm.icu.text.DecimalFormat;
 
 import dataset.NgramExtractor;
-import dataset.Texts;
+import dataset.TextUtil;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.RAMDictionary;
 import edu.mit.jwi.data.ILoadPolicy;
@@ -51,6 +51,14 @@ import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
+/**
+ * Ended up not being used in the thesis.
+ * The task of the class is to extract WordNet-synsets from sentences so that the 
+ * sentences can be semantically compared using synset-graph measures. 
+ * (It proved difficult to extract a "good" set of synsets for a sentence)
+ * @author jonathan
+ *
+ */
 public class SynsetExtractor {
 	
 	private static Printer printer = new Printer(false);
@@ -201,7 +209,7 @@ public class SynsetExtractor {
 				String pos = token.get(PartOfSpeechAnnotation.class);
 				String lemma = lemmas.get(lemmaIndex);
 				lemmaIndex ++;
-				if (!Texts.instance().isStopword(lemma)) {
+				if (!TextUtil.instance().isStopword(lemma)) {
 					POS posTag = fromPennTreebank(pos);
 					if (processPhrase(phraseIndex, lemma, posTag)) {
 						phrases.add(lemma);

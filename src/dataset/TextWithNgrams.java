@@ -4,6 +4,11 @@ import java.util.List;
 
 import org.jsoup.nodes.Element;
 
+/**
+ * Represents a piece of text with tf-idf scores for n-grams or skip-grams.
+ * @author jonathan
+ *
+ */
 public class TextWithNgrams extends Text{
 	
 	protected static final String XML_TEXT_CLASS = "text-with-ngrams";
@@ -36,6 +41,6 @@ public class TextWithNgrams extends Text{
 	@Override
 	public double similarity(Object o){
 		TextWithNgrams other = (TextWithNgrams)o;
-		return ngramsTfIdf.similarity(other.ngramsTfIdf, 1,1);
+		return ngramsTfIdf.similarity(other.ngramsTfIdf, 1,1); //TODO only unigrams
 	}
 }

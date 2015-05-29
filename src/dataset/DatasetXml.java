@@ -28,6 +28,13 @@ import concepts.WikiGraphFactory;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 
+/**
+ * Has 2 main tasks:
+ * - write a dataset to XML
+ * - parse XML and construct a dataset
+ * @author jonathan
+ *
+ */
 public class DatasetXml {
 	
 	private static final Printer printer = new Printer(true);
@@ -50,32 +57,6 @@ public class DatasetXml {
 	private static final String ATTR_TITLE = "title";
 	private static final String ATTR_SENTENCE_TYPE = "type";
 	
-	public static void main(String[] args) {
-		File resources = new File("/home/jonathan/Documents/eclipse-workspace/exjobb/resources");
-		File dir = new File(resources, "teufel-citation-context-corpus");
-	
-		final boolean ALLOW_STOPWORDS_CONCEPTS = false;
-		WikiGraph wiki = WikiGraphFactory.loadWikiGraph(
-				new File(resources, "ser/linksSingleWords.ser"), 
-				new File(resources, "ser/toIndexSingleWords.ser"), 
-				ALLOW_STOPWORDS_CONCEPTS);
-		
-		final String datasetLabel = "A92-1018";
-		
-//		NgramIdf wordIdf = NgramIdf.fromXmlFile(new File(resources, "xml-datasets/ngram-frequencies.xml"), 5);
-		
-//		Dataset<TextWithConcepts> dataset = DatasetFactory.fromFiles(
-//				DatasetParams.basic(TextParams.withWikiConcepts(wordIdf, wiki)), 
-//				new File(dir, datasetLabel + ".html"), 
-//				new File(dir, datasetLabel + ".txt"));
-//		dataset.findExtra(80, 2, 2);
-//		System.out.println("DATASET: " + dataset);
-//		writeToXml(dataset, new File(resources, "xml-datasets/" + datasetLabel + "-with-concepts.xml"));
-		
-//		Dataset<TextWithConcepts> dataset = parseFromXml(new File(dir, "TEST-ngrams.xml"));
-//		System.out.println("dataset: " + dataset);
-	}
-	
 	public static <T extends Text> void writeToXml(Dataset<T> dataset, File file){
 		try(FileWriter writer = new FileWriter(file)){
 			printer.print("Constructing XML for " + dataset.datasetLabel + " ... ");
@@ -94,8 +75,8 @@ public class DatasetXml {
 		Document doc = new Document("");
 		Element datasetTag = doc.appendElement(TAG_DATASET);
 		datasetTag.appendElement(TAG_DATASET_LABEL).text(dataset.datasetLabel);
-		if(dataset.hasExtra){
-			datasetTag.appendElement(TAG_ACRONYMS).text(Texts.merge(dataset.getAcronyms()));
+		if(dataset.hasAcronymsHooks){
+			datasetTag.appendElement(TAG_ACRONYMS).text(TextUtil.merge(dataset.getAcronyms()));
 			List<String> hooks = dataset.getLexicalHooks().stream()
 					.map(h -> h.hook).collect(Collectors.toCollection(ArrayList::new));
 			Element hooksTag = datasetTag.appendElement(TAG_LEXICAL_HOOKS);
@@ -132,18 +113,6 @@ public class DatasetXml {
 		sentenceTag.appendChild(sentence.text.toXml());
 		return sentenceTag;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
 
     public static void parseQuick(File file)  {
 		try {
@@ -246,14 +215,14 @@ public class DatasetXml {
 		Dataset<T> dataset = Dataset.full(label, mainAuthor, text(textClass, citedTitleTag), citers, 
 				text(textClass, citedContentTag), text(textClass, mergedExplicitTag));
 		if(datasetTag.select(TAG_ACRONYMS).size() == 1 && datasetTag.select(TAG_LEXICAL_HOOKS).size() == 1){
-			List<String> acronyms = Texts.split(datasetTag.select(TAG_ACRONYMS).text())
+			List<String> acronyms = TextUtil.split(datasetTag.select(TAG_ACRONYMS).text())
 					.collect(Collectors.toCollection(ArrayList::new));
 			Element hooksTag = datasetTag.select(TAG_LEXICAL_HOOKS).first();
 			List<LexicalHook> lexicalHooks = new ArrayList<LexicalHook>();
 			for(Element hookTag : hooksTag.select(TAG_LEXICAL_HOOK)){
 				lexicalHooks.add(new LexicalHook(hookTag.text()));
 			}
-			dataset.addExtra(acronyms, lexicalHooks);
+			dataset.addAcronymsHooks(acronyms, lexicalHooks);
 		}
 		
 		return dataset;

@@ -9,6 +9,12 @@ import dataset.DatasetXml;
 import dataset.NgramIdf;
 import dataset.Text;
 
+/**
+ * Compute idf (inverse document frequency) values for the dataset and write
+ * them to XML-files.
+ * @author jonathan
+ *
+ */
 public class CreateIdf {
 	
 	private final static String[] LABELS = new String[]{

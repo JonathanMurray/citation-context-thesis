@@ -19,6 +19,11 @@ import dataset.TextFactory;
 import dataset.TextParams;
 import dataset.TextWithSspace;
 
+/**
+ * Create the semantic space (s-space) from a large corpus
+ * @author jonathan
+ *
+ */
 public class SSpace {
 	
 	static String sspaceDir = Environment.resources() + "/sspace";

@@ -6,6 +6,12 @@ import edu.mit.jwi.item.ISynset;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
+/**
+ * Parameters used for the construction of Text-objects
+ * @author jonathan
+ *
+ * @param <T>
+ */
 public class TextParams<T extends Text>{
 	public Class<T> textClass;
 	public NgramIdf ngramIdf;

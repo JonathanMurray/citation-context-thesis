@@ -15,6 +15,12 @@ import org.jsoup.select.Elements;
 import util.Printer;
 import util.Timer;
 
+/**
+ * Is responsible for constructing the dataset, either from HTML-files or from another dataset 
+ * (in the latter case, adding some new data to it)
+ * @author jonathan
+ *
+ */
 public class DatasetFactory {
 	
 	private static Printer printer = new Printer(true);
@@ -45,7 +51,7 @@ public class DatasetFactory {
 	
 	public static <T extends Text> Dataset<T> fromFiles(DatasetParams<T> params, File htmlFile, File citedContentTextFile){
 		final int CITED_CONTENT_MAX_LINES = -1;
-		String text = Texts.readTextFile(citedContentTextFile, CITED_CONTENT_MAX_LINES);
+		String text = TextUtil.readTextFile(citedContentTextFile, CITED_CONTENT_MAX_LINES);
 		Dataset<T> dataset = fromHtmlFile(params, htmlFile, text);
 		return dataset;
 	}
@@ -107,8 +113,8 @@ public class DatasetFactory {
 		dataset.citedContent = TextFactory.createText(params.textParams, citedContent);
 		int numSentences = citers.stream().map(c -> c.sentences.size()).reduce(0, (x,y) -> x+y);
 		printer.println("[x]  (" + t.getSecString() + ")  {" + dataset.citers.size() + " citers, in total " + numSentences + " sentences}");
-		if(params.withExtra){
-			dataset = dataset.findExtra(params.authorProxyBoundary, params.numLexicalHooks, params.numAcronyms);
+		if(params.withAcronymsHooks){
+			dataset = dataset.findAcronymsHooks(params.authorProxyBoundary, params.numLexicalHooks, params.numAcronyms);
 		}
 		return dataset;
 	}

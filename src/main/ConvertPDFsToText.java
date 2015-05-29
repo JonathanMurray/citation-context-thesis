@@ -7,6 +7,11 @@ import org.apache.pdfbox.ExtractText;
 import util.Environment;
 import util.Printer;
 
+/**
+ * Use apache PDF-box to convert PDFs to text.
+ * @author jonathan
+ *
+ */
 public class ConvertPDFsToText {
 	
 	public static void main(String[] args) {

@@ -3,12 +3,18 @@ package concepts;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 
-public class Concept{
+/**
+ * Represents a set of Wikipedia articles that are related through links. 
+ * @author jonathan
+ *
+ */
+public class WikiConcept{
 	
+	//Each index corresponds to a Wikipedia article
 	public TIntHashSet indices;
 	public double sqrtSize;
 	
-	public Concept(TIntHashSet indices){
+	public WikiConcept(TIntHashSet indices){
 		this.indices = indices;
 		if(indices.size() < 1){
 			sqrtSize = 1;
@@ -18,12 +24,12 @@ public class Concept{
 		
 	}
 	
-	public double cosineSimilarity(Concept other){
+	public double cosineSimilarity(WikiConcept other){
 		TIntIterator it = indices.iterator();
-		double sum = 0;
+//		double sum = 0;
 		while(it.hasNext()){
 			int index = it.next();
-			if(((Concept)other).indices.contains(index)){
+			if(((WikiConcept)other).indices.contains(index)){
 //				sum += 1;
 				return 1;
 			}
