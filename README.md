@@ -7,14 +7,14 @@ This repository contains the code used in my master thesis about citation contex
 * **explicit citation**: A citation to another paper found in running text, that uses some well-defined format.
 * **implicit citation**: A citation that does not use such a format.
 
-The text snippet below consists of three sentences, one that is not a citation, one explicit citation, and one implicit.
+As an example, the text snippet below consists of three sentences, of which the first one is not a citation, the second one is an explicit citation, and the last one is an implicit citation.
 
 *The purpose of this project is to develop efficient sorting algorithms. Johnson et. al (1987) proposed the bubble sort algorithm. It proved a failure.*
 
 Two distinct methods are used for solving the classification problem: a Machine Learning classifier (Awais and Athar), and an iterative algorithm based on a graphical model (Qazvinian and Radev).
 
 ## 2. Code structure
-The code is written in Java. The repository consists of the following packages:
+The code is written in Java 8. The repository consists of the following packages:
 * **main** - contains main classes that correspond to specific tasks of the thesis, such as initializing a dataset, or running a classifier.
 * **dataset** - contains classes that are concerned with the data used as input to the algorithms. 
 * **machineLearning** - contains classes used for the machine learning approach (using the weka library).
@@ -24,3 +24,14 @@ The code is written in Java. The repository consists of the following packages:
 
 ## 3. Getting started
 To run the algorithms, one first needs the data. I used the dataset annotated by Awais Athar available at http://www.cl.cam.ac.uk/~aa496/citation-context-corpus/. The main-package contains classes for constructing XML-files with different additions to the data.
+
+The project has several dependencies to other libraries, depending on which parts have to be run.
+* jsoup 1.8.1
+* stanford-corenlp 3.5.1
+* jwi 2.3.3
+* ws4j 1.0.1
+* Apache Commons Lang 3.3.2
+* Weka 3.7.12
+* GNU Trove 3.1a1
+* pdfbox-app 1.8.8
+* S-Space Package 2.0.4
