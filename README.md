@@ -35,3 +35,5 @@ The project has several dependencies to other libraries, depending on which part
 * GNU Trove 3.1a1
 * pdfbox-app 1.8.8
 * S-Space Package 2.0.4
+
+All code was run on a laptop with 64-bit Linux (Ubuntu 14.04) and 8GB RAM.
