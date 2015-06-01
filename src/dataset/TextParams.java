@@ -1,6 +1,7 @@
 package dataset;
 
-import concepts.WikiGraph;
+import semanticSim.SSpaceWrapper;
+import semanticSim.WikiGraph;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.ISynset;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;

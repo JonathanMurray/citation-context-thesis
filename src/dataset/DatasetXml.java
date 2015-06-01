@@ -21,10 +21,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 
+import semanticSim.SSpaceWrapper;
 import util.Environment;
 import util.Printer;
-import concepts.WikiGraph;
-import concepts.WikiGraphFactory;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 
@@ -154,23 +153,6 @@ public class DatasetXml {
 			e.printStackTrace();
 		}
     }
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	public static <T extends Text> Dataset<T> parseXmlFile(Class<T> textClass, File xmlFile, int maxNumCiters){
 		try {
@@ -266,5 +248,4 @@ public class DatasetXml {
 			throw new IllegalArgumentException("Unknown text-class: " + textClass);
 		}
 	}
-	
 }

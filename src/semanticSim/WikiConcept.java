@@ -1,10 +1,10 @@
-package concepts;
+package semanticSim;
 
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 
 /**
- * Represents a set of Wikipedia articles that are related through links. 
+ * Represents a set of Wikipedia articles that are related through hyperlinks. 
  * @author jonathan
  *
  */
@@ -21,10 +21,9 @@ public class WikiConcept{
 		}else{
 			sqrtSize = Math.sqrt(indices.size());
 		}
-		
 	}
 	
-	public double cosineSimilarity(WikiConcept other){
+	public double similarity(WikiConcept other){
 		TIntIterator it = indices.iterator();
 //		double sum = 0;
 		while(it.hasNext()){

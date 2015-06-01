@@ -16,8 +16,12 @@ import org.apache.tika.io.IOUtils;
 import util.Environment;
 import util.Lemmatizer;
 import util.Printer;
-import wekaWrapper.SentenceInstance;
 
+/**
+ * Convert a corpus of full-text to lemmas
+ * @author jonathan
+ *
+ */
 public class LemmatizeCorpus {
 	
 	static Printer printer = new Printer(true);
@@ -64,7 +68,6 @@ public class LemmatizeCorpus {
 			System.out.print("Getting lemmas ... ");
 			List<String> lemmas = Lemmatizer.instance().lemmatize(text);
 			System.out.println("[x]");
-//			new ArrayList().subList(fromIndex, toIndex)
 			if(splitSentences){
 				int prevBoundary = -1;
 				int nextBoundary;
@@ -103,7 +106,6 @@ public class LemmatizeCorpus {
 			FileWriter out = new FileWriter(outFile);
 			List<String> cleanLemmas = new ArrayList<String>();
 			for(int i = 0; i < lemmas.size(); i++){
-//				boolean stopword = Texts.instance().isStopword(lemmas.get(i));
 				boolean number = NUMBER.matcher(lemmas.get(i)).matches();
 				if(!bad.contains(lemmas.get(i)) && !number){
 					cleanLemmas.add(lemmas.get(i));

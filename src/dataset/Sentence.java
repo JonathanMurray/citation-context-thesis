@@ -1,11 +1,20 @@
 package dataset;
 
-
+/**
+ * Represents a sentence in the dataset. Contains data about the text as
+ * well as the type of sentence (implicit/explicit/not citation)
+ * @author jonathan
+ *
+ * @param <T>
+ */
 public class Sentence<T extends Text> {
 	public SentenceType type;
 	public T text;
 	public int sentenceIndex; //In a specific paper (starts from 0)
 	
+	/*
+	 * sentiment is included in the dataset annotated by Awais and Athar
+	 */
 	public Sentence(String sentiment, T text, int sentenceIndex){
 		this.text = text;
 		this.type = typeFromSentiment(sentiment);

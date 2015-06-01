@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.jsoup.nodes.Element;
 
+import semanticSim.SSpaceWrapper;
 import edu.ucla.sspace.common.Similarity;
 
 /**
@@ -14,13 +15,10 @@ import edu.ucla.sspace.common.Similarity;
  */
 public class TextWithSspace extends TextWithNgrams{
 	
-//	private SSpaceWrapper sspace;
 	public double[] vector;
 	
 	public TextWithSspace(String raw, List<String> rawWords, List<String> lemmas, Ngrams ngramsTfIdf, SSpaceWrapper sspace) {
 		super(raw, rawWords, lemmas, ngramsTfIdf);
-
-		//		this.sspace = sspace;
 		this.vector = sspace.getVectorForDocument(lemmas);
 //		this.vector = sspace.getVectorForDocumentLSASpecial(lemmas);
 	}

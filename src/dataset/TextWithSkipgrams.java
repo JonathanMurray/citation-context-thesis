@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.jsoup.nodes.Element;
 
-import util.Printer;
-
 /**
  * Represents a piece of text with tf-idf scores for skip-grams
  * @author jonathan

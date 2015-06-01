@@ -1,4 +1,4 @@
-package dataset;
+package semanticSim;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,7 +8,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 import util.Environment;
 import util.Printer;
 import util.Timer;
+import dataset.NgramIdf;
 import edu.ucla.sspace.clustering.Assignments;
 import edu.ucla.sspace.clustering.DirectClustering;
 import edu.ucla.sspace.common.SemanticSpace;
@@ -171,7 +171,7 @@ public class SSpaceWrapper {
 	 * @return
 	 */
 	public double[] getVector(String word) {
-		Vector v = sspace.getVector(word);
+		Vector<?> v = sspace.getVector(word);
 		if(v == null){
 			return null;
 		}
@@ -189,7 +189,7 @@ public class SSpaceWrapper {
 		meanVector = new double[sspace.getVectorLength()];
 		double numVectors = 0;
 		for (String w : sspace.getWords()) {
-			Vector termVector = sspace.getVector(w);
+			Vector<?> termVector = sspace.getVector(w);
 			if (termVector != null && wordFrequencies.contains(w)) {
 				int wordFrequency = wordFrequencies.get(w);
 				if(wordFrequency == 0){
@@ -220,9 +220,9 @@ public class SSpaceWrapper {
 	
 	public double[] getVectorForDocumentLSASpecial(List<String> words){
 		double[] docVector = new double[sspace.getVectorLength()];
-		double numVecsInDoc = 0;
+//		double numVecsInDoc = 0;
 		for (String word : words) {
-			Vector vec = sspace.getVector(word);
+			Vector<?> vec = sspace.getVector(word);
 			if (vec != null) {
 				for (int i = 0; i < sspace.getVectorLength(); i++) {
 					double termVectorVal = (double) vec.getValue(i).doubleValue();
@@ -230,7 +230,7 @@ public class SSpaceWrapper {
 				}
 //				System.out.println("Normalized word vec. Magnitude : " + magnitude(normalizedWordVec));
 //				System.out.println("Normalized word vec minus mean. Magnitude : " + magnitude(normalizedWordVecMinusMean));
-				numVecsInDoc += 1;
+//				numVecsInDoc += 1;
 			}
 		}
 
@@ -248,7 +248,7 @@ public class SSpaceWrapper {
 		double[] docVector = new double[sspace.getVectorLength()];
 		double numVecsInDoc = 0;
 		for (String word : words) {
-			Vector vec = sspace.getVector(word);
+			Vector<?> vec = sspace.getVector(word);
 			if (vec != null) {
 //				System.out.println("word: " + word);
 //				System.out.println("word vector in dcument. Magnitude : " + vec.magnitude());

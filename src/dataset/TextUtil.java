@@ -22,7 +22,11 @@ import org.apache.commons.lang3.StringUtils;
 import util.Environment;
 import util.Stemmer;
 
-
+/**
+ * Utility class with many text related methods
+ * @author jonathan
+ *
+ */
 public class TextUtil {
 	
 	private List<String> determiners;
@@ -213,17 +217,14 @@ public class TextUtil {
 		return words.size() >= 1 && looseContains(connectors, words.get(0));
 	}
 	
-	
 	public boolean startsWithSectionHeader(List<String> words){
 		return words != null && HEADER.matcher(words.get(0)).matches();
-//		return words != null ? words.stream().anyMatch(word -> word.matches(HEADER_PATTERN)) : false;
 	}
 	
 	public boolean containsMainAuthor(List<String> words, String mainAuthor){
 		String cleanAuthor = Normalizer.normalize(mainAuthor, Normalizer.Form.NFD).replaceAll("[^\\x00-\\x7F]", "");
 		for(int i = 0; i < words.size(); i++){
 			String word = words.get(i);
-//			if(word.matches("\\(?\\[?(" + mainAuthor  + "|" + cleanAuthor + ")'?s?,?\\)?]?")){
 			if(word.contains(mainAuthor) || word.contains(cleanAuthor)){
 				return true;
 			}
@@ -310,7 +311,6 @@ public class TextUtil {
 		}
 		return false;
 	}
-	
 	
 	public static String stem(String word){
 		Stemmer s = new Stemmer();

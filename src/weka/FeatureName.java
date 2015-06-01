@@ -1,4 +1,4 @@
-package wekaWrapper;
+package weka;
 
 /**
  * Most features used in the WEKA-classification.

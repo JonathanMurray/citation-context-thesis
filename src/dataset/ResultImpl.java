@@ -46,7 +46,7 @@ public class ResultImpl<T extends Text> extends Result{
 		return label;
 	}
 	
-	public void add(ResultImpl other){
+	public void add(ResultImpl<T> other){
 		if(!label.equals(other.label)){
 			label = label + "+" + other.label;
 		}
@@ -77,9 +77,9 @@ public class ResultImpl<T extends Text> extends Result{
 		return predictions;
 	}
 	
-	public static ResultImpl mergeMany(List<ResultImpl> results){
-		ResultImpl merged = new ResultImpl("merged");
-		for(ResultImpl result : results){
+	public static <T2 extends Text> ResultImpl<T2> mergeMany(List<ResultImpl<T2>> results){
+		ResultImpl<T2> merged = new ResultImpl<T2>("merged");
+		for(ResultImpl<T2> result : results){
 			merged.add(result);
 		}
 		return merged;

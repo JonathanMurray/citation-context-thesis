@@ -3,10 +3,8 @@ package util;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
 import dataset.Dataset;
 import dataset.Result;

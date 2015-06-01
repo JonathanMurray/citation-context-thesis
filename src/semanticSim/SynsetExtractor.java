@@ -1,4 +1,4 @@
-package concepts;
+package semanticSim;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,8 +88,6 @@ public class SynsetExtractor {
 	private ArrayList<String> phrases;
 	private HashMap<ISynsetID, TIntDoubleHashMap> wordSenseProbabilities = new HashMap<ISynsetID, TIntDoubleHashMap>();
 	
-	
-	
 	//Shared by many instances
 	private final IDictionary dict;
 	private final StanfordCoreNLP pipeline;
@@ -102,8 +100,6 @@ public class SynsetExtractor {
 //		WordNet2 w = new WordNet2(createPipeline(), dictFromDir(dictDir));
 //		w.test();
 	}
-	
-	
 	
 	private static void printPOS(Annotation a){
 		List<CoreMap> sentences = a.get(SentencesAnnotation.class);
@@ -120,9 +116,6 @@ public class SynsetExtractor {
 	
 	public static void TEST(){
 		List<String> lemmas = Lemmatizer.instance().lemmatize("In this paper, we show that this approach misses much of the existing sentiment.");
-//		List<String> lemmas = Arrays.asList(new String[]{"I", "go", "home", "today", ".", "I", "will", "meet", "my", "dog"});
-		
-//		List<String> lemmas = Arrays.asList(new String[]{"tag"});
 		String dictDir = new File(Environment.resources(), "wordnet-dict").toString();
 		IDictionary dict = dictFromDir(dictDir);
 		SynsetExtractor s = new SynsetExtractor(createPipeline(), dict, new TObjectIntHashMap<ISynset>());
@@ -140,8 +133,6 @@ public class SynsetExtractor {
 	
 	public static IDictionary dictFromDir(String dictDir){
 		try {
-//			URL dictUrl = new URL("file", null, dictDir);
-//			IDictionary dict = new Dictionary(dictUrl);
 			IDictionary dict = new RAMDictionary(new File(dictDir), ILoadPolicy.IMMEDIATE_LOAD);
 			System.out.print("opening dict ... ");
 			dict.open();
@@ -153,8 +144,6 @@ public class SynsetExtractor {
 			return null;
 		}
 	}
-	
-	
 
 	private void test() {
 		Scanner s = new Scanner(System.in);
@@ -173,7 +162,7 @@ public class SynsetExtractor {
 		this.depths = depths;
 	}
 	
-	//Datasets can be created in parallell. Make sure this method is not invoked concurrently
+	//Datasets can be created in parallel. Make sure this method is not invoked concurrently
 	synchronized public List<ISynset>fromSentence(List<String> lemmas) {
 		setup(lemmas);
 //		System.out.println(lemmas); //TODOs
@@ -309,10 +298,6 @@ public class SynsetExtractor {
 				int artificialWordSynsetDistance = 3 - (int)Math.round(3*senseProbability);
 				pathsHere.put(phraseIndex, artificialWordSynsetDistance);
 				shortestPaths.put(synsetId, pathsHere);
-//				if (!predecessors.containsKey(phraseIndex)) {
-//					predecessors.put(phraseIndex, new HashMap<ISynsetID, ISynset>());
-//				}
-//				predecessors.get(phraseIndex).put(synsetId, null);
 			}
 			return true;
 		} else {
@@ -345,7 +330,6 @@ public class SynsetExtractor {
 									&& pathsToParent.get(wordIndex) < newLength;
 							if (!existingShorter) {
 								pathsToParent.put(wordIndex, newLength);
-//								predecessors.get(wordIndex).put(parent, synset);
 								parentWasUpdated = true;
 							}
 						}
@@ -388,28 +372,6 @@ public class SynsetExtractor {
 		for(K key : map.keySet()){
 			System.out.print(key + ": ");
 			System.out.println(map.get(key) + "\n");
-		}
-	}
-
-	void removeRedundant(HashMap<ISynsetID, TIntIntHashMap> shortestPaths) {
-		Iterator<Entry<ISynsetID, TIntIntHashMap>> it = shortestPaths.entrySet().iterator();
-		while (it.hasNext()) {
-			Entry<ISynsetID, TIntIntHashMap> e = it.next();
-			TIntIntHashMap paths = e.getValue();
-			boolean isRedundant = false;
-			for (ISynsetID otherId : shortestPaths.keySet()) {
-				if (otherId.equals(e.getKey())) {
-					continue; // avoid self comparison
-				}
-				TIntIntHashMap otherPaths = shortestPaths.get(otherId);
-				if (strictlyBetterThan(otherPaths, paths)) {
-					isRedundant = true;
-					break;
-				}
-			}
-			if (isRedundant) {
-				it.remove();
-			}
 		}
 	}
 
@@ -550,17 +512,6 @@ public class SynsetExtractor {
 				System.out.print(synset.getWords().stream().map(w -> w.getLemma()).collect(Collectors.toList()));
 				System.out.print(" :  " + pathsHere);
 				printer.println("    from:");
-				// for(int wordIndex : pathsHere.keySet()){
-				// ISynset predecessor =
-				// predecessors.get(wordIndex).get(synset.getID());
-				// System.out.print("    " + wordIndex + ":");
-				// if(predecessor == null){
-				// printer.println("NULL");
-				// }else{
-				// printer.println(predecessor.getWords().stream().map(w ->
-				// w.getLemma()).collect(Collectors.toList()) + ", ");
-				// }
-				// }
 			}
 		}
 		printer.println("}");

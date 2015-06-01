@@ -8,8 +8,8 @@ import mrf.MRF_params;
 import mrf.MRF_classifier;
 import util.Environment;
 import util.Printer;
-import wekaWrapper.InstanceHandler;
-import wekaWrapper.SentenceInstance;
+import weka.InstanceHandler;
+import weka.SentenceInstance;
 import dataset.Dataset;
 import dataset.DatasetXml;
 import dataset.SentenceKey;
@@ -66,9 +66,7 @@ public class CreateArff {
 			System.out.println(dataset.datasetLabel);
 			System.out.println("(" + dataset.citedMainAuthor + ")");
 			
-			//TODO
 			HashMap<SentenceKey<TextWithNgrams>, Double> mrfProbabilities =  mrfClassifier.classify(dataset).classificationProbabilities();
-//			List<Double> mrfProbabilities = null;
 			
 			ArrayList<SentenceInstance> balancedInstances =  InstanceHandler.createInstances(dataset, onlyText, true, mrfProbabilities);
 			InstanceHandler.writeToArffFile(balancedInstances, new File(Environment.resources(), 

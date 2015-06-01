@@ -3,9 +3,10 @@ package main;
 import java.io.File;
 import java.util.ArrayList;
 
-import concepts.SynsetExtractor;
-import concepts.WikiGraph;
-import concepts.WikiGraphFactory;
+import semanticSim.SSpaceWrapper;
+import semanticSim.SynsetExtractor;
+import semanticSim.WikiGraph;
+import semanticSim.WikiGraphFactory;
 import util.Environment;
 import util.Lemmatizer;
 import util.Printer;
@@ -14,7 +15,6 @@ import dataset.DatasetFactory;
 import dataset.DatasetParams;
 import dataset.DatasetXml;
 import dataset.NgramIdf;
-import dataset.SSpaceWrapper;
 import dataset.Text;
 import dataset.TextParams;
 import dataset.TextWithWiki;
@@ -25,6 +25,13 @@ import dataset.TextWithSynsets;
 import edu.mit.jwi.IDictionary;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
+/**
+ * Create a dataset and save it in XML-format.
+ * Some datasets are created from HTML-files; others are extended from existing
+ * XML-datasets.
+ * @author jonathan
+ *
+ */
 public class CreateDatasetsSaveXml {
 	public static void main(String[] args) throws ClassNotFoundException {
 		Class textClass = TextWithWiki.class;
@@ -78,7 +85,6 @@ public class CreateDatasetsSaveXml {
 			"J93-1007", "N04-1035", "P02-1053", "P04-1041", "P90-1034", "W05-0909"};
 	
 	private static void basic(){
-		File resourcesDir = new File(Environment.resources());
 		ArrayList<Dataset<Text>> datasets = DatasetFactory.fromHtmlDir(
 				DatasetParams.enhanced(TextParams.basic(), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
 				HTML_DIR);
@@ -135,9 +141,6 @@ public class CreateDatasetsSaveXml {
 		File resourcesDir = new File(Environment.resources());
 		NgramIdf ngramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/ngram-frequencies.xml"), NgramIdf.DEFAULT_NGRAM_MIN_COUNT);
 		NgramIdf skipgramIdf = NgramIdf.fromXmlFile(new File(resourcesDir, "xml-datasets/skipgram-frequencies.xml"), NgramIdf.DEFAULT_SKIPGRAM_MIN_COUNT);
-//		ArrayList<Dataset<TextWithSkipgrams>> datasets = DatasetFactory.fromHtmlDir(
-//				DatasetParams.enhanced(TextParams.withSkipgrams(ngramIdf, skipgramIdf), BOUNDARY, NUM_HOOKS, NUM_ACRONYMS), 
-//				new File(resourcesDir, "teufel-citation-context-corpus"));
 		ArrayList<Dataset<TextWithSkipgrams>> datasets = new ArrayList<Dataset<TextWithSkipgrams>>();
 		for(int i = 0; i < LABELS.length; i++){
 			String label = LABELS[i];

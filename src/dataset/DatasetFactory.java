@@ -127,7 +127,7 @@ public class DatasetFactory {
 		printer.print("Creating dataset from other raw dataset " + other.datasetLabel + " ... ");
 		Timer t = new Timer();
 		printer.resetProgress();
-		List<CitingPaper<T>> citers = other.citers.stream().parallel() //TODO
+		List<CitingPaper<T>> citers = other.citers.stream().parallel() //TODO stream().parallel()
 			.map(citer2 -> {
 				printer.progress();
 				List<Sentence<T>> sentences = new ArrayList<Sentence<T>>();

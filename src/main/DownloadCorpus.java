@@ -18,6 +18,7 @@ import edu.uci.ics.crawler4j.crawler.exceptions.PageBiggerThanMaxSizeException;
 
 /**
  * Download a large corpus of research papers from AAN.
+ * In the thesis, the corpus is used for creating the semantic space (S-space)
  * @author jonathan
  *
  */
@@ -100,13 +101,6 @@ public class DownloadCorpus {
 		System.out.print("  writing to file ... ");
 		int numBytes = IOUtils.copy(in, fos);
 		
-		
-		
-//		int b;
-//		while ((b = in.read()) != -1) {
-//			fos.write(b);
-//			
-//		}
 		System.out.print("~ closing, flushing ... ");
 		in.close();
 		fos.flush();

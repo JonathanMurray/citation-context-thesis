@@ -4,23 +4,20 @@ package main;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Scanner;
 
-import org.apache.lucene.store.OutputStreamDataOutput;
-import org.apache.tika.io.NullOutputStream;
-
+import semanticSim.SSpaceWrapper;
 import util.Environment;
 import util.Printer;
 import dataset.NgramIdf;
-import dataset.SSpaceWrapper;
 import dataset.TextFactory;
 import dataset.TextParams;
 import dataset.TextWithSspace;
 
 /**
- * Create the semantic space (s-space) from a large corpus
+ * Create a semantic space (s-space) from a large corpus, used for 
+ * semantic similarity of sentences
  * @author jonathan
  *
  */
@@ -29,9 +26,6 @@ public class SSpace {
 	static String sspaceDir = Environment.resources() + "/sspace";
 	
 	public static void main(String[] args) throws IOException {
-		
-//		System.setErr(new PrintStream(new NullOutputStream())); //TODO
-		
 		File txtDir = new File(Environment.resources() + "/corpus/lemmas-sentences");
 		File sspaceFile = new File(sspaceDir + "/space-lsa-500.sspace");
 		File wordFrequenciesFile = new File(sspaceDir + "/wordfrequencies.ser");
@@ -59,8 +53,6 @@ public class SSpace {
 			System.out.println();
 		}
 	}
-	
-	
 	
 	private static void testWeights(File sspaceFile, File wordFrequenciesFile) throws IOException{
 		SSpaceWrapper sspace = SSpaceWrapper.load(sspaceFile, wordFrequenciesFile);

@@ -4,14 +4,11 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.TDoubleIntHashMap;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import util.Printer;
 import util.Timer;
@@ -22,13 +19,13 @@ import dataset.Dataset;
 import dataset.LexicalHook;
 import dataset.ResultImpl;
 import dataset.Sentence;
+import dataset.SentenceKey;
 import dataset.SentenceType;
 import dataset.Text;
 import dataset.TextUtil;
-import dataset.SentenceKey;
 
 /**
- * The graphical classification algorithm, adopted by Qazviniand and Radev.
+ * The graphical classification algorithm, adopted by Qazvinian and Radev.
  * @author jonathan
  *
  * @param <T>
@@ -73,9 +70,9 @@ public class MRF_classifier<T extends Text> {
 		this.params = params;
 	}
 	
-	public ArrayList<ResultImpl> classify(Collection<Dataset<T>> datasets){
+	public ArrayList<ResultImpl<T>> classify(Collection<Dataset<T>> datasets){
 		System.out.println("Classifying multiple datasets ...");
-		ArrayList<ResultImpl> results = new ArrayList<ResultImpl>();
+		ArrayList<ResultImpl<T>> results = new ArrayList<ResultImpl<T>>();
 		int i = 0;
 		for(Dataset<T> dataset : datasets){
 			Printer.printBigProgressHeader(i, datasets.size());
@@ -88,8 +85,8 @@ public class MRF_classifier<T extends Text> {
 		return results;
 	}
 	
-	public ResultImpl classify(Dataset<T> dataset){
-		ResultImpl sumResult = new ResultImpl(dataset.datasetLabel);
+	public ResultImpl<T> classify(Dataset<T> dataset){
+		ResultImpl<T> sumResult = new ResultImpl<T>(dataset.datasetLabel);
 		System.out.print("\nMRF classifying " + dataset.datasetLabel + "  ");
 		System.out.print(dataset.getAcronyms() + ", ");
 		System.out.print(dataset.getLexicalHooks()); 
@@ -99,7 +96,7 @@ public class MRF_classifier<T extends Text> {
 		DEBUG_FALSE_NEG_AFTER_EXPL = 0;
 		for(int i = 0; i < dataset.citers.size(); i++){
 			printer.progress();
-			ResultImpl res = classifyOneCiter(i, dataset);
+			ResultImpl<T> res = classifyOneCiter(i, dataset);
 			sumResult.add(res);
 		}
 		
@@ -116,7 +113,7 @@ public class MRF_classifier<T extends Text> {
 		return sumResult;
 	}
 	
-	public ResultImpl classifyOneCiter(int citerIndex, Dataset<T> dataset){
+	public ResultImpl<T> classifyOneCiter(int citerIndex, Dataset<T> dataset){
 		Timer t = new Timer();
 		setup(citerIndex, dataset);
 		initMessages();
@@ -162,18 +159,15 @@ public class MRF_classifier<T extends Text> {
 		
 		double maxBelief = 0;  
 		double minBelief = Double.MAX_VALUE;
-		int maxIndex = 0;
+//		int maxIndex = 0;
 		for(int i = 0; i < numSentences; i++){
-//			if(sentences.get(i).type == SentenceType.EXPLICIT_REFERENCE){
-//				continue; // Don't let explicit citations raise the max-belief
-//			}
 			double unnormalized = unnormalizedBeliefs.get(i);
 			if(unnormalized < minBelief){
 				minBelief = unnormalized;
 			}
 			if(unnormalized > maxBelief){
 				maxBelief = unnormalized;
-				maxIndex = i;
+//				maxIndex = i;
 			}
 		}
 //		System.out.println("belief interval: " + minBelief + " --> " + maxBelief);
@@ -213,8 +207,8 @@ public class MRF_classifier<T extends Text> {
 	
 	private void setupMinMaxNeighbourSim(){
 		int numSentences = sentences.size();
-		Sentence<T> maxFrom = null;
-		Sentence<T> maxTo = null;
+//		Sentence<T> maxFrom = null;
+//		Sentence<T> maxTo = null;
 		minNeighbourSim = Double.MAX_VALUE;
 		maxNeighbourSim = Double.MIN_VALUE;
 		for(int from = 0; from < numSentences; from++){
@@ -230,8 +224,8 @@ public class MRF_classifier<T extends Text> {
 					}
 					if(sim > maxNeighbourSim){
 						maxNeighbourSim = sim;
-						maxFrom = sFrom;
-						maxTo = sTo;
+//						maxFrom = sFrom;
+//						maxTo = sTo;
 					}
 				}
 			}
@@ -286,11 +280,8 @@ public class MRF_classifier<T extends Text> {
 			List<LexicalHook> lexicalHooks){
 		
 		List<String> rawWords = sentence.text.rawWords;
-		
 		Printer p = new Printer(false);
-		
 		double score = 0;
-		
 		
 		score += similarity;
 		
@@ -307,16 +298,9 @@ public class MRF_classifier<T extends Text> {
 			score += 1;
 		}
 		
-//		if(Texts.instance().startsWithLimitedDet(rawWords)){
-//			score += 1;
-//		}
-		
-		
-		
 		double hookScore = TextUtil.instance().containsHookScore(sentence.text.raw, lexicalHooks);
 		double acronymScore = TextUtil.instance().containsAcronymScore(rawWords, acronyms);
 		score += 1 * Math.max(hookScore, acronymScore);
-		
 		
 		if(Double.isNaN(score)){
 			throw new RuntimeException("score == NaN");
@@ -339,7 +323,7 @@ public class MRF_classifier<T extends Text> {
 		}
 	}
 	
-	private ResultImpl getResults(String citerTitle, String label, double beliefThreshold, long passedMillis){
+	private ResultImpl<T> getResults(String citerTitle, String label, double beliefThreshold, long passedMillis){
 		int truePos = 0;
 		int falsePos = 0;
 		int trueNeg = 0;
@@ -347,7 +331,7 @@ public class MRF_classifier<T extends Text> {
 		
 		ArrayList<Integer> fpIndices = new ArrayList<Integer>();
 		ArrayList<Integer> fnIndices = new ArrayList<Integer>();
-		HashMap<SentenceKey, Double> classificationProbabilities = new HashMap<SentenceKey, Double>();
+		HashMap<SentenceKey<T>, Double> classificationProbabilities = new HashMap<SentenceKey<T>, Double>();
 		ArrayList<Prediction> predictions = new ArrayList<Prediction>();
 		
 		for(int i = 0; i < sentences.size(); i++){
@@ -369,7 +353,6 @@ public class MRF_classifier<T extends Text> {
 				NO_CITE_BELIEF_CHANGES.adjustOrPutValue(roundedChange, 1, 1);
 			}
 			
-			
 			if(sentence.type == SentenceType.EXPLICIT_REFERENCE){
 //				System.out.println();
 //				System.out.println("EXPLICIT: " + sentence.text.raw);
@@ -377,18 +360,8 @@ public class MRF_classifier<T extends Text> {
 				continue; //Don't count explicit citations in result!
 			}
 
-			DecimalFormat f = new DecimalFormat("#.##");
+//			DecimalFormat f = new DecimalFormat("#.##");
 //			System.out.println( sentence.type + " (" + f.format(selfBeliefs.get(i)[1]) + " -> " + f.format(belief[1]) +  "):   " + sentence.text.raw); //TODO
-			
-			//TODO ignore those too far away from explicit
-//			boolean closeToExplicit = false;
-//			final int LIMIT = 3;
-//			for(int j = Math.max(0, i-LIMIT); j < Math.min(sentences.size()-1, i+LIMIT); j++){
-//				if(sentences.get(j).type==SentenceType.EXPLICIT_REFERENCE){
-//					closeToExplicit = true;
-//				}
-//			}
-			
 			
 			if(sentence.type == SentenceType.NOT_REFERENCE){
 				predictions.add(new NominalPrediction(0.0, belief));
@@ -396,29 +369,9 @@ public class MRF_classifier<T extends Text> {
 				predictions.add(new NominalPrediction(1.0, belief));
 			}
 			
-//			double HIGHER_THRESH = 0.98;
-			boolean predictInContext = belief[1] > beliefThreshold;// && closeToExplicit || belief[1] > HIGHER_THRESH;
+			boolean predictInContext = belief[1] > beliefThreshold;
 			if(predictInContext){
 				if(sentence.type == SentenceType.NOT_REFERENCE){
-					
-//					Sentence prev=  null;
-//					if(i > 0){
-//						prev = sentences.get(i-1);
-//					}
-					
-//					System.out.println();
-//					System.out.println("close to explicit: " + closeToExplicit);
-//					if(i > 0){
-//						System.out.println(prev.type + "(" + f.format(selfBeliefs.get(i-1)[1]) + " -> " + f.format(finalBelief(i-1)[1]) +  "):   " + prev.text.raw);
-//					}
-//					
-//					System.out.println("FP (" + f.format(selfBeliefs.get(i)[1]) + " -> " + f.format(belief[1]) +  "):   " + sentence.text.raw); //TODO
-//					System.out.println(sentence.text.lemmas);
-//					System.out.println();
-//					fnIndices.add(i);
-					
-					
-					
 					fpIndices.add(i);
 					falsePos ++;
 				}else{
@@ -428,34 +381,12 @@ public class MRF_classifier<T extends Text> {
 				if(sentence.type == SentenceType.NOT_REFERENCE){
 					trueNeg ++;
 				}else{
-					
-					
-					
 					DEBUG_FALSE_NEG ++;
 					if(sentences.get(i).type == SentenceType.IMPLICIT_REFERENCE){
 						if(sentences.get(i-1).type == SentenceType.EXPLICIT_REFERENCE){
 							DEBUG_FALSE_NEG_AFTER_EXPL ++;
 						}
 					}
-					
-//					if(sentences.get(i).type == SentenceType.IMPLICIT_REFERENCE){
-//						Sentence<T> prev=  null;
-//						if(i > 0){
-//							prev = sentences.get(i-1);
-//						}
-//						Sentence<T> s = sentences.get(i);
-//						System.out.println("\n");
-//						System.out.println("PREV (" + prev.type + "  " + f.format(selfBeliefs.get(i-1)[1]) 
-//								+ " -> " + f.format(finalBelief(i-1)[1]) + "): " + prev.text.raw);
-//						System.out.println("(" + data.citedMainAuthor + "), " + data.citedTitle.raw);
-//						System.out.println("(" + f.format(selfBeliefs.get(i)[1]) + " -> " 
-//								+ f.format(belief[1]) +  "):   " + sentence.text.raw); 
-//						System.out.println(s.text.lemmas);
-//						System.out.println("cited content: " + s.text.similarity(data.citedContent));
-////						System.out.println("cited title  : " + s.text.similarity(data.citedTitle));
-////						System.out.println("citations    : " + s.text.similarity(data.mergedExplicitCitations));
-//						System.out.println();
-//					}
 
 					fnIndices.add(i);
 					falseNeg ++;
@@ -463,7 +394,7 @@ public class MRF_classifier<T extends Text> {
 			}
 		}
 		
-		return new ResultImpl(label, truePos, falsePos, trueNeg, falseNeg, classificationProbabilities, passedMillis, predictions);	
+		return new ResultImpl<T>(label, truePos, falsePos, trueNeg, falseNeg, classificationProbabilities, passedMillis, predictions);	
 	}
 	
 	private double[] finalBelief(int sentence){
@@ -483,11 +414,6 @@ public class MRF_classifier<T extends Text> {
 //		}
 			
 		return totalBeliefAboutSelf;
-	}
-	
-	private String beliefToString(double[] belief){
-		NumberFormat formatter = new DecimalFormat("#0.00");     
-		return formatter.format(belief[1]);
 	}
 
 	private boolean iterate(){
@@ -585,9 +511,8 @@ public class MRF_classifier<T extends Text> {
 	}
 	
 	private double[] compatibility(int context1, int s1, int s2){
-		T t1 = sentences.get(s1).text;
-		T t2 = sentences.get(s2).text;
-		
+//		T t1 = sentences.get(s1).text;
+//		T t2 = sentences.get(s2).text;
 		
 		if(context1 == NO){
 			return new double[]{0.5,0.5};
@@ -599,8 +524,6 @@ public class MRF_classifier<T extends Text> {
 		if(probSame > 1.01){
 			System.err.println("ERROR: compatibility for " + s1 + ", " + s2 + " == " + probSame);//TODO
 		}
-//		probSame -= 0.1; //interval : [0.4 , 0.9]
-//		System.out.println(probContext); //TODO
 		return new double[]{1 - probSame, probSame};
 	}
 	
@@ -643,7 +566,6 @@ public class MRF_classifier<T extends Text> {
 //		
 ////		double similarity = (unnormalizedSimilarity - minSimilarity)/(maxSimilarity-minSimilarity);
 		relatedness = Math.max(relatedness, similarity);
-////		relatednessMemoization.get(s1).put(s2, relatedness);
 		return relatedness;
 	}
 	
@@ -660,14 +582,6 @@ public class MRF_classifier<T extends Text> {
 		if(TextUtil.instance().startsWith3rdPersonPronoun(text.rawWords)){
 			return 1;
 		}
-		
-//		if(Texts.instance().startsWithDet(text.rawWords)){
-//			return 0.7;
-//		}
-//		
-//		if(Texts.instance().containsDet(text.rawWords) || text.rawWords.get(0).equals("It")){
-//			return 0.6;
-//		}
 		
 		return 0;
 	}

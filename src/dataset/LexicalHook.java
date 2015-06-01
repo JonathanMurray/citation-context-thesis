@@ -27,7 +27,6 @@ public class LexicalHook {
 				acronym = s.toString().toUpperCase();
 			}
 		}
-		
 		info = hook;
 		if(hasAcronym){
 			info += " <" + acronym + ">";

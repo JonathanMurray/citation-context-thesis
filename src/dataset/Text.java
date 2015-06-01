@@ -8,7 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 
 /**
- * Represents a piece of text. This class is extended with more advanced 
+ * Represents a piece of text. This base class is extended with more advanced 
  * representations of text. 
  * @author jonathan
  *

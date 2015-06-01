@@ -1,4 +1,4 @@
-package concepts;
+package semanticSim;
 
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -6,6 +6,11 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.util.NoSuchElementException;
 
+/**
+ * The default version of Wikigraph. It is constructed fully before use.
+ * @author jonathan
+ *
+ */
 public class PreBuiltWikiGraph extends WikiGraph{
 	
 	private TIntObjectHashMap<TIntArrayList> links;

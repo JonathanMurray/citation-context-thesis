@@ -1,4 +1,4 @@
-package wekaWrapper;
+package weka;
 
 import java.awt.BorderLayout;
 import java.io.BufferedReader;
@@ -41,6 +41,11 @@ import weka.gui.visualize.ThresholdVisualizePanel;
 import dataset.Result;
 import dataset.ResultWrapper;
 
+/**
+ * Machine learning classifier, using the WEKA-library.
+ * @author jonathan
+ *
+ */
 public class WekaClassifier {
 	
 	private static Printer printer = new Printer(true);

@@ -34,15 +34,13 @@ public class AcronymsHooksExtractor<T extends Text>{
 	}
 	
 	public List<LexicalHook> findLexicalHooks(int boundary, int numLexicalHooks){
-		String before = "[^a-zA-Z\\d]"; //TODO removed (
-		String after = "[ :;,\\.\\-\\)]"; //TODO added - and )  
+		String before = "[^a-zA-Z\\d]";
+		String after = "[ :;,\\.\\-\\)]";  
 		String word = "[A-Z][a-z]+";
 		String anotherWord = " " + word;
 		String moreWords = "(" + anotherWord + "((" + anotherWord + after + ")|" + after + "))";
 		String regexString = before + word + "(" + moreWords + "|" + after + ")";
 		Pattern regex = Pattern.compile(regexString);
-//		System.out.println(regexString);
-//		Pattern regex = Pattern.compile("[^a-zA-Z(\\d][A-Z][a-z]+(( [A-Z][a-z]+(( [A-Z][a-z]+[ :;,\\.])|[ :;,\\.]))|[ :;,\\.])");
 		List<String> hooks = findNotableInExplicit(boundary, numLexicalHooks, regex, false, false);
 		return hooks.stream().map(hook -> new LexicalHook(hook)).collect(Collectors.toCollection(ArrayList::new));
 	}

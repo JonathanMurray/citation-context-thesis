@@ -1,4 +1,4 @@
-package wekaWrapper;
+package weka;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -13,13 +13,19 @@ import util.Printer;
 import dataset.CitingPaper;
 import dataset.Dataset;
 import dataset.Sentence;
+import dataset.SentenceKey;
 import dataset.SentenceType;
 import dataset.Text;
-import dataset.TextWithSspace;
 import dataset.TextUtil;
-import dataset.SentenceKey;
 
-
+/**
+ * Handles
+ *  - extracting the sentence features
+ *  - creating sentence-instances
+ *  - writing them to .arff-files, used as input by WEKA
+ * @author jonathan
+ *
+ */
 public class InstanceHandler {
 	
 	private static Printer printer = new Printer(true);

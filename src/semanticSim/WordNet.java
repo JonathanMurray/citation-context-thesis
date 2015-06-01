@@ -1,4 +1,4 @@
-package concepts;
+package semanticSim;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,13 +6,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
-import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,46 +19,16 @@ import com.ibm.icu.text.DecimalFormat;
 import com.ibm.icu.text.NumberFormat;
 
 import dataset.NgramExtractor;
-import dataset.TextUtil;
-import edu.cmu.lti.jawjaw.pobj.Synset;
-import edu.cmu.lti.lexical_db.ILexicalDatabase;
-import edu.cmu.lti.lexical_db.NictWordNet;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
-import edu.cmu.lti.ws4j.impl.HirstStOnge;
-import edu.cmu.lti.ws4j.impl.JiangConrath;
-import edu.cmu.lti.ws4j.impl.LeacockChodorow;
-import edu.cmu.lti.ws4j.impl.Lesk;
-import edu.cmu.lti.ws4j.impl.Lin;
-import edu.cmu.lti.ws4j.impl.Path;
-import edu.cmu.lti.ws4j.impl.Resnik;
-import edu.cmu.lti.ws4j.impl.WuPalmer;
 import edu.cmu.lti.ws4j.util.WS4JConfiguration;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.IIndexWord;
-import edu.mit.jwi.item.IPointer;
 import edu.mit.jwi.item.ISynset;
 import edu.mit.jwi.item.ISynsetID;
 import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
-import edu.mit.jwi.item.IndexWordID;
 import edu.mit.jwi.item.POS;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Sentence;
-import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
-import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.trees.CollinsHeadFinder;
-import edu.stanford.nlp.trees.HeadFinder;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
-import edu.stanford.nlp.util.CoreMap;
-import gnu.trove.iterator.TObjectDoubleIterator;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 /**
@@ -76,52 +41,6 @@ public class WordNet{
 	private static Printer printer = new Printer(true);
 	
 	public IDictionary dict;
-	
-	public static void ws4j(){
-		ILexicalDatabase db = new NictWordNet();
-        RelatednessCalculator[] rcs = {
-                        new HirstStOnge(db), new LeacockChodorow(db), new Lesk(db),  new WuPalmer(db),
-                        new Resnik(db), new JiangConrath(db), new Lin(db), new Path(db)
-                        };
-       
-        Scanner s = new Scanner(System.in);
-		
-		boolean c = true;
-		while(c){
-			System.out.print("INPUT: ");
-			String input1 = s.nextLine();
-			String input2 = s.nextLine();
-			List<String> words1 = new ArrayList(Arrays.asList(input1.split(" ")));
-			List<String> words2 = new ArrayList(Arrays.asList(input2.split(" ")));
-			List<String> allNgrams1 = NgramExtractor.allNgramPhrases(1,3, words1);
-			List<String> allNgrams2 = NgramExtractor.allNgramPhrases(1,3, words2);
-
-//			System.out.println("PATH: \n--------");
-//			for(int i = 0; i < allNgrams1.size(); i++){
-//				for(int j = i + 1; j < allNgrams2.size(); j++){
-//					String a = allNgrams1.get(i);
-//					String b = allNgrams2.get(j);
-//					System.out.println("comparing " + a + " and " + b + ": ");
-//					run(a, b, rcs);
-//				}
-//			}
-			
-//			run(rcs[0], allNgrams1, allNgrams2);
-			run(rcs[1], allNgrams1, allNgrams2);
-//			run(rcs[2], allNgrams1, allNgrams2);
-//			run(rcs[3], allNgrams1, allNgrams2);
-//			run(rcs[4], allNgrams1, allNgrams2);
-//			run(rcs[5], allNgrams1, allNgrams2);
-//			run(rcs[6], allNgrams1, allNgrams2);
-			
-			Sentence sentence;
-			
-//			sentence.
-//			
-//			Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-//			headFinder.determineHead(tree).pennPrint(out);
-		}
-	}
 	
 	static void run(RelatednessCalculator c, List<String> a, List<String> b){
 		double[][] simMatrix = c.getNormalizedSimilarityMatrix(
@@ -318,10 +237,6 @@ public class WordNet{
 			
 		}
 	}
-
-	
-	
-	
 	
 	static class X implements Comparable<X>{
 		String s;
@@ -423,8 +338,6 @@ public class WordNet{
 			return false;
 		}
 		
-	
-		
 		for(IWordID wordID : indexWord.getWordIDs()){
 			IWord word = dict.getWord(wordID);
 			
@@ -475,8 +388,6 @@ public class WordNet{
 			ISynset synset = word.getSynset();
 			
 			System.out.println(synset.getWords().stream().map(w -> w.getLemma()).collect(Collectors.toList()));
-			
-			
 			
 			System.out.println("Gloss: " + synset.getGloss());
 			for(ISynsetID relatedID : synset.getRelatedSynsets()){

@@ -1,5 +1,11 @@
 package dataset;
 
+/**
+ * Used to uniquely identify sentences
+ * @author jonathan
+ *
+ * @param <T>
+ */
 public class SentenceKey<T extends Text> {
 	public String citerTitle;
 	public int sentenceIndex;
@@ -17,6 +23,7 @@ public class SentenceKey<T extends Text> {
 		return (citerTitle + sentenceIndex).hashCode();
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object other){
 		if(!(other instanceof SentenceKey<?>)){

@@ -1,4 +1,4 @@
-package concepts;
+package semanticSim;
 
 import gnu.trove.list.array.TIntArrayList;
 
@@ -10,7 +10,12 @@ import java.util.Scanner;
 
 import util.Printer;
 
-
+/**
+ * An "online" version of WikiGraph, that loads data when it needs it. The idea was to have a class that is quicker for 
+ * tiny test examples.
+ * @author jonathan
+ *
+ */
 public class QuickWikiGraph extends WikiGraph{
 	
 	private static Printer printer = new Printer(true);

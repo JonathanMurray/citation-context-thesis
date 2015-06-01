@@ -3,13 +3,12 @@ package main;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import util.Environment;
 import util.Printer;
+import weka.WekaClassifier;
 import weka.core.Instances;
-import wekaWrapper.WekaClassifier;
 import dataset.Result;
 
 /**
@@ -70,7 +69,6 @@ public class Weka {
 //		System.out.println(Printer.valueSortedMap(infogains, 50));
 		
 //		smo.ROC(wekaBalancedDatasets.get(0));
-		
 		
 		System.out.println("FULL RESULTS:");
 		List<Result> results = smo.manualCrossValidation(labels, wekaBalancedDatasets, wekaFullDatasets);

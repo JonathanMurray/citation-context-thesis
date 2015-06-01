@@ -1,7 +1,6 @@
 package dataset;
 
 import gnu.trove.iterator.TIntIterator;
-import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -10,8 +9,8 @@ import java.util.List;
 
 import org.jsoup.nodes.Element;
 
+import semanticSim.WikiConcept;
 import util.CosineSimilarity;
-import concepts.WikiConcept;
 
 /**
  * Represents a piece of text as well as a set of Wikipedia-concepts,
@@ -23,14 +22,11 @@ public class TextWithWiki extends TextWithNgrams{
 	
 	protected static final String XML_TEXT_CLASS = "text-with-concepts";
 	
-//	public final List<Concept> concepts;
 	public final TObjectDoubleHashMap<Integer> conceptMap;
-//	public final double logNumConcepts;
 
 	public TextWithWiki(String raw, List<String> rawWords, List<String> lemmatizedWords, 
 			Ngrams ngrams, List<WikiConcept> concepts) {
 		super(raw, rawWords, lemmatizedWords, ngrams);
-//		this.concepts = concepts;
 		conceptMap = new TObjectDoubleHashMap<Integer>();
 		for(WikiConcept c : concepts){
 			TIntIterator it = c.indices.iterator();
@@ -39,12 +35,6 @@ public class TextWithWiki extends TextWithNgrams{
 				conceptMap.adjustOrPutValue(index, 1, 1);
 			}
 		}
-//		if(concepts.size() < 2){
-//			logNumConcepts = Math.log(2);
-//		}else{
-//			logNumConcepts = Math.log(concepts.size());
-//		}
-		
 	}
 	
 //	@Override
@@ -83,7 +73,6 @@ public class TextWithWiki extends TextWithNgrams{
 
 	@Override
 	public double similarity(Object o) {
-//		double ngramSimilarity = super.similarity(o);
 		TextWithWiki other = (TextWithWiki)o;
 //		double conceptSum = 0;
 //		for(Concept c1 : concepts){
@@ -99,7 +88,6 @@ public class TextWithWiki extends TextWithNgrams{
 //		}
 		return CosineSimilarity.calculateCosineSimilarity(conceptMap, other.conceptMap);
 //		return conceptSimilarity;
-//		return ngramSimilarity;// * conceptSimilarity; //TODO
 	}
 
 }

@@ -5,19 +5,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import mrf.MRF_params;
 import mrf.MRF_classifier;
+import mrf.MRF_params;
 import util.Environment;
 import util.Printer;
-import wekaWrapper.WekaClassifier;
 import dataset.Dataset;
 import dataset.DatasetXml;
 import dataset.ResultImpl;
 import dataset.Text;
-import dataset.TextWithNgrams;
-import dataset.TextWithSkipgrams;
-import dataset.TextWithSspace;
-import dataset.TextWithSynsets;
 import dataset.TextWithWiki;
 
 /**
@@ -63,7 +58,6 @@ public class MRF {
 		String resourcesDir = Environment.resources();
 		List<Dataset<T>> datasets = new ArrayList<Dataset<T>>();
 //		labels = labels.subList(0, 1); //TODO
-//		labels = Arrays.asList(new String[]{"example_1"});
 		
 //		File XML_DIR = new File(resourcesDir, "my-xml-datasets");
 		File XML_DIR = new File(resourcesDir, "xml-datasets");
@@ -89,20 +83,15 @@ public class MRF {
 		final int maxRuns = 100;
 		MRF_params params = new MRF_params(neighbourhood, beliefThreshold, maxRuns);
 		
-//		List<ResultImpl> results = new MRF_classifier<T>(params).classify(datasets);
-		
-		List<ArrayList<ResultImpl>> thresholdResults = new ArrayList<ArrayList<ResultImpl>>();
+		List<ArrayList<ResultImpl<T>>> thresholdResults = new ArrayList<ArrayList<ResultImpl<T>>>();
 		for(double threshold = 0.1; threshold <= 0.9; threshold += 0.1){
 			params = new MRF_params(neighbourhood, threshold, maxRuns);
-			ArrayList<ResultImpl> results = new MRF_classifier<T>(params).classify(datasets);
+			ArrayList<ResultImpl<T>> results = new MRF_classifier<T>(params).classify(datasets);
 			thresholdResults.add(results);
 		}
-		for(List<ResultImpl> results : thresholdResults){
+		for(List<ResultImpl<T>> results : thresholdResults){
 			Printer.printMultipleResults("MRF-wiki", results, datasets, false);
 		}
-		
-		
-		
 		
 		//TODO
 //		ResultImpl mergedResults = ResultImpl.mergeMany(results);
@@ -111,6 +100,5 @@ public class MRF {
 		
 //		System.out.println("FULL RESULTS:");
 //		Printer.printMultipleResults("MRF-wiki", results, datasets, true);
-		
 	}
 }

@@ -10,13 +10,12 @@ import java.util.regex.Pattern;
 
 import org.jsoup.nodes.Element;
 
+import semanticSim.SynsetExtractor;
 import util.Environment;
-import concepts.SynsetExtractor;
 import edu.cmu.lti.jawjaw.pobj.POS;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
 import edu.cmu.lti.lexical_db.data.Concept;
-import edu.cmu.lti.ws4j.Relatedness;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
 import edu.cmu.lti.ws4j.impl.Lin;
 import edu.cmu.lti.ws4j.impl.Path;
@@ -31,7 +30,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 /**
- * Represents a piece of text with a set of WordNet synsets extracted from the text
+ * Represents a piece of text plus a set of WordNet synsets extracted from the text
  * @author jonathan
  *
  */

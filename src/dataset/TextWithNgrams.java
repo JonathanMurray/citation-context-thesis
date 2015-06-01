@@ -5,7 +5,7 @@ import java.util.List;
 import org.jsoup.nodes.Element;
 
 /**
- * Represents a piece of text with tf-idf scores for n-grams or skip-grams.
+ * Represents a piece of text with tf-idf scores for n-grams
  * @author jonathan
  *
  */

@@ -11,6 +11,11 @@ import org.jsoup.parser.Tag;
 
 import util.CosineSimilarity;
 
+/**
+ * Represents a set of n-grams (possibly skipgrams) for some n-values.
+ * @author jonathan
+ *
+ */
 public class Ngrams {
 	
 	private static final String[] TAG_MAP = new String[]{

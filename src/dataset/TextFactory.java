@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import semanticSim.SynsetExtractor;
+import semanticSim.WikiConcept;
 import util.Lemmatizer;
-import concepts.WikiConcept;
-import concepts.SynsetExtractor;
 import edu.mit.jwi.item.ISynset;
 
 /**
@@ -23,8 +23,6 @@ public class TextFactory {
 		
 		List<String> lemmas = Lemmatizer.instance().lemmatize(raw);
 		ArrayList<String> rawWords = TextUtil.split(raw).collect(Collectors.toCollection(ArrayList::new));
-		
-		
 		
 		if(params.textClass.equals(TextWithNgrams.class)){
 			Ngrams ngramsTfIdf = NgramExtractor.ngramsTfIdf(MAX_NGRAM_N, lemmas, params.ngramIdf);

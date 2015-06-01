@@ -1,4 +1,4 @@
-package concepts;
+package semanticSim;
 
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
