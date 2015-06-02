@@ -23,9 +23,9 @@ The code is written in Java 8. The repository consists of the following packages
 * **util** - contains general classes that don't fit in any other package, as well as classes for representing classification results.
 
 ## 3. Getting started
-To run the algorithms, one first needs the data. I used the dataset annotated by Awais Athar available at http://www.cl.cam.ac.uk/~aa496/citation-context-corpus/. The main-package contains classes for constructing XML-files with different additions to the data. The first main classes to run are the ones that generate different datasets in XML-format. Once one has a basic XML-dataset one can extend it with other text representations. The classes for running the actual algorithms (Machine Learning classifier, and iterative algorithm) are also found in the main-package. The algorithms and all dataset-classes are generic in the way that they accept different text representations. Specifying which representation should be used is done in the main methods. 
+To run the algorithms, one first needs the data. I used the dataset annotated by Awais Athar available at http://www.cl.cam.ac.uk/~aa496/citation-context-corpus/. The first main classes to run are the ones that generate different datasets in XML-format. Once one has a basic XML-dataset one can extend it with other text representations. The classes for running the actual algorithms (Machine Learning classifier, and iterative algorithm) are also found in the main-package. The algorithms and all dataset-classes are generic in the way that they accept different text representations. Specifying which representation should be used is done in the main methods. 
 
-The project has several dependencies to other libraries, depending on which parts have to be run.
+The project has several dependencies to other libraries, depending on which parts are run.
 * jsoup 1.8.1
 * stanford-corenlp 3.5.1
 * jwi 2.3.3
